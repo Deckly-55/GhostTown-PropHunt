@@ -65,7 +65,7 @@ const WALL_HEIGHT = 40;
 const GLASS_HEIGHT = 40;
 const PROP_HEIGHT = 18;
 
-const CRATE_MODEL_URL = 'crate.glb';
+const CRATE_MODEL_URL = 'Crate.glb';
 const mapModelCache = {};
 const mapModelLoadPromises = {};
 

@@ -1,11 +1,13 @@
 {
   "name": "prop-hunt-ghost-town",
   "version": "1.0.0",
-  "description": "PropHunt.io Ghost Town — multiplayer asymmetric prop-hunt game with Group 3 combat mechanics (crouch, heal, weapon swap/reload).",
-  "main": "server.js",
+  "description": "PropHunt.io Ghost Town",
+  "author": "Pasan",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "node test-integration.js"
+    "server": "node server.js",
+    "start": "electron .",
+    "build": "electron-packager . GhostTownPropHunt --platform=win32 --arch=x64 --out=builds --overwrite"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -13,6 +15,7 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
-    "socket.io-client": "^4.7.5"
+    "electron": "^44.9.0",
+    "electron-packager": "^17.1.2"
   }
 }
