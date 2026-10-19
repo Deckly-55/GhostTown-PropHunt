@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Hover Inspect Popup — preview of the store fix</title>
+<style>
+  body { margin:0; background:#0b111a; color:#eaf6ff; font-family:'Segoe UI', Inter, system-ui, sans-serif; min-height:100vh; padding:26px; box-sizing:border-box; }
+  .demo-caption { max-width:820px; margin:0 auto 18px; color:#8b96a3; font-size:13px; line-height:1.55; }
+  .demo-caption b { color:#8ee8ff; }
+  .store-items { max-width:820px; margin:0 auto; padding:14px; background:rgba(15,21,31,.9); border:1px solid rgba(137,179,219,.24); border-radius:16px; }
+  .store-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; }
+  .store-section-title { margin:4px 0 10px; font-size:12px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:#8ee8ff; }
+  /* Item preview imagery — used for skins (shop + inventory) and weapons.
+     Images are letterboxed INSIDE the swatch with object-fit: contain plus
+     padding so a character's head and feet are never clipped by the card
+     slot. Rounded corners are dropped in favour of a soft drop-shadow that
+     hugs the transparent PNG silhouette. (Full art is shown uncropped in the
+     #characterHoverPreview popup — see the hover-inspect block below.) */
+  .store-swatch img.item-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 9px;
+    box-shadow: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+  }
+  .item-preview-img {
+    display: block;
+  }
+  .preview-preview-img
+  .store-card {
+    min-width: 0;
+    box-sizing: border-box;
+    background: linear-gradient(145deg, rgba(19, 29, 42, 0.98), rgba(12, 18, 27, 0.98));
+    border: 1px solid rgba(151, 188, 218, 0.13);
+    border-radius: 12px;
+    padding: 13px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .store-card:hover {
+    border-color: rgba(102, 204, 255, 0.4);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+    transform: translateY(-2px);
+  }
+  .store-swatch {
+    height: 66px;
+    box-sizing: border-box;
+    padding: 5px;
+    border-radius: 9px;
+    margin-bottom: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Image-bearing swatches (client.js tags them .sw-image) get a taller slot
+     so full-body character art has room to breathe instead of being scaled
+     down to a sliver. */
+  .store-swatch.sw-image {
+    height: 96px;
+    padding: 8px 8px 6px;
+  }
+  .store-swatch .sw-icon {
+    font-size: 29px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.65));
+    line-height: 1;
+  }
+  .store-swatch.shadow { background: #111111; }
+  .store-swatch.steel { background: #7f8c8d; }
+  .store-swatch.sw-skin-default { background: linear-gradient(135deg, #3498db 0%, #e74c3c 100%); }
+  .store-swatch.sw-gun-standard { background: linear-gradient(135deg, #4a5540 0%, #8a9478 100%); }
+  .store-swatch.sw-gun-shotgun { background: linear-gradient(135deg, #503924 0%, #d5a06b 100%); }
+  .store-swatch.sw-gun-vulcan { background: linear-gradient(135deg, #4a2c1a 0%, #ff8c42 100%); }
+  .store-swatch.sw-gun-longshot { background: linear-gradient(135deg, #1d3461 0%, #9fd8ff 100%); }
+  .store-swatch.sw-gun-sidearm { background: linear-gradient(135deg, #4b5563 0%, #9ca3af 100%); }
+  .store-swatch.sw-gun-revolver { background: linear-gradient(135deg, #3b2a20 0%, #d1a679 100%); }
+  .store-swatch.sw-gun-viper { background: linear-gradient(135deg, #1f3d1f 0%, #a2ff9f 100%); }
+  .store-swatch.sw-knife-field { background: linear-gradient(135deg, #6b7280 0%, #e5e7eb 100%); }
+  .store-swatch.sw-knife-carbon { background: linear-gradient(135deg, #111827 0%, #374151 100%); }
+  .store-swatch.sw-knife-throwing { background: linear-gradient(135deg, #33475b 0%, #9fd8ff 100%); }
+  .store-swatch.sw-knife-phantom { background: linear-gradient(135deg, #3b1d5e 0%, #d8a2ff 100%); }
+  /* Item preview imagery — used for skins (shop + inventory) and weapons.
+     Images are letterboxed INSIDE the swatch with object-fit: contain plus
+     padding so a character's head and feet are never clipped by the card
+     slot. Rounded corners are dropped in favour of a soft drop-shadow that
+     hugs the transparent PNG silhouette. (Full art is shown uncropped in the
+     #characterHoverPreview popup — see the hover-inspect block below.) */
+  .store-swatch img.item-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 9px;
+    box-shadow: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+  }
+  .item-preview-img {
+    display: block;
+  }
+  .preview-preview-img {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  .store-card h3 { margin: 0 0 5px; font-size: 15px; line-height: 1.25; }
+  .store-card .store-desc { min-height: 34px; margin: 0 0 10px; color: #8b96a3; font-size: 12px; line-height: 1.42; }
+  .store-action {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(102, 204, 255, 0.32);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    background: #1d6f9b;
+    color: #f4fbff;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .store-action:hover:not(:disabled) {
+    background: #258abf;
+    border-color: #66ccff;
+    transform: translateY(-1px);
+  }
+  .store-action.owned { background: #1e8155; border-color: rgba(91, 230, 156, 0.42); color: #eafff2; }
+  /* Inventory "Equipped" badge overlaid on owned item cards. */
+  .equipped-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(30, 129, 85, 0.9);
+    border: 1px solid rgba(91, 230, 156, 0.5);
+    color: #eafff2;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .equipped-badge.hidden { display: none; }
+  .store-card { position: relative; }
+  .store-action.equipped { background: #334455; border-color: rgba(148, 174, 196, 0.28); color: #b9c9d6; cursor: default; }
+  .store-action:disabled { opacity: 0.78; cursor: not-allowed; }
+  /* ------------------------------------------------------------------
+     Full-body hover inspect popup (#characterHoverPreview)
+     A single floating node shared by every Shop/Inventory card. client.js
+     populates it on mouseenter, repositions it with edge-aware clamping,
+     and hides it on mouseleave. pointer-events: none keeps the pointer on
+     the card underneath, so mouseleave always fires reliably.
+     ------------------------------------------------------------------ */
+  #characterHoverPreview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 70; /* above #storeOverlay (35) and menu/starter modals (60) */
+    width: 258px;
+    box-sizing: border-box;
+    padding: 12px 12px 11px;
+    border-radius: 14px;
+    background: rgba(8, 13, 21, 0.82);
+    -webkit-backdrop-filter: blur(12px) saturate(1.25);
+    backdrop-filter: blur(12px) saturate(1.25);
+    border: 1px solid rgba(102, 204, 255, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(102, 204, 255, 0.12),
+      0 0 22px rgba(102, 204, 255, 0.22),
+      0 18px 44px rgba(0, 0, 0, 0.6);
+    color: #eaf6ff;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.97);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0.2s ease;
+    will-change: transform, opacity;
+  }
+  #characterHoverPreview.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  #characterHoverPreview .chp-stage {
+    position: relative;
+    height: 240px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 28%, #2f4b61 0%, #12202e 62%, #0a1018 100%);
+    border: 1px solid rgba(102, 204, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #characterHoverPreview .chp-stage::after {
+    content: '';
+    position: absolute;
+    right: 16%;
+    bottom: 10px;
+    left: 16%;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    filter: blur(4px);
+  }
+  #characterHoverPreview .chp-stage img {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+  }
+  #characterHoverPreview .chp-stage .chp-fallback {
+    position: relative;
+    z-index: 1;
+    font-size: 54px;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  }
+  #characterHoverPreview .chp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 10px 0 2px;
+  }
+  #characterHoverPreview .chp-title {
+    min-width: 0;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #characterHoverPreview .chp-rarity {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0b111a;
+    background: #8fa1b1;
+  }
+  #characterHoverPreview .chp-theme {
+    margin: 0 0 9px;
+    color: #9db0c4;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  #characterHoverPreview .chp-cost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: rgba(102, 204, 255, 0.08);
+    border: 1px solid rgba(102, 204, 255, 0.25);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  #characterHoverPreview .chp-cost .chp-coins { color: #ffd257; }
+  #characterHoverPreview .chp-cost.state-owned { background: rgba(30, 129, 85, 0.16); border-color: rgba(91, 230, 156, 0.35); color: #a7f3c9; }
+  #characterHoverPreview .chp-cost.state-equipped { background: rgba(51, 68, 85, 0.35); border-color: rgba(148, 174, 196, 0.3); color: #b9c9d6; }
+  /* Rarity tinting: border/glow + badge colour shift per tier. client.js sets
+     data-rarity on the popup root (starter|common|rare|epic|legendary). */
+  #characterHoverPreview[data-rarity='common']   { --chp-accent: #5bea9c; }
+  #characterHoverPreview[data-rarity='rare']     { --chp-accent: #66ccff; }
+  #characterHoverPreview[data-rarity='epic']     { --chp-accent: #d8a2ff; }
+  #characterHoverPreview[data-rarity='legendary']{ --chp-accent: #ffd257; }
+  #characterHoverPreview[data-rarity='starter']  { --chp-accent: #93a7bb; }
+  #characterHoverPreview[data-rarity] {
+    border-color: color-mix(in srgb, var(--chp-accent, #66ccff) 45%, rgba(255, 255, 255, 0.08));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--chp-accent, #66ccff) 14%, transparent),
+      0 0 22px color-mix(in srgb, var(--chp-accent, #66ccff) 24%, transparent),
+      0 18px 44px rgba(0, 0, 0, 0.6);
+  }
+  #characterHoverPreview[data-rarity] .chp-rarity { background: var(--chp-accent, #8fa1b1); }
+  @media (max-width: 720px) {
+    #characterHoverPreview { width: 224px; }
+    #characterHoverPreview .chp-stage { height: 200px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #characterHoverPreview { transition: none; }
+  }
+</style></head><body>
+  <p class="demo-caption">Standalone preview of the shipped fix: card thumbnails use <b>object-fit: contain</b> inside a padded, taller slot; hovering a card (or just its name) reveals the shared <b>#characterHoverPreview</b> popup. CSS, markup and popup JS below are extracted <b>verbatim</b> from the updated index.html / client.js — only the catalog data is stubbed. Scroll the page or hover the wide right-hand card to see the flip + clamp. Beach Character is pre-owned; Astronaut is too pricey — check the popup cost lines.</p>
+  <div id="shopItems" class="store-items"><div class="store-section-title">Skins</div><div class="store-grid" id="shopGrid"></div></div>
+
+  <div id="characterHoverPreview" data-rarity="common" aria-hidden="true">
+    <div class="chp-stage">
+      <img id="chpImage" class="hidden" alt="" />
+      <span id="chpFallback" class="chp-fallback hidden" aria-hidden="true">👤</span>
+    </div>
+    <div class="chp-head">
+      <h4 id="chpTitle" class="chp-title">Character</h4>
+      <span id="chpRarity" class="chp-rarity">Common</span>
+    </div>
+    <p id="chpTheme" class="chp-theme">Preview unavailable.</p>
+    <div id="chpCost" class="chp-cost"><span class="chp-coins">🪙</span><span>—</span></div>
+  </div>
+
+<script>
+// --- demo stubs standing in for the game client's state and DOM refs ---
+const DEMO_IMG = {"Beach_Character": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20300%20520%22%20width%3D%22300%22%20height%3D%22520%22%3E%3Ccircle%20cx%3D%22150%22%20cy%3D%2295%22%20r%3D%2252%22%20fill%3D%22%232a9d8f%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22108%22%20y%3D%22150%22%20width%3D%2284%22%20height%3D%22170%22%20rx%3D%2230%22%20fill%3D%22%23f4a259%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%2266%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%23f4a259%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22200%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%23f4a259%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22112%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%232a9d8f%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22154%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%232a9d8f%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%3C/svg%3E", "Punk": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20300%20520%22%20width%3D%22300%22%20height%3D%22520%22%3E%3Ccircle%20cx%3D%22150%22%20cy%3D%2295%22%20r%3D%2252%22%20fill%3D%22%23d8a2ff%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22108%22%20y%3D%22150%22%20width%3D%2284%22%20height%3D%22170%22%20rx%3D%2230%22%20fill%3D%22%235e2ca5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%2266%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%235e2ca5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22200%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%235e2ca5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22112%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%23d8a2ff%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22154%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%23d8a2ff%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%3C/svg%3E", "Astronaut": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20300%20520%22%20width%3D%22300%22%20height%3D%22520%22%3E%3Ccircle%20cx%3D%22150%22%20cy%3D%2295%22%20r%3D%2258%22%20fill%3D%22%23dfe8f5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%3Ccircle%20cx%3D%22150%22%20cy%3D%2295%22%20r%3D%2230%22%20fill%3D%22%233a6ea5%22/%3E%20%3Crect%20x%3D%22108%22%20y%3D%22150%22%20width%3D%2284%22%20height%3D%22170%22%20rx%3D%2230%22%20fill%3D%22%23dfe8f5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%2266%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%23dfe8f5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22200%22%20y%3D%22156%22%20width%3D%2234%22%20height%3D%22130%22%20rx%3D%2216%22%20fill%3D%22%23dfe8f5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22112%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%233a6ea5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%20%3Crect%20x%3D%22154%22%20y%3D%22320%22%20width%3D%2234%22%20height%3D%22160%22%20rx%3D%2214%22%20fill%3D%22%233a6ea5%22%20stroke%3D%22%230a0f16%22%20stroke-width%3D%228%22/%3E%3C/svg%3E"};
+const STORE_CATALOG = {
+  Beach_Character: { id:'Beach_Character', name:'Beach Character', cost:500,  type:'skin', stats:'Sun-bleached boardwalk fit.' },
+  Punk:            { id:'Punk',            name:'Punk',            cost:800,  type:'skin', stats:'Studs, spikes and bad attitude.' },
+  Astronaut:       { id:'Astronaut',       name:'Astronaut',       cost:3000, type:'skin', stats:'Vacuum-rated flagship cosmetic.' }
+};
+const STORE_ITEM_ICON = { Beach_Character:'🏖️', Punk:'🤘', Astronaut:'🚀' };
+let myCoins = 900;
+const myInventory = ['Beach_Character'];
+const myLoadout = { equippedSkin:'Beach_Character' };
+function isOwnedItem(id) { return myInventory.includes(id); }
+function isEquippedItem(id) { const it = STORE_CATALOG[id]; return !!(it && myLoadout.equippedSkin === id); }
+function itemPreviewSrc(idOrItem) { const item = STORE_CATALOG[typeof idOrItem === 'string' ? idOrItem : (idOrItem && idOrItem.id)]; return item ? (DEMO_IMG[item.id] || '') : ''; }
+
+const characterHoverPreview = document.getElementById('characterHoverPreview');
+const chpImage = document.getElementById('chpImage');
+const chpFallback = document.getElementById('chpFallback');
+const chpTitle = document.getElementById('chpTitle');
+const chpRarity = document.getElementById('chpRarity');
+const chpTheme = document.getElementById('chpTheme');
+const chpCost = document.getElementById('chpCost');
+const storeOverlay = null;
+const storePanelEl = null;
+const shopItemsEl = document.getElementById('shopItems');
+const inventoryItemsEl = null;
+const storeTabContentShop = null;
+const storeTabContentInventory = null;
+let activeStoreTab = 'shop';
+
+// --- VERBATIM shipped popup logic from client.js ---
+const STORE_RARITY_TIERS = [
+  { maxCost: 0,    key: 'starter',   label: 'Starter',   theme: 'Base kit issued to every recruit.' },
+  { maxCost: 650,  key: 'common',    label: 'Common',    theme: 'Everyday field cosmetic.' },
+  { maxCost: 900,  key: 'rare',      label: 'Rare',      theme: 'Limited-run gear, seen rarely in the lobby.' },
+  { maxCost: 1500, key: 'epic',      label: 'Epic',      theme: 'Signature collector line with custom flair.' },
+  { maxCost: Infinity, key: 'legendary', label: 'Legendary', theme: 'Top-shelf flagship — the store’s crown jewel.' }
+];
+function storeItemRarity(item) {
+  const cost = item && typeof item.cost === 'number' ? item.cost : 0;
+  for (const tier of STORE_RARITY_TIERS) {
+    if (cost <= tier.maxCost) return tier;
+  }
+  return STORE_RARITY_TIERS[STORE_RARITY_TIERS.length - 1];
+}
+let hoverPreviewCard = null;   // card element the popup is currently anchored to
+let hoverPreviewFrame = 0;     // rAF handle used to throttle repositioning
+
+function populateCharacterHoverPreview(item) {
+  if (!characterHoverPreview || !item) return;
+  const rarity = storeItemRarity(item);
+  const src = itemPreviewSrc(item.id);
+
+  if (chpImage) {
+    if (src) {
+      chpImage.src = src;
+      chpImage.alt = item.name + ' — full preview';
+      chpImage.classList.remove('hidden');
+      if (chpFallback) chpFallback.classList.add('hidden');
+    } else {
+      chpImage.removeAttribute('src');
+      chpImage.classList.add('hidden');
+      if (chpFallback) {
+        chpFallback.textContent = STORE_ITEM_ICON[item.id] || '🎭';
+        chpFallback.classList.remove('hidden');
+      }
+    }
+  }
+  if (chpTitle) {
+    chpTitle.textContent = item.name;
+    chpTitle.title = item.name;
+  }
+  if (chpRarity) chpRarity.textContent = rarity.label;
+  if (chpTheme) {
+    chpTheme.textContent = item.stats ? rarity.theme + ' ' + item.stats : rarity.theme;
+  }
+  characterHoverPreview.setAttribute('data-rarity', rarity.key);
+
+  if (chpCost) {
+    chpCost.classList.remove('state-owned', 'state-equipped');
+    let label;
+    if (isEquippedItem(item.id)) {
+      chpCost.classList.add('state-equipped');
+      label = 'Equipped — active loadout';
+    } else if (isOwnedItem(item.id)) {
+      chpCost.classList.add('state-owned');
+      label = 'Owned — equip from Inventory';
+    } else if (item.cost <= 0) {
+      label = 'FREE — starter reward';
+    } else if (myCoins < item.cost) {
+      label = item.cost + ' coins — need ' + (item.cost - myCoins) + ' more';
+    } else {
+      label = item.cost + ' coins';
+    }
+    chpCost.textContent = '';
+    const coin = document.createElement('span');
+    coin.className = 'chp-coins';
+    coin.textContent = '🪙';
+    const price = document.createElement('span');
+    price.textContent = label;
+    chpCost.appendChild(coin);
+    chpCost.appendChild(price);
+  }
+}
+
+// Edge-aware placement: prefer directly above the card, then flip to the
+// right, left or below depending on free space. The allowed box starts as
+// the viewport (minus a margin) and is tightened to the store panel rect
+// while the store modal is open, so the popup can never overflow past the
+// screen edge or past the store modal boundaries.
+function positionCharacterHoverPreview() {
+  if (!characterHoverPreview || !hoverPreviewCard || !hoverPreviewCard.isConnected) {
+    hideCharacterHoverPreview();
+    return;
+  }
+  const GAP = 12;
+  const popupW = characterHoverPreview.offsetWidth;
+  const popupH = characterHoverPreview.offsetHeight;
+  const rect = hoverPreviewCard.getBoundingClientRect();
+
+  let bounds = {
+    left: GAP,
+    top: GAP,
+    right: window.innerWidth - GAP,
+    bottom: window.innerHeight - GAP
+  };
+  if (storePanelEl && storeOverlay && !storeOverlay.classList.contains('hidden')) {
+    const panel = storePanelEl.getBoundingClientRect();
+    bounds.left = Math.max(bounds.left, panel.left + 10);
+    bounds.top = Math.max(bounds.top, panel.top + 10);
+    bounds.right = Math.min(bounds.right, panel.right - 10);
+    bounds.bottom = Math.min(bounds.bottom, panel.bottom - 10);
+  }
+
+  const fits = (x, y) => x >= bounds.left && y >= bounds.top &&
+    x + popupW <= bounds.right && y + popupH <= bounds.bottom;
+
+  const cardCenterX = rect.left + rect.width / 2;
+  const candidates = [
+    { x: cardCenterX - popupW / 2, y: rect.top - popupH - GAP },          // above
+    { x: rect.right + GAP, y: rect.top - 24 },                             // right
+    { x: rect.left - popupW - GAP, y: rect.top - 24 },                     // left
+    { x: cardCenterX - popupW / 2, y: rect.bottom + GAP }                  // below
+  ];
+  let best = null;
+  for (const candidate of candidates) {
+    if (fits(candidate.x, candidate.y)) { best = candidate; break; }
+  }
+  if (!best) best = candidates[0]; // last resort: clamp the preferred spot
+
+  const maxX = Math.max(bounds.left, bounds.right - popupW);
+  const maxY = Math.max(bounds.top, bounds.bottom - popupH);
+  const x = Math.min(Math.max(best.x, bounds.left), maxX);
+  const y = Math.min(Math.max(best.y, bounds.top), maxY);
+  characterHoverPreview.style.left = Math.round(x) + 'px';
+  characterHoverPreview.style.top = Math.round(y) + 'px';
+}
+
+function showCharacterHoverPreview(card) {
+  if (!characterHoverPreview || !card) return;
+  const item = STORE_CATALOG[card.dataset.item];
+  if (!item) return;
+  hoverPreviewCard = card;
+  populateCharacterHoverPreview(item);
+  positionCharacterHoverPreview();
+  characterHoverPreview.classList.add('visible');
+  characterHoverPreview.setAttribute('aria-hidden', 'false');
+}
+
+function hideCharacterHoverPreview() {
+  hoverPreviewCard = null;
+  if (!characterHoverPreview) return;
+  characterHoverPreview.classList.remove('visible');
+  characterHoverPreview.setAttribute('aria-hidden', 'true');
+}
+
+// Throttled reflow-safe reposition used by mousemove / scroll / resize.
+function scheduleCharacterHoverReposition() {
+  if (!hoverPreviewCard || hoverPreviewFrame) return;
+  hoverPreviewFrame = window.requestAnimationFrame(() => {
+    hoverPreviewFrame = 0;
+    positionCharacterHoverPreview();
+  });
+}
+
+// After refreshStoreUi() replaces all card nodes, re-anchor (and refresh the
+// price line) if the hovered item still exists in the active list.
+function reanchorCharacterHoverPreview() {
+  const card = hoverPreviewCard;
+  if (!card) return;
+  const itemId = card.dataset.item;
+  hideCharacterHoverPreview();
+  const container = activeStoreTab === 'inventory' ? inventoryItemsEl : shopItemsEl;
+  let next = null;
+  if (container && itemId) {
+    const safeId = (window.CSS && CSS.escape) ? CSS.escape(itemId) : itemId.replace(/[^a-zA-Z0-9_-]/g, '');
+    next = container.querySelector('.store-card[data-item="' + safeId + '"]');
+  }
+  if (next && next !== card && next.isConnected) showCharacterHoverPreview(next);
+}
+
+function bindCharacterHoverPreview() {
+  if (!characterHoverPreview) return;
+  const containers = [shopItemsEl, inventoryItemsEl].filter(Boolean);
+  for (const container of containers) {
+    container.addEventListener('mouseover', (event) => {
+      const card = event.target instanceof Element ? event.target.closest('.store-card') : null;
+      if (!card || !container.contains(card)) return;
+      if (card === hoverPreviewCard) return; // already inspecting this card
+      showCharacterHoverPreview(card);
+    });
+    container.addEventListener('mousemove', scheduleCharacterHoverReposition);
+    container.addEventListener('mouseout', (event) => {
+      if (!hoverPreviewCard) return;
+      const card = event.target instanceof Element ? event.target.closest('.store-card') : null;
+      if (card && card !== hoverPreviewCard) return; // moved between two other cards
+      const next = event.relatedTarget;
+      if (next instanceof Element && hoverPreviewCard.contains(next)) return;
+      hideCharacterHoverPreview();
+    });
+  }
+  // Scrolling the tab (or resizing the window) moves the anchored card.
+  for (const scroller of [storeTabContentShop, storeTabContentInventory]) {
+    if (scroller) scroller.addEventListener('scroll', scheduleCharacterHoverReposition, { passive: true });
+  }
+  window.addEventListener('resize', scheduleCharacterHoverReposition);
+  window.addEventListener('blur', hideCharacterHoverPreview);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') hideCharacterHoverPreview();
+  });
+}
+
+// --- demo card renderer mirroring createStoreCard()'s structure ---
+function renderDemo() {
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  for (const item of Object.values(STORE_CATALOG)) {
+    const card = document.createElement('div');
+    card.className = 'store-card';
+    card.dataset.item = item.id;
+    const swatch = document.createElement('div');
+    swatch.className = 'store-swatch sw-image';
+    const img = document.createElement('img');
+    img.className = 'item-preview-img';
+    img.src = itemPreviewSrc(item.id);
+    img.alt = item.name;
+    swatch.appendChild(img);
+    card.appendChild(swatch);
+    const h3 = document.createElement('h3');
+    h3.textContent = item.name;
+    card.appendChild(h3);
+    const desc = document.createElement('p');
+    desc.className = 'store-desc';
+    desc.textContent = item.stats;
+    card.appendChild(desc);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'store-action';
+    btn.textContent = isOwnedItem(item.id) ? 'Owned' : 'Buy — ' + item.cost;
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
+}
+renderDemo();
+bindCharacterHoverPreview();
+</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a36f90e748747d7f',t:'MTc4ODcxOTY0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body></html>

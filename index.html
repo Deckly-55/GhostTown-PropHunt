@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PropHunt.io — Ghost Town</title>
+
+<!-- ES Module Shims for importmap support (older browsers) -->
+<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
+<!-- Import map: load Three.js core and addons from a CDN -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1a1a1a;
+    font-family: sans-serif;
+  }
+
+  /* Three.js canvas fills the window */
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Crosshair - center of FPS view */
+  #crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 5;
+    text-shadow: 0 0 4px rgba(0,0,0,0.9), 0 0 2px black;
+    line-height: 1;
+    user-select: none;
+  }
+  #crosshair::before {
+    content: '+';
+  }
+
+  #hint {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 13px;
+    font-weight: normal;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 7px 14px;
+    border-radius: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  /* Lobby Statistics - live counter top-right */
+  #lobby-stats {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    font-size: 12px;
+    font-family: sans-serif;
+    padding: 8px 10px;
+    border-radius: 6px;
+    z-index: 10;
+    line-height: 1.6;
+    min-width: 130px;
+    pointer-events: none;
+  }
+
+  #lobby-stats div {
+    white-space: nowrap;
+  }
+
+  #roleDisplay {
+    position: fixed;
+    top: 78px;
+    right: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px 10px;
+    border-radius: 6px;
+    z-index: 6;
+  }
+
+  #health-bar-container {
+    position: fixed;
+    top: 110px;
+    right: 10px;
+    width: 150px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 6;
+  }
+
+  #health-bar-container .health-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 18px;
+  }
+
+  #health-bar-bg {
+    flex: 1;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  #health-fill {
+    height: 100%;
+    width: 100%;
+    background: #2ecc71;
+    border-radius: 5px;
+    transition: width 0.2s ease, background 0.3s ease;
+  }
+
+  #health-text {
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* Group 3 — Healing progress bar (centered; hidden until [H] channel runs) */
+  #heal-progress-container {
+    position: fixed;
+    top: 58%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    z-index: 8;
+    pointer-events: none;
+    text-align: center;
+  }
+  #heal-progress-label {
+    color: #7fff8f;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.6), 0 2px 6px rgba(0, 0, 0, 0.8);
+    margin-bottom: 6px;
+  }
+  #heal-progress-bg {
+    width: 100%;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(46, 204, 113, 0.55);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.25);
+  }
+  #heal-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #27ae60, #2ecc71, #7fff8f);
+    border-radius: 8px;
+    transition: width 0.08s linear;
+  }
+
+  /* Group 3 — Weapon / Ammo HUD (bottom-right, hunters only) */
+  #weaponHud {
+    position: fixed;
+    bottom: 46px;
+    right: 10px;
+    min-width: 150px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: white;
+    z-index: 6;
+    pointer-events: none;
+    text-align: right;
+  }
+  #weaponHudName {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f1c40f;
+  }
+  #weaponHudAmmo {
+    font-family: monospace;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  #weaponHudAmmo.ammo-low {
+    color: #e74c3c;
+  }
+  #weaponHudReload {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ffd166;
+    animation: reloadPulse 0.8s infinite;
+    margin-top: 2px;
+  }
+  /* Phase 3 — equipped knife model line (hunters: melee blade, props: thrower) */
+  #weaponHudKnife {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #b8c6d3;
+    margin-top: 3px;
+    min-height: 12px;
+  }
+  @keyframes reloadPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+
+  #leaderboard {
+    position: fixed;
+    top: 145px;
+    right: 10px;
+    width: 220px;
+    color: white;
+    font-size: 13px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 6px;
+    padding: 8px 10px;
+    z-index: 6;
+  }
+
+  #leaderboard h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f1c40f;
+  }
+
+  #leaderboardList,
+  #deathLeaderboardList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #leaderboardList li,
+  #deathLeaderboardList li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .lb-rank { width: 16px; color: #999; }
+  .lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-role { font-size: 11px; padding: 1px 5px; border-radius: 4px; }
+  .lb-role-hunter { background: rgba(231, 76, 60, 0.35); color: #ff8a7a; }
+  .lb-role-prop { background: rgba(52, 152, 219, 0.35); color: #7fc2f2; }
+  .lb-score { font-weight: bold; min-width: 32px; text-align: right; }
+  .lb-me { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+  .lb-empty { color: #999; font-style: italic; }
+
+  #loadingOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1a1a1a;
+    color: white;
+    font-size: 18px;
+    letter-spacing: 0.03em;
+    z-index: 30;
+  }
+
+  #loadingOverlay.loading-error {
+    color: #ff8a7a;
+    font-size: 15px;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(10, 10, 10, 0.92);
+    z-index: 20;
+  }
+
+  .menu-panel {
+    background: #222;
+    padding: 40px 50px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    min-width: 280px;
+  }
+
+  .game-title {
+    color: white;
+    font-size: 42px;
+    margin: 0 0 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .game-subtitle {
+    color: #888;
+    font-size: 14px;
+    margin: 0 0 30px;
+    letter-spacing: 0.05em;
+  }
+
+  .title-io { color: #f1c40f; }
+
+  .menu-btn {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .menu-btn:hover { background: #2f86bd; }
+  .menu-btn-secondary { background: #444; }
+  .menu-btn-secondary:hover { background: #555; }
+
+  .menu-divider {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    margin: 16px 0 10px;
+  }
+
+  /* ------------------------------------------------------------------
+     PRIVATE MATCH — MASSIVE ROOM CODE ENTRY
+     The code box is the single most important input on the menu, so it is
+     given its own full-width row (stacked, not side-by-side) and sized so
+     every character is unmistakable while being typed.
+     ------------------------------------------------------------------ */
+  .join-private-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0 10px;
+  }
+
+  .room-code-label {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(102, 204, 255, 0.85);
+    text-align: center;
+    margin: 0;
+  }
+
+  #room-code-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+
+    /* Massive, unmistakable characters */
+    font-family: "Courier New", Consolas, monospace;
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 12px;
+    text-align: center;
+    text-transform: uppercase;
+
+    /* letter-spacing adds a trailing gap after the last glyph, which shifts
+       the text visually left of centre. Offsetting by half the spacing
+       re-centres the typed code inside the box. */
+    text-indent: 12px;
+
+    padding: 16px 10px;
+    border-radius: 10px;
+    border: 3px solid #4a5a66;
+    background: #0a0f14;
+    color: #f1c40f;
+    outline: none;
+    caret-color: #66ccff;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, color 0.15s;
+  }
+
+  #room-code-input::placeholder {
+    color: #3a4650;
+    font-size: 15px;
+    font-weight: normal;
+    letter-spacing: 3px;
+    text-transform: none;
+  }
+
+  /* Focused state: glowing cyan so the player knows exactly where their
+     keystrokes are landing. */
+  #room-code-input:focus {
+    border-color: #66ccff;
+    background: #06131d;
+    color: #8ee8ff;
+    caret-color: #8ee8ff;
+    box-shadow:
+      0 0 0 3px rgba(102, 204, 255, 0.22),
+      0 0 18px rgba(102, 204, 255, 0.55),
+      inset 0 0 14px rgba(102, 204, 255, 0.14);
+  }
+
+  /* Filled + valid (all 4 characters entered): flip to bright green so the
+     player gets an unambiguous "this code is ready to submit" signal. */
+  #room-code-input.code-complete {
+    border-color: #2ecc71;
+    color: #8affc1;
+    caret-color: #8affc1;
+    box-shadow:
+      0 0 0 3px rgba(46, 204, 113, 0.20),
+      0 0 18px rgba(46, 204, 113, 0.45);
+  }
+
+  /* Rejected code: red shake, cleared by the next keystroke. */
+  #room-code-input.code-error {
+    border-color: #e74c3c;
+    color: #ff8a7a;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.20), 0 0 18px rgba(231, 76, 60, 0.45);
+    animation: codeShake 0.32s ease-in-out;
+  }
+
+  @keyframes codeShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    40% { transform: translateX(7px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* Live "0/4 characters" counter under the box. */
+  #room-code-counter {
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.42);
+    text-align: center;
+    margin: -4px 0 0;
+    transition: color 0.15s;
+  }
+
+  #room-code-counter.ready { color: #2ecc71; }
+
+  #join-error {
+    color: #ff8a7a;
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid rgba(231, 76, 60, 0.55);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 10px 0 0;
+    text-align: left;
+  }
+
+  /* Room code row inside the Lobby Stats overlay */
+  #lobby-room {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  #lobby-room #room-code-display {
+    font-family: monospace;
+    font-weight: bold;
+    color: #f1c40f;
+    letter-spacing: 2px;
+  }
+
+  .death-title {
+    color: #e74c3c;
+    font-size: 32px;
+    margin: 0 0 20px;
+  }
+
+  .death-leaderboard {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .death-leaderboard h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f1c40f;
+  }
+
+  #mapInfo {
+    position: fixed;
+    bottom: 12px;
+    right: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  /* Damage flash overlay */
+  #damageFlash {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 40, 30, 0);
+    pointer-events: none;
+    z-index: 7;
+    transition: background 0.05s;
+  }
+
+  /* Fixed-North COD-style minimap (2D UI overlay) */
+  #minimapCanvas {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 150px;
+    height: 150px;
+    z-index: 6;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+    background: #0b0f0c;
+    pointer-events: none;
+  }
+
+  /* Blocked pointer-lock hint */
+  #lockHint {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    background: rgba(0,0,0,0.65);
+    padding: 10px 16px;
+    border-radius: 6px;
+    pointer-events: auto;
+    z-index: 6;
+    margin-top: 32px;
+  }
+
+  /* Melee slash feedback — centered slash icon shown on successful Prop knife hit */
+  #meleeSlashIndicator {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    color: #ff3b30;
+    font: bold 42px monospace;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 24px rgba(255,59,48,0.7);
+    z-index: 9;
+    pointer-events: none;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.08s, transform 0.08s;
+  }
+
+  /* Top-center HUD: stacked timer (large) + room code (small) */
+  #topCenterHud {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+  /* Room code bar sits directly beneath the match timer for BOTH the host
+     and every non-host player in a private match. Only the "Copy Code"
+     button is host-only. */
+  #roomCodeBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(241,196,15,0.28);
+    pointer-events: auto;
+  }
+  #roomCodeSmallText {
+    color: rgba(255,255,255,0.62);
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+  }
+  /* The 4-char code itself is highlighted so players can read it back to a
+     friend at a glance without hunting for it. */
+  #roomCodeSmallText .rc-code {
+    color: #f1c40f;
+    letter-spacing: 2.5px;
+  }
+  #copy-room-code, #start-match-btn { border:0; border-radius:6px; cursor:pointer; font-weight:bold; }
+  #copy-room-code {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: #f1c40f;
+    color: #171717;
+    font-size: 10px;
+    line-height: 1.1;
+    letter-spacing: .025em;
+    opacity: .9;
+    transition: opacity .15s, background .15s;
+  }
+  #copy-room-code:hover { opacity: 1; }
+  #copy-room-code.copied { background:#2ecc71; color:#fff; }
+  #start-match-btn { padding:7px 10px; }
+  #lobbyPanel { position:fixed; top:78px; left:50%; transform:translateX(-50%); z-index:11; min-width:280px; text-align:center; color:#fff; padding:11px 18px; border-radius:9px; background:rgba(8,22,35,.88); border:1px solid rgba(102,204,255,.65); box-shadow:0 3px 16px rgba(0,0,0,.45); }
+  #lobbyTitle { margin:0 0 3px; font-size:18px; color:#8ee8ff; letter-spacing:.08em; } #lobbyStatus { font-size:13px; color:#d7efff; } #start-match-btn { margin-top:9px; background:#2ecc71; color:#07170d; font-size:14px; }
+
+  /* Match Timer - large and prominent inside topCenterHud */
+  #matchTimer {
+    background: rgba(0,0,0,0.75);
+    color: #f1c40f;
+    font-family: monospace;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    padding: 6px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(241,196,15,0.3);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    min-width: 90px;
+    text-align: center;
+    pointer-events: none;
+  }
+  #matchTimer.timer-warning {
+    color: #ff6b6b;
+    border-color: rgba(255,107,107,0.5);
+    animation: timerPulse 1s infinite;
+  }
+  @keyframes timerPulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Match Over overlay - 10-second intermission */
+  #matchOverOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.85);
+    z-index: 25;
+    pointer-events: none;
+  }
+  #matchOverTitle {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    margin: 0 0 12px;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+  }
+  #matchOverTitle.props-win { color: #2ecc71; }
+  #matchOverTitle.hunters-win { color: #e74c3c; }
+  #matchOverSubtitle {
+    color: rgba(255,255,255,0.7);
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  #matchOverCountdown {
+    color: #f1c40f;
+    font-family: monospace;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    animation: countdownPulse 1s infinite;
+  }
+  @keyframes countdownPulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+  }
+
+  /* Lobby Computer [F] hint — shown to the Host only, within 60 units of the
+     gold terminal in the center of the Staging Ground */
+  #lobbyComputerHint {
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffd700;
+    font-size: 15px;
+    font-weight: bold;
+    background: rgba(20, 16, 4, 0.85);
+    border: 1px solid rgba(255, 215, 0, 0.6);
+    padding: 9px 18px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 6;
+    pointer-events: none;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.25);
+  }
+
+  /* Host Settings overlay — "Among Us" style customization panel opened by the
+     Host pressing [F] near the Lobby Computer */
+  #hostSettingsOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(5, 8, 15, 0.82);
+    z-index: 40;
+  }
+  .host-settings-panel {
+    background: #141a26;
+    border: 2px solid #ffd700;
+    border-radius: 14px;
+    padding: 28px 34px;
+    min-width: 320px;
+    text-align: left;
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.35), inset 0 0 24px rgba(255, 215, 0, 0.06);
+    color: #ffffff;
+  }
+  .host-settings-panel h2 {
+    margin: 0 0 18px;
+    text-align: center;
+    color: #ffd700;
+    letter-spacing: 0.12em;
+    font-size: 22px;
+    text-transform: uppercase;
+  }
+  .host-settings-panel label {
+    display: block;
+    margin: 14px 0 6px;
+    color: #ffd700;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .settings-dropdown {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 15px;
+    font-weight: bold;
+    background: #0e1420;
+    color: #ffd700;
+    border: 2px solid rgba(255, 215, 0, 0.55);
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .settings-dropdown:hover { border-color: #ffd700; }
+  .settings-dropdown option { background: #0e1420; color: #ffffff; }
+  .settings-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .settings-btn {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+  }
+  .settings-btn:active { transform: translateY(1px); }
+  #settingsApplyBtn { background: #ffd700; color: #121212; }
+  #settingsApplyBtn:hover { background: #ffe14d; }
+  #settingsCloseBtn { background: #2c3e50; color: #cfe3f5; }
+  #settingsCloseBtn:hover { background: #3a536b; }
+
+  /* Match Over overlay leaderboard */
+  .match-over-leaderboard {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 16px 24px;
+    max-width: 420px;
+    width: 90%;
+    margin: 10px 0 10px;
+  }
+  .match-over-leaderboard h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #f1c40f;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .match-over-leaderboard ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .match-over-leaderboard li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 15px;
+  }
+  .match-over-leaderboard li:last-child { border-bottom: none; }
+  .match-over-leaderboard .lb-rank { font-weight: bold; color: #f1c40f; width: 36px; }
+  .match-over-leaderboard .lb-name { flex: 1; text-align: left; padding-left: 8px; color: #fff; }
+  .match-over-leaderboard .lb-score { font-weight: bold; color: #2ecc71; width: 50px; text-align: right; }
+  .match-over-leaderboard .lb-role { width: 70px; text-align: right; font-size: 13px; color: #aaa; }
+  .match-over-leaderboard .lb-empty { color: #aaa; text-align: center; padding: 8px; }
+
+  /* ------------------------------------------------------------------
+     Group 4 — In-game Store overlay
+     The panel owns a fixed viewport-safe height. Shop and Inventory are
+     separate scroll regions so neither tab can push content outside the
+     modal or clip long weapon/skin lists.
+     ------------------------------------------------------------------ */
+  #storeOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+    overflow: auto;
+    background: rgba(6, 8, 14, 0.88);
+    z-index: 35;
+  }
+
+  .store-panel {
+    width: min(980px, 94vw);
+    height: min(820px, calc(100vh - 32px));
+    max-height: calc(100vh - 32px);
+    min-height: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(83, 123, 164, 0.13), transparent 34%),
+      linear-gradient(180deg, #161f2d 0%, #0f151f 100%);
+    border: 1px solid rgba(137, 179, 219, 0.24);
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.58), inset 0 0 40px rgba(99, 174, 232, 0.035);
+    padding: 24px 26px 20px;
+    color: #fff;
+  }
+
+  .store-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex: 0 0 auto;
+    margin-bottom: 16px;
+  }
+  .store-header > div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .store-header p {
+    margin: 9px 0 0;
+    color: #91a2b5;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* Sleek dark-mode Shop / Inventory tabs */
+  .store-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px;
+    background: #0b111a;
+    border: 1px solid rgba(125, 164, 198, 0.2);
+    border-radius: 11px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+  .store-tab {
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #8191a3;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    min-width: 112px;
+    padding: 11px 16px;
+    text-transform: uppercase;
+    transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .store-tab:hover {
+    color: #e7f5ff;
+    background: rgba(89, 129, 164, 0.16);
+    transform: translateY(-1px);
+  }
+  .store-tab:focus-visible {
+    outline: 2px solid #66ccff;
+    outline-offset: 2px;
+  }
+  .store-tab.active {
+    color: #eaf8ff;
+    background: linear-gradient(180deg, #263b50 0%, #1b2b3d 100%);
+    border-color: rgba(102, 204, 255, 0.82);
+    box-shadow: 0 0 0 1px rgba(102, 204, 255, 0.12), 0 5px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  #storeCoinBalance {
+    flex: 0 0 auto;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.08);
+    border: 1px solid rgba(241, 196, 15, 0.28);
+    border-radius: 10px;
+    padding: 9px 13px;
+    white-space: nowrap;
+  }
+
+  /* Each tab is an independent scroll container. The inner item wrappers are
+     intentionally not scroll containers, avoiding nested scrollbars. */
+  .store-tab-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding: 2px 8px 8px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #3b5970 #0b111a;
+  }
+  #storeTabContent-shop,
+  #storeTabContent-inventory {
+    overflow-y: auto;
+  }
+  .store-tab-content::-webkit-scrollbar,
+  .store-items::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .store-tab-content::-webkit-scrollbar-track,
+  .store-items::-webkit-scrollbar-track {
+    background: rgba(7, 12, 19, 0.72);
+    border-radius: 10px;
+  }
+  .store-tab-content::-webkit-scrollbar-thumb,
+  .store-items::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #476983, #2a4053);
+    border: 2px solid rgba(7, 12, 19, 0.72);
+    border-radius: 10px;
+  }
+  .store-tab-content::-webkit-scrollbar-thumb:hover,
+  .store-items::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #66ccff, #3e89af);
+  }
+
+  .store-items {
+    min-height: 0;
+    padding: 0 0 4px;
+  }
+  .store-section { margin-bottom: 18px; }
+  .store-section:last-child { margin-bottom: 0; }
+  .store-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin: 4px 0 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8ee8ff;
+  }
+  .store-slot-current {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-align: right;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+    color: #8e9eae;
+  }
+
+  .store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+  }
+  .store-card {
+    min-width: 0;
+    box-sizing: border-box;
+    background: linear-gradient(145deg, rgba(19, 29, 42, 0.98), rgba(12, 18, 27, 0.98));
+    border: 1px solid rgba(151, 188, 218, 0.13);
+    border-radius: 12px;
+    padding: 13px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .store-card:hover {
+    border-color: rgba(102, 204, 255, 0.4);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+    transform: translateY(-2px);
+  }
+  .store-swatch {
+    height: 66px;
+    box-sizing: border-box;
+    padding: 5px;
+    border-radius: 9px;
+    margin-bottom: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Image-bearing swatches (client.js tags them .sw-image) get a taller slot
+     so full-body character art has room to breathe instead of being scaled
+     down to a sliver. */
+  .store-swatch.sw-image {
+    height: 96px;
+    padding: 8px 8px 6px;
+  }
+  .store-swatch .sw-icon {
+    font-size: 29px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.65));
+    line-height: 1;
+  }
+  .store-swatch.shadow { background: #111111; }
+  .store-swatch.steel { background: #7f8c8d; }
+  .store-swatch.sw-skin-default { background: linear-gradient(135deg, #3498db 0%, #e74c3c 100%); }
+  .store-swatch.sw-gun-standard { background: linear-gradient(135deg, #4a5540 0%, #8a9478 100%); }
+  .store-swatch.sw-gun-shotgun { background: linear-gradient(135deg, #503924 0%, #d5a06b 100%); }
+  .store-swatch.sw-gun-vulcan { background: linear-gradient(135deg, #4a2c1a 0%, #ff8c42 100%); }
+  .store-swatch.sw-gun-longshot { background: linear-gradient(135deg, #1d3461 0%, #9fd8ff 100%); }
+  .store-swatch.sw-gun-sidearm { background: linear-gradient(135deg, #4b5563 0%, #9ca3af 100%); }
+  .store-swatch.sw-gun-revolver { background: linear-gradient(135deg, #3b2a20 0%, #d1a679 100%); }
+  .store-swatch.sw-gun-viper { background: linear-gradient(135deg, #1f3d1f 0%, #a2ff9f 100%); }
+  .store-swatch.sw-knife-field { background: linear-gradient(135deg, #6b7280 0%, #e5e7eb 100%); }
+  .store-swatch.sw-knife-carbon { background: linear-gradient(135deg, #111827 0%, #374151 100%); }
+  .store-swatch.sw-knife-throwing { background: linear-gradient(135deg, #33475b 0%, #9fd8ff 100%); }
+  .store-swatch.sw-knife-phantom { background: linear-gradient(135deg, #3b1d5e 0%, #d8a2ff 100%); }
+  /* Item preview imagery — used for skins (shop + inventory) and weapons.
+     Images are letterboxed INSIDE the swatch with object-fit: contain plus
+     padding so a character's head and feet are never clipped by the card
+     slot. Rounded corners are dropped in favour of a soft drop-shadow that
+     hugs the transparent PNG silhouette. (Full art is shown uncropped in the
+     #characterHoverPreview popup — see the hover-inspect block below.) */
+  .store-swatch img.item-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 9px;
+    box-shadow: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+  }
+  .item-preview-img {
+    display: block;
+  }
+  .preview-preview-img {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  .store-card h3 { margin: 0 0 5px; font-size: 15px; line-height: 1.25; }
+  .store-card .store-desc { min-height: 34px; margin: 0 0 10px; color: #8b96a3; font-size: 12px; line-height: 1.42; }
+  .store-action {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(102, 204, 255, 0.32);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    background: #1d6f9b;
+    color: #f4fbff;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .store-action:hover:not(:disabled) {
+    background: #258abf;
+    border-color: #66ccff;
+    transform: translateY(-1px);
+  }
+  .store-action.owned { background: #1e8155; border-color: rgba(91, 230, 156, 0.42); color: #eafff2; }
+  /* Inventory "Equipped" badge overlaid on owned item cards. */
+  .equipped-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(30, 129, 85, 0.9);
+    border: 1px solid rgba(91, 230, 156, 0.5);
+    color: #eafff2;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .equipped-badge.hidden { display: none; }
+  .store-card { position: relative; }
+  .store-action.equipped { background: #334455; border-color: rgba(148, 174, 196, 0.28); color: #b9c9d6; cursor: default; }
+  .store-action:disabled { opacity: 0.78; cursor: not-allowed; }
+
+  /* ------------------------------------------------------------------
+     Full-body hover inspect popup (#characterHoverPreview)
+     A single floating node shared by every Shop/Inventory card. client.js
+     populates it on mouseenter, repositions it with edge-aware clamping,
+     and hides it on mouseleave. pointer-events: none keeps the pointer on
+     the card underneath, so mouseleave always fires reliably.
+     ------------------------------------------------------------------ */
+  #characterHoverPreview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 70; /* above #storeOverlay (35) and menu/starter modals (60) */
+    width: 258px;
+    box-sizing: border-box;
+    padding: 12px 12px 11px;
+    border-radius: 14px;
+    background: rgba(8, 13, 21, 0.82);
+    -webkit-backdrop-filter: blur(12px) saturate(1.25);
+    backdrop-filter: blur(12px) saturate(1.25);
+    border: 1px solid rgba(102, 204, 255, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(102, 204, 255, 0.12),
+      0 0 22px rgba(102, 204, 255, 0.22),
+      0 18px 44px rgba(0, 0, 0, 0.6);
+    color: #eaf6ff;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.97);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0.2s ease;
+    will-change: transform, opacity;
+  }
+  #characterHoverPreview.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  #characterHoverPreview .chp-stage {
+    position: relative;
+    height: 240px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 28%, #2f4b61 0%, #12202e 62%, #0a1018 100%);
+    border: 1px solid rgba(102, 204, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #characterHoverPreview .chp-stage::after {
+    content: '';
+    position: absolute;
+    right: 16%;
+    bottom: 10px;
+    left: 16%;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    filter: blur(4px);
+  }
+  #characterHoverPreview .chp-stage img {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+  }
+  #characterHoverPreview .chp-stage .chp-fallback {
+    position: relative;
+    z-index: 1;
+    font-size: 54px;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  }
+  #characterHoverPreview .chp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 10px 0 2px;
+  }
+  #characterHoverPreview .chp-title {
+    min-width: 0;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #characterHoverPreview .chp-rarity {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0b111a;
+    background: #8fa1b1;
+  }
+  #characterHoverPreview .chp-theme {
+    margin: 0 0 9px;
+    color: #9db0c4;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  #characterHoverPreview .chp-cost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: rgba(102, 204, 255, 0.08);
+    border: 1px solid rgba(102, 204, 255, 0.25);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  #characterHoverPreview .chp-cost .chp-coins { color: #ffd257; }
+  #characterHoverPreview .chp-cost.state-owned { background: rgba(30, 129, 85, 0.16); border-color: rgba(91, 230, 156, 0.35); color: #a7f3c9; }
+  #characterHoverPreview .chp-cost.state-equipped { background: rgba(51, 68, 85, 0.35); border-color: rgba(148, 174, 196, 0.3); color: #b9c9d6; }
+  /* Rarity tinting: border/glow + badge colour shift per tier. client.js sets
+     data-rarity on the popup root (starter|common|rare|epic|legendary). */
+  #characterHoverPreview[data-rarity='common']   { --chp-accent: #5bea9c; }
+  #characterHoverPreview[data-rarity='rare']     { --chp-accent: #66ccff; }
+  #characterHoverPreview[data-rarity='epic']     { --chp-accent: #d8a2ff; }
+  #characterHoverPreview[data-rarity='legendary']{ --chp-accent: #ffd257; }
+  #characterHoverPreview[data-rarity='starter']  { --chp-accent: #93a7bb; }
+  #characterHoverPreview[data-rarity] {
+    border-color: color-mix(in srgb, var(--chp-accent, #66ccff) 45%, rgba(255, 255, 255, 0.08));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--chp-accent, #66ccff) 14%, transparent),
+      0 0 22px color-mix(in srgb, var(--chp-accent, #66ccff) 24%, transparent),
+      0 18px 44px rgba(0, 0, 0, 0.6);
+  }
+  #characterHoverPreview[data-rarity] .chp-rarity { background: var(--chp-accent, #8fa1b1); }
+  @media (max-width: 720px) {
+    #characterHoverPreview { width: 224px; }
+    #characterHoverPreview .chp-stage { height: 200px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #characterHoverPreview { transition: none; }
+  }
+
+  /* Inventory: a dedicated Key 1 / Key 2 loadout control row */
+  .inventory-layout {
+    display: grid;
+    grid-template-columns: minmax(190px, 235px) minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    min-width: 0;
+  }
+  .inventory-preview {
+    position: sticky;
+    top: 0;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 14px;
+    background: rgba(8, 14, 22, 0.74);
+    border: 1px solid rgba(151, 188, 218, 0.16);
+    border-radius: 13px;
+  }
+  .preview-stage {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: radial-gradient(circle at 50% 30%, #2f4b61 0%, #12202e 62%, #0a1018 100%);
+    border: 1px solid rgba(102, 204, 255, 0.2);
+  }
+  .preview-stage::after {
+    content: '';
+    position: absolute;
+    right: 10%;
+    bottom: 12px;
+    left: 10%;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.32);
+    filter: blur(4px);
+  }
+  .preview-figure {
+    position: absolute;
+    inset: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.35));
+  }
+  .preview-figure img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+  .preview-figure.no-image {
+    color: #7f97ab;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    align-items: center;
+  }
+  .preview-skin-name { margin: 11px 0 10px; color: #eaf8ff; font-size: 13px; font-weight: 800; text-align: center; }
+  .preview-loadout { display: grid; gap: 6px; }
+  .preview-slot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.045); font-size: 10px; }
+  .preview-slot-label { color: #8fa1b1; text-transform: uppercase; letter-spacing: 0.08em; }
+  .preview-slot-value { min-width: 0; overflow: hidden; color: #dcecff; text-align: right; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
+  .preview-gear-thumb { width: 20px; height: 20px; flex: 0 0 auto; object-fit: cover; border-radius: 5px; border: 1px solid rgba(151, 188, 218, 0.25); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); vertical-align: middle; }
+  .preview-gear-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .inventory-main { min-width: 0; }
+  .inventory-loadout-slots {
+    margin-bottom: 18px;
+    padding: 13px;
+    background: rgba(10, 17, 26, 0.72);
+    border: 1px solid rgba(102, 204, 255, 0.18);
+    border-radius: 13px;
+  }
+  .inventory-loadout-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; color: #eaf8ff; font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+  .inventory-loadout-heading small { color: #8194a7; font-size: 10px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; }
+  .loadout-slot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .loadout-slot-card { min-width: 0; padding: 10px; border: 1px solid rgba(151, 188, 218, 0.14); border-radius: 10px; background: rgba(24, 36, 50, 0.8); }
+  .loadout-slot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .loadout-slot-header h3 { min-width: 0; margin: 0; overflow: hidden; color: #e7f5ff; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .loadout-slot-key { flex: 0 0 auto; padding: 3px 5px; border-radius: 4px; background: rgba(102, 204, 255, 0.14); color: #8ee8ff; font-family: monospace; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; }
+  .loadout-slot-card > .loadout-slot-current { display: block; margin-bottom: 8px; text-align: left; }
+  .loadout-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .loadout-equip-button { max-width: 100%; overflow: hidden; padding: 7px 8px; border: 1px solid rgba(102, 204, 255, 0.22); border-radius: 6px; background: #162432; color: #cdeeff; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; transition: background 0.18s ease, border-color 0.18s ease; }
+  .loadout-equip-button:hover:not(:disabled) { background: #20516e; border-color: #66ccff; }
+  .loadout-equip-button.active { background: #276847; border-color: rgba(91, 230, 156, 0.55); color: #dfffea; cursor: default; }
+  .loadout-equip-button:disabled { opacity: 0.9; }
+  .loadout-empty { color: #8194a7; font-size: 10px; font-style: italic; }
+
+  #storeStatus {
+    flex: 0 0 auto;
+    min-height: 18px;
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  #storeCloseBtn {
+    flex: 0 0 auto;
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px;
+    border: 1px solid rgba(148, 174, 196, 0.25);
+    border-radius: 8px;
+    background: #26394b;
+    color: #cfe3f5;
+    font-family: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  #storeCloseBtn:hover { background: #34536e; border-color: rgba(102, 204, 255, 0.55); }
+
+  @media (max-width: 720px) {
+    #storeOverlay { padding: 8px; }
+    .store-panel { width: 100%; height: calc(100vh - 16px); max-height: calc(100vh - 16px); padding: 17px 15px 14px; border-radius: 14px; }
+    .store-header { gap: 10px; }
+    .store-header p { font-size: 11px; }
+    .store-tab { min-width: 0; padding: 10px 11px; font-size: 10px; }
+    #storeCoinBalance { font-size: 14px; padding: 8px 9px; }
+    .inventory-layout { grid-template-columns: 1fr; }
+    .inventory-preview { position: relative; }
+    .preview-stage { height: 150px; }
+    .loadout-slot-grid { grid-template-columns: 1fr; }
+    .inventory-loadout-heading { align-items: flex-start; flex-direction: column; }
+    .store-grid { grid-template-columns: 1fr; }
+  }
+
+  #btn-respawn:disabled {
+    background: #555;
+    color: #aaa;
+    cursor: not-allowed;
+    border-color: #777;
+  }
+  /* Health bar pulse when hunter takes melee damage */
+  #health-bar-container.hit-pulse {
+    animation: hpPulse 0.22s ease;
+  }
+  @keyframes hpPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  /* ------------------------------------------------------------------
+     STARTER CHARACTER SELECTION
+     First-run modal where the player picks a Male or Female starter.
+     NOTE: this is UI markup + a small persistence script only. The 3D
+     model itself is loaded by client.js, which should read the choice
+     from localStorage (see the 'prophunt.starterGender' key at the
+     bottom of the body) and load Casual_Character.glb / Casual_w.glb.
+     ------------------------------------------------------------------ */
+  #starterOverlay { z-index: 60; }
+
+  .starter-panel {
+    width: min(620px, 92vw);
+    max-height: calc(100vh - 40px);
+    box-sizing: border-box;
+    overflow: auto;
+    padding: 26px 28px 24px;
+    color: #fff;
+    text-align: center;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(83, 123, 164, 0.16), transparent 40%),
+      linear-gradient(180deg, #161f2d 0%, #0e141d 100%);
+    border: 1px solid rgba(137, 179, 219, 0.26);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.62), inset 0 0 40px rgba(99, 174, 232, 0.04);
+  }
+  .starter-kicker {
+    display: inline-block;
+    margin: 0 0 6px;
+    padding: 4px 10px;
+    border: 1px solid rgba(241, 196, 15, 0.35);
+    border-radius: 20px;
+    background: rgba(241, 196, 15, 0.08);
+    color: #f1c40f;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .starter-title {
+    margin: 0 0 8px;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+  }
+  .starter-title span { color: #66ccff; }
+  .starter-sub {
+    margin: 0 0 20px;
+    color: #91a2b5;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .gender-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 20px;
+    text-align: left;
+  }
+  .gender-card {
+    position: relative;
+    min-width: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .gender-card > input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .gender-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px 18px;
+    box-sizing: border-box;
+    height: 100%;
+    border-radius: 14px;
+    text-align: center;
+    background: linear-gradient(160deg, rgba(20, 31, 44, 0.92), rgba(9, 14, 22, 0.95));
+    border: 1px solid rgba(137, 179, 219, 0.16);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  }
+  .gender-card:hover .gender-card-body {
+    border-color: rgba(102, 204, 255, 0.5);
+    transform: translateY(-2px);
+  }
+  .gender-card input:focus-visible + .gender-card-body {
+    outline: 2px solid #66ccff;
+    outline-offset: 2px;
+  }
+  .gender-card input:checked + .gender-card-body {
+    border-color: #66ccff;
+    background:
+      linear-gradient(160deg, rgba(30, 52, 72, 0.92), rgba(12, 22, 34, 0.95));
+    box-shadow: 0 0 0 1px rgba(102, 204, 255, 0.35), 0 0 24px rgba(102, 204, 255, 0.28), 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+  .gender-avatar {
+    width: 74px;
+    height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 42px;
+    line-height: 1;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
+  .gender-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+  }
+  .gender-avatar.male {
+    background: radial-gradient(circle at 32% 28%, #2f6fb6, #16334f 70%);
+  }
+  .gender-avatar.female {
+    background: radial-gradient(circle at 32% 28%, #b5539b, #4f1d44 70%);
+  }
+  .gender-card input:checked + .gender-card-body .gender-avatar {
+    border-color: #66ccff;
+    box-shadow: 0 0 0 3px rgba(102, 204, 255, 0.18), 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  .gender-radio-dot {
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 2px solid rgba(137, 179, 219, 0.5);
+    background: transparent;
+    flex: 0 0 auto;
+  }
+  .gender-card input:checked + .gender-card-body .gender-radio-dot {
+    border-color: #66ccff;
+    background: radial-gradient(circle at 50% 50%, #66ccff 0 45%, transparent 55%);
+    box-shadow: 0 0 8px rgba(102, 204, 255, 0.6);
+  }
+  .gender-name {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #eaf8ff;
+  }
+  .gender-tagline {
+    color: #8194a7;
+    font-size: 12px;
+    line-height: 1.4;
+    min-height: 32px;
+  }
+  .gender-file {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(10, 17, 26, 0.8);
+    border: 1px solid rgba(102, 204, 255, 0.22);
+    color: #8ee8ff;
+    font-family: monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .gender-select-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(137, 179, 219, 0.18);
+  }
+  .gender-radio-copy { min-width: 0; text-align: left; }
+  .gender-radio-copy b { display: block; font-size: 13px; letter-spacing: 0.05em; }
+  .gender-radio-copy span { color: #8194a7; font-size: 10px; }
+
+  .starter-footer { margin-top: 4px; }
+  .starter-footer p {
+    margin: 0 0 14px;
+    color: #91a2b5;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  #starterConfirmBtn {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(102, 204, 255, 0.4);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #2b8ac0, #1d6f9b);
+    color: #f4fbff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  }
+  #starterConfirmBtn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #37a2d9, #258abf);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(102, 204, 255, 0.25);
+  }
+  #starterConfirmBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+  #starterChangeBtn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px dashed rgba(137, 179, 219, 0.28);
+    border-radius: 9px;
+    background: transparent;
+    color: #8fa1b1;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+  }
+  #starterChangeBtn:hover { color: #e7f5ff; border-color: rgba(102, 204, 255, 0.5); background: rgba(102, 204, 255, 0.06); }
+
+  /* Two-across compact row on the main menu (Character + Store). */
+  .menu-btn-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .menu-btn-pair .menu-btn { margin: 10px 0; }
+
+  @media (max-width: 520px) {
+    .gender-cards { grid-template-columns: 1fr; }
+    .starter-panel { padding: 20px 16px 18px; }
+  }
+</style>
+</head>
+
+<body>
+  <div id="loadingOverlay">Loading assets…</div>
+
+  <div id="damageFlash"></div>
+  <canvas id="minimapCanvas" width="150" height="150" class="hidden"></canvas>
+  <div id="crosshair" class="hidden"></div>
+  <div id="lockHint" class="hidden">
+    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Game Paused</div>
+    <div style="font-size: 12px; color: #ccc; margin-bottom: 15px;">Click background to resume</div>
+    <button class="menu-btn menu-btn-secondary" id="btn-ig-store">Open Store</button>
+    <button class="menu-btn" style="background: #e74c3c;" id="btn-ig-leave">Leave Match</button>
+  </div>
+  <!-- Host-only hint shown while standing near the Lobby Computer -->
+  <div id="lobbyComputerHint" class="hidden">Press [F] to Customize Match Settings</div>
+
+  <div id="main-menu" class="menu-overlay hidden">
+    <div class="menu-panel">
+      <h1 class="game-title">
+        PropHunt<span class="title-io">.io</span>
+      </h1>
+      <p class="game-subtitle">Ghost Town Edition — 3D First Person</p>
+
+      <div id="menu-buttons-root">
+        <button class="menu-btn" id="btn-play-global">🌍 Play Global</button>
+        <button class="menu-btn" id="btn-create-private">🔒 Create Private Match</button>
+
+        <div class="join-private-row">
+          <label class="room-code-label" for="room-code-input">Have a code? Enter it below</label>
+          <input
+            id="room-code-input"
+            type="text"
+            maxlength="4"
+            placeholder="ENTER 4-CHARACTER CODE"
+            autocomplete="off"
+            autocapitalize="characters"
+            autocorrect="off"
+            spellcheck="false"
+            inputmode="text"
+            aria-label="4-character room code"
+            aria-describedby="room-code-counter"
+          />
+          <div id="room-code-counter" aria-live="polite">0 / 4</div>
+          <button class="menu-btn" id="btn-join-private">Join Private Match</button>
+        </div>
+
+        <div id="join-error" class="hidden"></div>
+
+        <hr class="menu-divider" />
+        <p id="menuAccountLabel" style="color:#9aa6b2;font-size:13px;margin:0 0 8px;">Playing as Guest</p>
+        <button class="menu-btn menu-btn-secondary" id="btn-auth">Register / Login</button>
+        <div class="menu-btn-pair">
+          <button class="menu-btn menu-btn-secondary" id="btn-character">👤 Character</button>
+          <button class="menu-btn menu-btn-secondary" id="btn-skins">🛒 Store</button>
+        </div>
+        <button class="menu-btn menu-btn-secondary" id="btn-leaderboard">Leaderboard</button>
+      </div>
+
+      <div id="menu-buttons-zones" class="hidden">
+        <button class="menu-btn zone-btn" data-zone="oldCityCenter" id="btn-zone-oldCityCenter">The Old City Center</button>
+        <button class="menu-btn zone-btn" data-zone="historicRuralEdge" id="btn-zone-historicRuralEdge">The Historic &amp; Rural Edge</button>
+        <button class="menu-btn zone-btn" data-zone="industrialWorkingDistrict" id="btn-zone-industrialWorkingDistrict">The Industrial Working District</button>
+        <button class="menu-btn zone-btn" data-zone="miningForgeHub" id="btn-zone-miningForgeHub">The Mining &amp; Forge Hub</button>
+        <button class="menu-btn zone-btn" data-zone="massiveTransitCorridor" id="btn-zone-massiveTransitCorridor">The Massive Transit Corridor</button>
+        <button class="menu-btn zone-btn" data-zone="giantSouthernBorder" id="btn-zone-giantSouthernBorder">The Giant Southern Border</button>
+        <hr class="menu-divider" />
+        <button class="menu-btn menu-btn-secondary" id="btn-zones-back">Back</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="death-screen" class="menu-overlay hidden">
+    <div class="menu-panel">
+      <h1 class="death-title">Game Over!</h1>
+
+      <div class="death-leaderboard">
+        <h3>Leaderboard</h3>
+        <ul id="deathLeaderboardList">
+          <li class="lb-empty">No scores yet</li>
+        </ul>
+      </div>
+
+      <button class="menu-btn" id="btn-respawn">Respawn</button>
+      <button class="menu-btn menu-btn-secondary" id="btn-main-menu">
+        Main Menu
+      </button>
+    </div>
+  </div>
+
+  <div id="hint" class="hidden">
+    WASD move &nbsp;|&nbsp; Space jump &nbsp;|&nbsp; C / Ctrl crouch &nbsp;|&nbsp; Mouse look &nbsp;|&nbsp;
+    E disguise/unhide &nbsp;|&nbsp; H heal &nbsp;|&nbsp; 1 / 2 weapons &nbsp;|&nbsp; R reload &nbsp;|&nbsp;
+    Click shoot (Hunter) / Click slash (Prop) &nbsp;|&nbsp; G throw knife (Prop) &nbsp;|&nbsp; Right-click aim (Hunter)
+  </div>
+
+  <!-- Lobby Statistics overlay - live counter top-right -->
+  <div id="lobby-stats">
+    <div id="lobby-room">Room: <span id="room-code-display">—</span></div>
+    <div id="lobby-total">Total Players: 0</div>
+    <div id="lobby-hunters">Hunters: 0</div>
+    <div id="lobby-props">Props: 0</div>
+  </div>
+
+  <div id="topCenterHud">
+    <div id="matchTimer" class="hidden">05:00</div>
+    <div id="roomCodeBar" class="hidden">
+      <span id="roomCodeSmallText"></span>
+      <button id="copy-room-code" type="button" class="hidden">Copy Code</button>
+    </div>
+  </div>
+  <div id="lobbyPanel" class="hidden"><h2 id="lobbyTitle">STAGING GROUND</h2><div id="lobbyStatus">Waiting for players…</div><button id="start-match-btn" class="hidden" type="button">Start Match</button></div>
+
+  <div id="roleDisplay" class="hidden">Role: —</div>
+
+  <div id="health-bar-container" class="hidden">
+    <span class="health-label">HP</span>
+    <div id="health-bar-bg">
+      <div id="health-fill"></div>
+    </div>
+    <span id="health-text">100</span>
+  </div>
+
+  <!-- Group 3 — Healing progress (hidden; shown while the [H] channel runs) -->
+  <div id="heal-progress-container" class="hidden">
+    <div id="heal-progress-label">Healing…</div>
+    <div id="heal-progress-bg">
+      <div id="heal-progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Group 3 — Weapon / Ammo HUD (bottom-right; guns for hunters, knives for props) -->
+  <div id="weaponHud" class="hidden">
+    <div id="weaponHudName">Primary</div>
+    <div id="weaponHudAmmo">5 / 5</div>
+    <div id="weaponHudReload" class="hidden">Reloading…</div>
+    <div id="weaponHudKnife"></div>
+  </div>
+
+  <div id="leaderboard" class="hidden">
+    <h3>Leaderboard</h3>
+    <ul id="leaderboardList">
+      <li class="lb-empty">No scores yet</li>
+    </ul>
+  </div>
+
+  <!-- Match Over overlay with 10-second intermission countdown -->
+  <div id="matchOverOverlay" class="hidden">
+    <h1 id="matchOverTitle">PROPS WIN</h1>
+    <p id="matchOverSubtitle">New match starting automatically...</p>
+    <div id="matchOverCountdown" class="hidden">Returning to Lobby in 10...</div>
+    <div class="match-over-leaderboard">
+      <h2>Final Leaderboard</h2>
+      <ul id="matchOverLeaderboardList">
+        <li class="lb-empty">No scores yet</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Host Settings overlay — opened by the Host pressing [F] near the Lobby
+       Computer in the Staging Ground. Apply broadcasts the selection to the
+       whole room via the server. -->
+  <div id="hostSettingsOverlay" class="hidden">
+    <div class="host-settings-panel">
+      <h2>⚙ Host Settings</h2>
+
+      <label for="settingsZoneSelect">District</label>
+      <select id="settingsZoneSelect" class="settings-dropdown">
+        <option value="oldCityCenter">The Old City Center</option>
+        <option value="historicRuralEdge">The Historic &amp; Rural Edge</option>
+        <option value="industrialWorkingDistrict">The Industrial Working District</option>
+        <option value="miningForgeHub">The Mining &amp; Forge Hub</option>
+        <option value="massiveTransitCorridor">The Massive Transit Corridor</option>
+        <option value="giantSouthernBorder">The Giant Southern Border</option>
+      </select>
+
+      <label for="settingsTimeSelect">Match Length</label>
+      <select id="settingsTimeSelect" class="settings-dropdown">
+        <option value="180">3 minutes</option>
+        <option value="300" selected>5 minutes</option>
+        <option value="600">10 minutes</option>
+        <option value="1200">20 minutes</option>
+      </select>
+
+      <div class="settings-buttons">
+        <button class="settings-btn" id="settingsApplyBtn" type="button">Apply Settings</button>
+        <button class="settings-btn" id="settingsCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+<div id="mapInfo">Ghost Town — 4000x4000</div>
+
+  <!-- Group 5 — Authentication Overlay -->
+  <div id="authOverlay" class="hidden menu-overlay">
+    <div class="menu-panel">
+      <h2 style="color: #f1c40f; margin-top: 0; letter-spacing: 0.05em;">ACCOUNT</h2>
+      <p style="color: #9aa6b2; font-size: 13px; margin-bottom: 20px;">Enter a unique username and password.</p>
+      
+      <input id="authUsername" type="text" placeholder="Username" style="display: block; width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 12px; background: #0a0f14; border: 2px solid #4a5a66; color: #f1c40f; font-weight: bold; border-radius: 6px; outline: none;" autocomplete="off" />
+      
+      <input id="authPassword" type="password" placeholder="Password" style="display: block; width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 20px; background: #0a0f14; border: 2px solid #4a5a66; color: #fff; font-weight: bold; border-radius: 6px; outline: none;" />
+      
+      <div id="authError" class="hidden" style="color: #ff8a7a; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.55); padding: 8px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;"></div>
+      
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button id="authLoginBtn" class="menu-btn" style="margin: 0;">Login</button>
+        <button id="authRegisterBtn" class="menu-btn" style="margin: 0; background: #2ecc71; color: #07170d;">Register</button>
+      </div>
+      <button id="authCloseBtn" class="menu-btn menu-btn-secondary" style="margin: 0;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Group 4 — In-game Store overlay (Phase 3: tabbed Shop + Inventory loadout) -->
+  <div id="storeOverlay" class="hidden">
+    <div class="store-panel">
+      <div class="store-header">
+        <div>
+          <nav class="store-tabs" aria-label="Store sections">
+            <button id="storeTab-shop" class="store-tab active" type="button" data-tab="shop">Shop</button>
+            <button id="storeTab-inventory" class="store-tab" type="button" data-tab="inventory">Inventory</button>
+          </nav>
+          <p id="storeTabSubtitle">Spend coins from eliminations and survival. Purchases are saved to your account.</p>
+        </div>
+        <div id="storeCoinBalance">0 Coins</div>
+      </div>
+
+      <div id="storeTabContent-shop" class="store-tab-content" aria-label="Shop catalog">
+        <!-- client.js renders every STORE_CATALOG category here, including
+             both Hunter weapon slots and both Prop knife slots. -->
+        <div id="shopItems" class="store-items"></div>
+      </div>
+
+      <div id="storeTabContent-inventory" class="store-tab-content hidden" aria-label="Inventory loadout">
+        <div class="inventory-layout">
+          <aside class="inventory-preview" aria-label="Character preview">
+            <div class="preview-stage">
+              <div id="previewFigure" class="preview-figure">
+                <img id="previewFigureImg" class="preview-preview-img" src="/images/skins/Casual_Character.png" alt="Equipped character" />
+              </div>
+            </div>
+            <div id="previewSkinName" class="preview-skin-name">Standard Uniform</div>
+            <div id="previewLoadout" class="preview-loadout"></div>
+          </aside>
+
+          <div class="inventory-main">
+            <!-- Dedicated buttons for the two gun slots selected by Keys 1/2,
+                 plus independent primary/secondary Prop knife slots. -->
+            <section id="inventoryLoadoutSlots" class="inventory-loadout-slots" aria-label="Equipped weapon slots"></section>
+            <div id="inventoryItems" class="store-items"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="storeStatus"></div>
+      <button id="storeCloseBtn" type="button">Close Store</button>
+    </div>
+  </div>
+
+  <!-- Full-body hover inspect popup. A single shared node positioned by
+       client.js (#characterHoverPreview logic) whenever a Shop/Inventory
+       card is hovered: uncropped character art, skin title, rarity + theme
+       blurb, and the coin cost. aria-hidden is toggled with visibility. -->
+  <div id="characterHoverPreview" data-rarity="common" aria-hidden="true">
+    <div class="chp-stage">
+      <img id="chpImage" class="hidden" alt="" />
+      <span id="chpFallback" class="chp-fallback hidden" aria-hidden="true">👤</span>
+    </div>
+    <div class="chp-head">
+      <h4 id="chpTitle" class="chp-title">Character</h4>
+      <span id="chpRarity" class="chp-rarity">Common</span>
+    </div>
+    <p id="chpTheme" class="chp-theme">Preview unavailable.</p>
+    <div id="chpCost" class="chp-cost"><span class="chp-coins">🪙</span><span>—</span></div>
+  </div>
+
+  <!-- Starter character selection (shown on first launch until a choice is
+       persisted). UI + lightweight persistence only — client.js reads the
+       chosen gender/model from localStorage to load the actual GLB. -->
+  <div id="starterOverlay" class="menu-overlay hidden">
+    <div class="starter-panel">
+      <span class="starter-kicker">Step 1</span>
+      <h1 class="starter-title">Choose Your <span>Character</span></h1>
+      <p class="starter-sub">
+        Pick the starter you'll enter PropHunt.io as. You can change it later
+        from the <strong>Character</strong> button on the main menu.
+      </p>
+
+      <div class="gender-cards">
+        <label class="gender-card">
+          <input type="radio" name="starter-gender" value="male" />
+          <div class="gender-card-body">
+            <div class="gender-avatar male" aria-hidden="true"><img src="/images/skins/Casual_Character.png" alt="Male starter" /></div>
+            <span class="gender-name">Male</span>
+            <span class="gender-tagline">All-round starter uniform with a confident, classic look.</span>
+            <div class="gender-select-row">
+              <span class="gender-radio-dot" aria-hidden="true"></span>
+              <span class="gender-radio-copy"><b>Select Male</b></span>
+            </div>
+          </div>
+        </label>
+
+        <label class="gender-card">
+          <input type="radio" name="starter-gender" value="female" />
+          <div class="gender-card-body">
+            <div class="gender-avatar female" aria-hidden="true"><img src="/images/skins/Casual_w.png" alt="Female starter" /></div>
+            <span class="gender-name">Female</span>
+            <span class="gender-tagline">Starter uniform cut for a lighter, agile silhouette.</span>
+            <div class="gender-select-row">
+              <span class="gender-radio-dot" aria-hidden="true"></span>
+              <span class="gender-radio-copy"><b>Select Female</b></span>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div class="starter-footer">
+        <p id="starterStatus">Tap a card above to preview your starter.</p>
+        <button id="starterConfirmBtn" type="button" disabled>Confirm &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io (global `io`) must load before the ES module -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Main 3D client as ES module (uses import map for Three.js + GLTFLoader) -->
+  <script type="module" src="client.js"></script>
+
+<script>
+/* ------------------------------------------------------------------
+   STARTER CHARACTER SELECTOR — UI wiring
+   ------------------------------------------------------------------
+   This small, self-contained block only manages the visual
+   first-run modal and persists the player's starter choice to
+   localStorage under two keys so client.js (which loads the actual
+   3D models) can consume them:
+
+       localStorage.getItem('prophunt.starterGender')  // 'male' | 'female'
+       localStorage.getItem('prophunt.starterModel')   // 'Casual_Character.glb' | 'Casual_w.glb'
+
+   The keys above are conventions you can change to whatever the rest
+   of your client expects. If the <body> already hides this overlay by
+   default (class="hidden"), nothing here will force it open on reload.
+------------------------------------------------------------------ */
+(function () {
+  'use strict';
+  var LS_GENDER = 'prophunt.starterGender';
+  var LS_MODEL  = 'prophunt.starterModel';
+  var MODELS = {
+    male:   { label: 'Male',   file: 'Casual_Character.glb' },
+    female: { label: 'Female', file: 'Casual_w.glb' }
+  };
+
+  var overlay   = document.getElementById('starterOverlay');
+  var confirmBtn = document.getElementById('starterConfirmBtn');
+  var statusEl   = document.getElementById('starterStatus');
+  var radios     = Array.prototype.slice.call(document.querySelectorAll('input[name="starter-gender"]'));
+  var charBtn    = document.getElementById('btn-character');
+
+  if (!overlay || !confirmBtn) return; // UI not present — bail silently.
+
+  function currentChoice() {
+    var checked = document.querySelector('input[name="starter-gender"]:checked');
+    return checked ? checked.value : null;
+  }
+
+  function reflectState() {
+    var choice = currentChoice();
+    confirmBtn.disabled = !choice;
+    if (statusEl) {
+      if (choice && MODELS[choice]) {
+        statusEl.textContent = 'Starter selected: ' + MODELS[choice].label;
+      } else {
+        statusEl.textContent = 'Tap a card above to preview your starter.';
+      }
+    }
+  }
+
+  function open() { overlay.classList.remove('hidden'); }
+  function close() { overlay.classList.add('hidden'); }
+
+  function preselect() {
+    var saved = null;
+    try { saved = localStorage.getItem(LS_GENDER); } catch (e) {}
+    var target = (saved === 'male' || saved === 'female') ? saved : 'male';
+    radios.forEach(function (r) {
+      r.checked = (r.value === target);
+    });
+    reflectState();
+  }
+
+  function persist() {
+    var choice = currentChoice();
+    if (!choice || !MODELS[choice]) return;
+    try {
+      localStorage.setItem(LS_GENDER, choice);
+      localStorage.setItem(LS_MODEL, MODELS[choice].file);
+    } catch (e) {}
+    close();
+  }
+
+  radios.forEach(function (r) {
+    r.addEventListener('change', reflectState);
+  });
+  confirmBtn.addEventListener('click', persist);
+
+  if (charBtn) charBtn.addEventListener('click', open);
+
+  var alreadyChosen = false;
+  try { alreadyChosen = !!localStorage.getItem(LS_GENDER); } catch (e) {}
+  // First launch only: show until a starter is confirmed.
+  if (!alreadyChosen) {
+    preselect();
+    open();
+  }
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a36b8b9f2c0b34bc',t:'MTc4ODY3NzQ4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a36e877a6d862169',t:'MTc4ODcwODc3Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a36f8f39acfc7d7f',t:'MTc4ODcxOTU3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

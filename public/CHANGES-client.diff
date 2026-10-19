@@ -1,0 +1,240 @@
+401a402,420
+> // Rarity tiers powering the hover inspect popup. STORE_CATALOG has no explicit
+> // rarity field, so tiers are derived from the coin price bracket. The theme
+> // line shown in the popup combines the tier's flavour text with the item's
+> // own stats blurb.
+> const STORE_RARITY_TIERS = [
+>   { maxCost: 0,    key: 'starter',   label: 'Starter',   theme: 'Base kit issued to every recruit.' },
+>   { maxCost: 650,  key: 'common',    label: 'Common',    theme: 'Everyday field cosmetic.' },
+>   { maxCost: 900,  key: 'rare',      label: 'Rare',      theme: 'Limited-run gear, seen rarely in the lobby.' },
+>   { maxCost: 1500, key: 'epic',      label: 'Epic',      theme: 'Signature collector line with custom flair.' },
+>   { maxCost: Infinity, key: 'legendary', label: 'Legendary', theme: 'Top-shelf flagship — the store’s crown jewel.' }
+> ];
+> function storeItemRarity(item) {
+>   const cost = item && typeof item.cost === 'number' ? item.cost : 0;
+>   for (const tier of STORE_RARITY_TIERS) {
+>     if (cost <= tier.maxCost) return tier;
+>   }
+>   return STORE_RARITY_TIERS[STORE_RARITY_TIERS.length - 1];
+> }
+> 
+481a501,509
+> // --- Full-body hover inspect popup (ids from index.html) ---
+> const characterHoverPreview = document.getElementById('characterHoverPreview');
+> const chpImage = document.getElementById('chpImage');
+> const chpFallback = document.getElementById('chpFallback');
+> const chpTitle = document.getElementById('chpTitle');
+> const chpRarity = document.getElementById('chpRarity');
+> const chpTheme = document.getElementById('chpTheme');
+> const chpCost = document.getElementById('chpCost');
+> const storePanelEl = storeOverlay ? storeOverlay.querySelector('.store-panel') : null;
+2660a2689
+>   hideCharacterHoverPreview(); // card list is about to swap — drop the popup
+2957a2987,2989
+>   // Card nodes were rebuilt; keep the inspector on-screen and up to date if
+>   // the player is still hovering the same item (e.g. coins just changed).
+>   reanchorCharacterHoverPreview();
+2971a3004
+>   hideCharacterHoverPreview();
+2992a3026,3223
+> // Full-body hover inspect popup (#characterHoverPreview)
+> // ===========================
+> // Hovering any Shop/Inventory card (the whole card or just the character-name
+> // heading — both are inside .store-card) reveals the floating inspector:
+> // uncropped character art, skin title, rarity + theme blurb and the coin cost.
+> // Listeners are delegated on the two list containers because refreshStoreUi()
+> // rebuilds card nodes through innerHTML. The popup uses pointer-events: none,
+> // so the pointer always stays over the card underneath and mouseout/mouseleave
+> // fire reliably (no hover flicker when the cursor crosses onto the popup).
+> 
+> let hoverPreviewCard = null;   // card element the popup is currently anchored to
+> let hoverPreviewFrame = 0;     // rAF handle used to throttle repositioning
+> 
+> function populateCharacterHoverPreview(item) {
+>   if (!characterHoverPreview || !item) return;
+>   const rarity = storeItemRarity(item);
+>   const src = itemPreviewSrc(item.id);
+> 
+>   if (chpImage) {
+>     if (src) {
+>       chpImage.src = src;
+>       chpImage.alt = item.name + ' — full preview';
+>       chpImage.classList.remove('hidden');
+>       if (chpFallback) chpFallback.classList.add('hidden');
+>     } else {
+>       chpImage.removeAttribute('src');
+>       chpImage.classList.add('hidden');
+>       if (chpFallback) {
+>         chpFallback.textContent = STORE_ITEM_ICON[item.id] || '🎭';
+>         chpFallback.classList.remove('hidden');
+>       }
+>     }
+>   }
+>   if (chpTitle) {
+>     chpTitle.textContent = item.name;
+>     chpTitle.title = item.name;
+>   }
+>   if (chpRarity) chpRarity.textContent = rarity.label;
+>   if (chpTheme) {
+>     chpTheme.textContent = item.stats ? rarity.theme + ' ' + item.stats : rarity.theme;
+>   }
+>   characterHoverPreview.setAttribute('data-rarity', rarity.key);
+> 
+>   if (chpCost) {
+>     chpCost.classList.remove('state-owned', 'state-equipped');
+>     let label;
+>     if (isEquippedItem(item.id)) {
+>       chpCost.classList.add('state-equipped');
+>       label = 'Equipped — active loadout';
+>     } else if (isOwnedItem(item.id)) {
+>       chpCost.classList.add('state-owned');
+>       label = 'Owned — equip from Inventory';
+>     } else if (item.cost <= 0) {
+>       label = 'FREE — starter reward';
+>     } else if (myCoins < item.cost) {
+>       label = item.cost + ' coins — need ' + (item.cost - myCoins) + ' more';
+>     } else {
+>       label = item.cost + ' coins';
+>     }
+>     chpCost.textContent = '';
+>     const coin = document.createElement('span');
+>     coin.className = 'chp-coins';
+>     coin.textContent = '🪙';
+>     const price = document.createElement('span');
+>     price.textContent = label;
+>     chpCost.appendChild(coin);
+>     chpCost.appendChild(price);
+>   }
+> }
+> 
+> // Edge-aware placement: prefer directly above the card, then flip to the
+> // right, left or below depending on free space. The allowed box starts as
+> // the viewport (minus a margin) and is tightened to the store panel rect
+> // while the store modal is open, so the popup can never overflow past the
+> // screen edge or past the store modal boundaries.
+> function positionCharacterHoverPreview() {
+>   if (!characterHoverPreview || !hoverPreviewCard || !hoverPreviewCard.isConnected) {
+>     hideCharacterHoverPreview();
+>     return;
+>   }
+>   const GAP = 12;
+>   const popupW = characterHoverPreview.offsetWidth;
+>   const popupH = characterHoverPreview.offsetHeight;
+>   const rect = hoverPreviewCard.getBoundingClientRect();
+> 
+>   let bounds = {
+>     left: GAP,
+>     top: GAP,
+>     right: window.innerWidth - GAP,
+>     bottom: window.innerHeight - GAP
+>   };
+>   if (storePanelEl && storeOverlay && !storeOverlay.classList.contains('hidden')) {
+>     const panel = storePanelEl.getBoundingClientRect();
+>     bounds.left = Math.max(bounds.left, panel.left + 10);
+>     bounds.top = Math.max(bounds.top, panel.top + 10);
+>     bounds.right = Math.min(bounds.right, panel.right - 10);
+>     bounds.bottom = Math.min(bounds.bottom, panel.bottom - 10);
+>   }
+> 
+>   const fits = (x, y) => x >= bounds.left && y >= bounds.top &&
+>     x + popupW <= bounds.right && y + popupH <= bounds.bottom;
+> 
+>   const cardCenterX = rect.left + rect.width / 2;
+>   const candidates = [
+>     { x: cardCenterX - popupW / 2, y: rect.top - popupH - GAP },          // above
+>     { x: rect.right + GAP, y: rect.top - 24 },                             // right
+>     { x: rect.left - popupW - GAP, y: rect.top - 24 },                     // left
+>     { x: cardCenterX - popupW / 2, y: rect.bottom + GAP }                  // below
+>   ];
+>   let best = null;
+>   for (const candidate of candidates) {
+>     if (fits(candidate.x, candidate.y)) { best = candidate; break; }
+>   }
+>   if (!best) best = candidates[0]; // last resort: clamp the preferred spot
+> 
+>   const maxX = Math.max(bounds.left, bounds.right - popupW);
+>   const maxY = Math.max(bounds.top, bounds.bottom - popupH);
+>   const x = Math.min(Math.max(best.x, bounds.left), maxX);
+>   const y = Math.min(Math.max(best.y, bounds.top), maxY);
+>   characterHoverPreview.style.left = Math.round(x) + 'px';
+>   characterHoverPreview.style.top = Math.round(y) + 'px';
+> }
+> 
+> function showCharacterHoverPreview(card) {
+>   if (!characterHoverPreview || !card) return;
+>   const item = STORE_CATALOG[card.dataset.item];
+>   if (!item) return;
+>   hoverPreviewCard = card;
+>   populateCharacterHoverPreview(item);
+>   positionCharacterHoverPreview();
+>   characterHoverPreview.classList.add('visible');
+>   characterHoverPreview.setAttribute('aria-hidden', 'false');
+> }
+> 
+> function hideCharacterHoverPreview() {
+>   hoverPreviewCard = null;
+>   if (!characterHoverPreview) return;
+>   characterHoverPreview.classList.remove('visible');
+>   characterHoverPreview.setAttribute('aria-hidden', 'true');
+> }
+> 
+> // Throttled reflow-safe reposition used by mousemove / scroll / resize.
+> function scheduleCharacterHoverReposition() {
+>   if (!hoverPreviewCard || hoverPreviewFrame) return;
+>   hoverPreviewFrame = window.requestAnimationFrame(() => {
+>     hoverPreviewFrame = 0;
+>     positionCharacterHoverPreview();
+>   });
+> }
+> 
+> // After refreshStoreUi() replaces all card nodes, re-anchor (and refresh the
+> // price line) if the hovered item still exists in the active list.
+> function reanchorCharacterHoverPreview() {
+>   const card = hoverPreviewCard;
+>   if (!card) return;
+>   const itemId = card.dataset.item;
+>   hideCharacterHoverPreview();
+>   const container = activeStoreTab === 'inventory' ? inventoryItemsEl : shopItemsEl;
+>   let next = null;
+>   if (container && itemId) {
+>     const safeId = (window.CSS && CSS.escape) ? CSS.escape(itemId) : itemId.replace(/[^a-zA-Z0-9_-]/g, '');
+>     next = container.querySelector('.store-card[data-item="' + safeId + '"]');
+>   }
+>   if (next && next !== card && next.isConnected) showCharacterHoverPreview(next);
+> }
+> 
+> function bindCharacterHoverPreview() {
+>   if (!characterHoverPreview) return;
+>   const containers = [shopItemsEl, inventoryItemsEl].filter(Boolean);
+>   for (const container of containers) {
+>     container.addEventListener('mouseover', (event) => {
+>       const card = event.target instanceof Element ? event.target.closest('.store-card') : null;
+>       if (!card || !container.contains(card)) return;
+>       if (card === hoverPreviewCard) return; // already inspecting this card
+>       showCharacterHoverPreview(card);
+>     });
+>     container.addEventListener('mousemove', scheduleCharacterHoverReposition);
+>     container.addEventListener('mouseout', (event) => {
+>       if (!hoverPreviewCard) return;
+>       const card = event.target instanceof Element ? event.target.closest('.store-card') : null;
+>       if (card && card !== hoverPreviewCard) return; // moved between two other cards
+>       const next = event.relatedTarget;
+>       if (next instanceof Element && hoverPreviewCard.contains(next)) return;
+>       hideCharacterHoverPreview();
+>     });
+>   }
+>   // Scrolling the tab (or resizing the window) moves the anchored card.
+>   for (const scroller of [storeTabContentShop, storeTabContentInventory]) {
+>     if (scroller) scroller.addEventListener('scroll', scheduleCharacterHoverReposition, { passive: true });
+>   }
+>   window.addEventListener('resize', scheduleCharacterHoverReposition);
+>   window.addEventListener('blur', hideCharacterHoverPreview);
+>   document.addEventListener('keydown', (event) => {
+>     if (event.key === 'Escape') hideCharacterHoverPreview();
+>   });
+> }
+> 
+> // ===========================
+3176a3408,3409
+> // Shop/Inventory hover inspect popup (delegated; safe across list re-renders).
+> bindCharacterHoverPreview();

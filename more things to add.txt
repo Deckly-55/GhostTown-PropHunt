@@ -1,0 +1,267 @@
+to do list
+
+1. when player looks up or down and shoot or stab they can damage or bullets or knives go to the looking direction (up,right, down, left)  - Done 
+2. bullet and throwing knives speed
+3. prop players can change any objects near him. and if nothing near player can change into last object he spaceshift.
+4. wepon adding. - done 
+ 4.1 see what wepon have right now.
+ 4.2 changing wepon animation
+5. Reload wepon - Done
+6. Game time - done
+7. skins for prop players and hunters
+8. Add settings like crouch, throw knives. - Done
+9. Create a Lobby room - Done
+10. lobby host can select which map they wanna play {The Old City Center, The Historic & Rural Edge, The Industrial Working District, The Mining & Forge Hub, 
+The Massive Transit Corridor, The Giant Southern Border}. - Done
+11. global players have global time that changes time to time. ex: first it playes for 5 minutes and they next match randomly set for 10 minutes match - Done
+12. Healing option to players. - Done
+13. in private match add code and visible the code player add. - Done
+14. When player clicks "Create match" button he became a host; and he has a private room like Among us; and he can change the time. Also he has unique room code. 
+he can share it with others and they can play. and if a player click "Join game" button he enter a still playing or start to play game with random but not a private room game.
+ ("Join game" button can add a player to normal still playing game and can't add to private unique code game.) - Done
+15. Add bots. if players left alone it means nothing. they get bored and they left and never comeback. so add bots so thats players didn't get bored at all.
+16. Add settings part to change username and other things. also save in database so database can recognise him correctly. and same username can't input.
+17. Game sound
+18. global leaderboard for shows all to who is the best.
+19. Live Deployment
+20. when player deal the damage to other enemy player can see if they acctually damaged it or not.
+21. Hunters and Props had two lobbies, because props wanna more time to hide. hunters game enter time is 10 second behind props.
+22. In wepons zoom distance change for wepons for wepons.
+23. Shift + W means fast run and i wanna adjust jumping speed i mean up and down speed.
+24. Day and night - Done
+25. day and night look like exactly ghost town - 
+26 set scripts for all map - 
+	Fountains - Done
+	Custom Footstep Sounds -  
+27. Ghoul's health bar must be smaller and near the body of ghoul - 
+28. Ghouls walking state complete - 
+29. ghouls attacking action - 
+30. drop coin size change - change to 25 coin earning message. - Done
+31. Attack sound -
+32. Big restricted erea; for a example a massive hole with terrible wind sound. - 
+33. broken wells - 
+34. Hnuters skins and props skins separately store in players inventory or players store. - 
+35. Players store had another part that what they have, like inventory. but it only has what they buy in store. - 
+36. trees and leaf separately - 
+37. little and medium size water ponds. - 
+38. prop players can change their sizes. Means if they wanna change their appearence as a tree they can shapeshift into a tree and if a hunter shoot a branch of tree prop 
+player get damage. also prop player shapeshift into a green leaf hunter had to shoot to leave and not the near erea. - 
+39. a name with w is for female characters. so if player select male use skins named without w in the end of the name.
+40. when landig sound is delayed a bit and fix it - 
+41. 
+ 
+
+
+
+Poly Pizza (poly.pizza) this is the site that download models.
+The 3D Map Architecture (For Deckly & Artist wolf)
+
+
+MAIN STREET BUILDINGS
+ALLEYS AND COURTYARDS
+RESIDENTIAL AREA
+MARKET SQUARE
+WAREHOUSE DISTRICT
+INDUSTRIAL AREA
+CEMETERY AREA
+WELL AREA
+TRAIN STATION
+BARN AREA
+WATER TOWER AREA
+MISCELLANEOUS STRUCTURES
+FENCE LINES
+BOUNDARY WALLS
+MORE BUILDINGS
+MINE SHAFT ENTRANCE
+FORGE AREA
+BLACKSMITH
+CORRAL
+
+
+Southern districts
+	HARBOR & DOCKS
+	COUNTY FAIRGROUNDS
+	RAIL YARD & SOUTH FOUNDRY
+
+
+Rim fences, outskirts and farmland
+	WORLD PERIMETER FENCES
+	EAST RIM ROAD WATCHTOWERS
+	OUTSKIRTS FARMLAND
+
+
+Filler structures
+	FOUNTAINS
+	NEIGHBORHOOD POND & PARK
+	CAFÉ ROW / SMALL SHOPS
+	COMMUNITY GARDEN 
+	GAZEBO
+	PLAYGROUND
+	CHAPEL
+	LIVESTOCK PENS
+	CONSTRUCTION SITE & TOWER CRANE
+	MEMORIAL PARK & CEMETERY EXTENSION
+	TOWN HALL & BANDSTAND
+	TRAIN APPROACH STALLS
+	STABLE & WAGON YARD
+	EAST OUTPOST
+	HAY & EQUIPMENT YAR
+	WORKSHOP / GARAGE ROW
+	COAL YARD & HOPPERS
+	FOUNDRY ANNEX / SCRAP YARD
+	SHEDS & SOUTH WORKSHOPS
+	FREIGHT YARD
+	SOUTH FREIGHT YARDS
+	DEPOT YARDS
+
+
+Notes for the Pack
+For Artist wolf: Because the minimap is now a separate HTML element layered on top of the game, you can easily style it with CSS later. 
+You can add glowing box-shadows, a metallic CSS border, or even a semi-transparent PNG frame that sits over the canvas to make it look like a high-tech tactical watch.
+
+For Hus wolf: This asymmetrical radar is what makes the 3D game so thrilling. Hunters will physically look around in 3D but constantly check their 2D radar for teammates. 
+Props will be hiding in 3D corners, watching the red dots on their radar get closer and closer. The tension will be incredible.
+
+For Hus wolf: That 15-second intermission screen is prime real estate. Once the game is live, this is exactly where we can place a "Double XP" 
+ad button or showcase the top player's premium cosmetics.
+
+For Artist wolf: When the AI builds the weaponType === 'knife' logic, it will likely just use the standard yellow sphere for the projectile. You can easily go 
+into client.js later and swap that specific geometry for a custom 3D knife or shuriken model!
+
+If the pack decides to monetize this later with premium currency, we will skip Stripe and route the real-money transactions through a global merchant of record like 
+Paddle or 2Checkout to ensure international payments clear without a hitch. But before we get to real money, we need to build the foundation: the Virtual Economy.
+
+Old city center map item
+
+Main Street Shops: Search for storefront, bakery, blacksmith, or shop.
+
+Residential Blocks: Search for medieval house, cabin, cottage, or townhouse.
+
+Market Square: Search for market stall, fruit stand, awning, or cart.
+
+Gazebo: Search for gazebo or pavilion.
+
+Fountains: Search for stone fountain or water well.
+
+Cafés: Search for round table, wooden chair, and cafe.
+
+Alleys & Courtyards (Props): Search for wooden barrel, lantern, fence, and crate.
+
+Use a full glTF viewer: Drop your .glb file into gltf-viewer.donmccurdy.com or sandbox.babylonjs.com. In the side panel, you will see a dedicated Animation dropdown menu 
+allowing you to test each clip individually (such as Idle, Walk, Run, Attack, and Death).
+
+gltf-viewer.donmccurdy.com
+https://sandbox.babylonjs.com/
+https://www.mixamo.com/#/
+https://modelviewer.dev/editor/
+
+
+In the Three.js editor top menu, click File > Export OBJ (or Export GLTF).
+
+Head to Mixamo (free with an Adobe account).
+
+Click Upload Character and drop your exported model in.
+
+Follow the chin/wrists/knees marker setup so Mixamo builds the skeleton automatically.
+
+Select a Walking animation, click Download (choose FBX or convert to GLB), then do the same for an Attack animation.
+
+https://www.mixamo.com/#/
+
+1. Adventurer.glb - 650
+2. Astronaut.glb - 3000
+3. Beach_Character.glb - 500
+4. Business_Man.glb - 700
+5. Farmer.glb - 600
+6. Hoodie_Character.glb - 600
+7. King.glb - 1500
+8. Punk.glb - 800
+9. Swat.glb - 950
+10. Worker.glb - 600
+
+11. Adventurer_w.glb - 750
+12. Casual_w2.glb - 500 
+13. Medieval_w.glb - 850
+14. Punk_w.glb - 900
+15. Sci_Fi_Character_w.glb - 2500 
+16. Soldier_w.glb - 850 
+17. Suit_w.glb - 800
+18. Witch_w.glb - 1500
+19. Worker_w.glb - 600
+
+
+
+The Historic & Rural Edge
+
+Abandoned Farms: Search for ruined barn, rusted tractor, creepy scarecrow, or rotting hay bale.
+
+Overgrown Graveyard: Search for cracked tombstone, stone mausoleum, dead tree, or wrought iron fence.
+
+Dilapidated Church: Search for ruined church, broken wooden pew, shattered stained glass window, or fallen bell.
+
+Desolate Windmill: Search for broken windmill, torn grain sack, or rotting wooden wheelbarrow.
+
+Forgotten Orchards (Props): Search for dead apple tree, overgrown pumpkin patch, wooden bucket, or pitchfork.
+
+
+
+The Industrial Working District
+
+Ruined Factories: Search for brick smokestack, broken assembly line, or rusted machinery.
+
+Warehouse Row: Search for giant shipping crate, broken forklift, metal shelf, or wooden pallet.
+
+Scrap Yards: Search for crushed car, scrap metal pile, old tire, or rusty crane.
+
+Worker Slums: Search for boarded-up tenement house, rusted fire escape, or dented trash can.
+
+Abandoned Chemical Plant: Search for toxic waste barrel, leaky pipe, or rusty metal silo.
+
+
+
+The Mining & Forge Hub
+
+Mine Entrances: Search for boarded mine shaft, wooden support beams, or rusty warning sign.
+
+Deep Tunnels (Props): Search for derailed minecart, pickaxe, broken lantern, or dynamite crate.
+
+The Grand Forge: Search for cold anvil, giant extinguished furnace, blacksmith tools, or pile of slag.
+
+Miners' Quarters: Search for ruined bunkhouse, dirty cot, or rusted locker.
+
+Ore Processing Area: Search for rock crusher, broken conveyor belt, or massive pile of coal.
+
+
+
+The Massive Transit Corridor
+
+Derelict Train Station: Search for shattered grand clock, broken ticket booth, or dusty waiting bench.
+
+Ghost Trains: Search for rusted locomotive, abandoned passenger car, or derailed flatbed train.
+
+Overgrown Tracks: Search for railway tracks, broken crossing signal, or rusted railroad switch.
+
+Cargo Loading Docks: Search for shipping container, broken cargo crane, or rusted oil barrel.
+
+Maintenance Depot: Search for train roundhouse, scattered rusted tools, or mechanic pit.
+
+
+
+The Giant Southern Border
+
+The Great Barricade: Search for concrete barrier, abandoned watchtower, barbed wire fence, or massive iron gate.
+
+Abandoned Checkpoints: Search for ruined guard booth, broken boom barrier, or shattered searchlight.
+
+Ruined Outposts: Search for torn military tent, sandbag wall, or rusted radio tower.
+
+Smugglers' Camps: Search for hidden hatch, dirt tunnel entrance, wooden crate, or extinguished campfire.
+
+No Man's Land (Props): Search for rusted tank trap (hedgehog), ruined transport vehicle, danger sign, or dead bush.
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Since this is a ghost town prop hunt, items like barrels, crates, hay bales, and tombstones will make perfect, realistic hiding spots for players trying to blend into the 
+creepy environment.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

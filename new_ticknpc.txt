@@ -1,0 +1,148 @@
+function tickNPCs() {
+  const now = Date.now();
+  const npcDamageRooms = new Set();
+  const eliminationRooms = new Set();
+  const LEASH_RADIUS = 400; 
+
+  for (const [npcId, npc] of Object.entries(npcs)) {
+    if (!npc || !Array.isArray(npc.waypoints) || npc.waypoints.length === 0) continue;
+
+    if (typeof npc.currentWaypoint !== 'number' || npc.currentWaypoint < 0 || npc.currentWaypoint >= npc.waypoints.length) {
+      npc.currentWaypoint = 0;
+    }
+
+    const patrolSpeed = typeof npc.speed === 'number' ? npc.speed : 6;
+    const chaseSpeed = patrolSpeed * 1.5;
+
+    let target = npc.targetId ? players[npc.targetId] : null;
+    if (target) {
+      const targetRoom = getRoomState(target.roomName);
+      if (!target.alive || !targetRoom || targetRoom.state !== 'playing' || (npc.roomName && target.roomName !== npc.roomName)) {
+        target = null;
+      }
+    }
+    if (!target && npc.targetId) {
+      npc.targetId = null;
+      if (npc.state === 'chasing') {
+        npc.state = 'patrolling';
+        npc.currentWaypoint = 0; 
+        io.to(npc.roomName).emit('npcStateChange', { npcId: npc.id, state: 'patrolling' });
+      }
+    }
+
+    const homeX = npc.waypoints[0].x;
+    const homeZ = npc.waypoints[0].z;
+    const distFromHome = Math.hypot(npc.x - homeX, npc.z - homeZ);
+
+    if (npc.state === 'chasing' && distFromHome > LEASH_RADIUS) {
+      npc.isLeashing = true; 
+      npc.state = 'patrolling';
+      npc.targetId = null;
+      target = null;
+      npc.currentWaypoint = 0; 
+      if (npc.roomName) io.to(npc.roomName).emit('npcStateChange', { npcId: npc.id, state: 'patrolling' });
+    }
+
+    let closest = null;
+    let closestId = null;
+    let closestDist = Infinity;
+    const boundRoom = npc.state === 'chasing' ? npc.roomName : null;
+
+    for (const [id, player] of Object.entries(players)) {
+      if (!player.alive) continue;
+      if (boundRoom && player.roomName !== boundRoom) continue;
+      if (getRoomState(player.roomName)?.state !== 'playing') continue;
+
+      const d = Math.hypot(player.x - npc.x, player.z - npc.z);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = player;
+        closestId = id;
+      }
+    }
+
+    if (npc.state !== 'chasing' && !npc.isLeashing && closest && closestDist <= 300) {
+      npc.state = 'chasing';
+      npc.targetId = closestId;
+      npc.roomName = closest.roomName;
+      target = closest;
+      io.to(npc.roomName).emit('npcAggro', { npcId: npc.id, targetId: closestId });
+    }
+
+    if (npc.state === 'chasing' && target) {
+      const dx = target.x - npc.x;
+      const dz = target.z - npc.z;
+      const dist = Math.hypot(dx, dz);
+      const stopDist = 30 - 5; 
+
+      if (dist > stopDist) {
+        const step = Math.min(chaseSpeed, dist - stopDist);
+        npc.x += (dx / dist) * step;
+        npc.z += (dz / dist) * step;
+      }
+    } else {
+      const wp = npc.waypoints[npc.currentWaypoint];
+      if (wp) {
+        const dx = wp.x - npc.x;
+        const dz = wp.z - npc.z;
+        const dist = Math.hypot(dx, dz);
+
+        if (dist < patrolSpeed || dist === 0) {
+          npc.x = wp.x;
+          npc.z = wp.z;
+          npc.currentWaypoint = (npc.currentWaypoint + 1) % npc.waypoints.length;
+          npc.isLeashing = false; 
+        } else {
+          npc.x += (dx / dist) * patrolSpeed;
+          npc.z += (dz / dist) * patrolSpeed;
+        }
+      }
+    }
+
+    if (npc.state !== 'chasing' || !target) continue;
+    const strikeDist = Math.hypot(target.x - npc.x, target.z - npc.z);
+    if (strikeDist > 30) continue; 
+    if (now - (npc.lastAttackAt || 0) < 1000) continue;
+
+    npc.lastAttackAt = now;
+    if (typeof target.health !== 'number') target.health = 100;
+    if (typeof target.npcStrikes !== 'number') target.npcStrikes = 0;
+
+    target.npcStrikes += 1;
+    target.health -= 17; 
+    const lethal = target.npcStrikes >= 6 || target.health <= 0;
+
+    npcDamageRooms.add(target.roomName);
+    io.to(target.roomName).emit('npcAttack', { npcId: npc.id });
+
+    if (lethal) {
+      target.health = 0;
+      target.alive = false;
+      target.isProp = false;
+      target.propId = null;
+      target.npcStrikes = 0;
+
+      io.to(npc.targetId).emit('hit', { health: 0, wasMelee: true, fromNpc: true });
+      io.to(npc.targetId).emit('died');
+      eliminationRooms.add(target.roomName);
+
+      npc.targetId = null;
+      npc.state = 'patrolling';
+      npc.currentWaypoint = 0;
+      io.to(target.roomName).emit('npcStateChange', { npcId: npc.id, state: 'patrolling' });
+    } else {
+      io.to(npc.targetId).emit('hit', { health: target.health, wasMelee: true });
+    }
+  }
+
+  for (const roomName of npcDamageRooms) {
+    io.to(roomName).emit('stateUpdate', buildStateUpdatePayload(roomName));
+  }
+  if (eliminationRooms.size > 0) {
+    sendRadarAfterStateChange();
+    for (const roomName of eliminationRooms) {
+      broadcastLeaderboard(roomName);
+      checkWinConditions(roomName);
+    }
+  }
+}

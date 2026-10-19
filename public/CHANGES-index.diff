@@ -1,0 +1,199 @@
+1067a1068,1069
+>     box-sizing: border-box;
+>     padding: 5px;
+1074a1077,1083
+>   /* Image-bearing swatches (client.js tags them .sw-image) get a taller slot
+>      so full-body character art has room to breathe instead of being scaled
+>      down to a sliver. */
+>   .store-swatch.sw-image {
+>     height: 96px;
+>     padding: 8px 8px 6px;
+>   }
+1095,1096c1104,1108
+<      Images fill the swatch with object-fit so proportions stay intact, with
+<      rounded corners and a soft shadow to sit neatly inside each card. */
+---
+>      Images are letterboxed INSIDE the swatch with object-fit: contain plus
+>      padding so a character's head and feet are never clipped by the card
+>      slot. Rounded corners are dropped in favour of a soft drop-shadow that
+>      hugs the transparent PNG silhouette. (Full art is shown uncropped in the
+>      #characterHoverPreview popup — see the hover-inspect block below.) */
+1100c1112
+<     object-fit: cover;
+---
+>     object-fit: contain;
+1103c1115,1116
+<     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+---
+>     box-shadow: none;
+>     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+1154a1168,1318
+>   /* ------------------------------------------------------------------
+>      Full-body hover inspect popup (#characterHoverPreview)
+>      A single floating node shared by every Shop/Inventory card. client.js
+>      populates it on mouseenter, repositions it with edge-aware clamping,
+>      and hides it on mouseleave. pointer-events: none keeps the pointer on
+>      the card underneath, so mouseleave always fires reliably.
+>      ------------------------------------------------------------------ */
+>   #characterHoverPreview {
+>     position: fixed;
+>     left: 0;
+>     top: 0;
+>     z-index: 60; /* above #storeOverlay (35) so it floats over the store modal */
+>     width: 258px;
+>     box-sizing: border-box;
+>     padding: 12px 12px 11px;
+>     border-radius: 14px;
+>     background: rgba(8, 13, 21, 0.82);
+>     -webkit-backdrop-filter: blur(12px) saturate(1.25);
+>     backdrop-filter: blur(12px) saturate(1.25);
+>     border: 1px solid rgba(102, 204, 255, 0.45);
+>     box-shadow:
+>       0 0 0 1px rgba(102, 204, 255, 0.12),
+>       0 0 22px rgba(102, 204, 255, 0.22),
+>       0 18px 44px rgba(0, 0, 0, 0.6);
+>     color: #eaf6ff;
+>     pointer-events: none;
+>     opacity: 0;
+>     visibility: hidden;
+>     transform: translateY(10px) scale(0.97);
+>     transition:
+>       opacity 0.2s ease,
+>       transform 0.2s ease,
+>       visibility 0.2s ease;
+>     will-change: transform, opacity;
+>   }
+>   #characterHoverPreview.visible {
+>     opacity: 1;
+>     visibility: visible;
+>     transform: translateY(0) scale(1);
+>   }
+>   #characterHoverPreview .chp-stage {
+>     position: relative;
+>     height: 240px;
+>     border-radius: 10px;
+>     overflow: hidden;
+>     background: radial-gradient(circle at 50% 28%, #2f4b61 0%, #12202e 62%, #0a1018 100%);
+>     border: 1px solid rgba(102, 204, 255, 0.22);
+>     display: flex;
+>     align-items: center;
+>     justify-content: center;
+>   }
+>   #characterHoverPreview .chp-stage::after {
+>     content: '';
+>     position: absolute;
+>     right: 16%;
+>     bottom: 10px;
+>     left: 16%;
+>     height: 14px;
+>     border-radius: 50%;
+>     background: rgba(0, 0, 0, 0.35);
+>     filter: blur(4px);
+>   }
+>   #characterHoverPreview .chp-stage img {
+>     position: relative;
+>     z-index: 1;
+>     width: auto;
+>     max-width: 100%;
+>     height: auto;
+>     max-height: 100%;
+>     object-fit: contain;
+>     filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+>   }
+>   #characterHoverPreview .chp-stage .chp-fallback {
+>     position: relative;
+>     z-index: 1;
+>     font-size: 54px;
+>     filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+>   }
+>   #characterHoverPreview .chp-head {
+>     display: flex;
+>     align-items: center;
+>     justify-content: space-between;
+>     gap: 8px;
+>     margin: 10px 0 2px;
+>   }
+>   #characterHoverPreview .chp-title {
+>     min-width: 0;
+>     margin: 0;
+>     font-size: 14px;
+>     font-weight: 800;
+>     line-height: 1.25;
+>     overflow: hidden;
+>     text-overflow: ellipsis;
+>     white-space: nowrap;
+>   }
+>   #characterHoverPreview .chp-rarity {
+>     flex: 0 0 auto;
+>     padding: 3px 7px;
+>     border-radius: 6px;
+>     font-size: 9px;
+>     font-weight: 800;
+>     letter-spacing: 0.08em;
+>     text-transform: uppercase;
+>     color: #0b111a;
+>     background: #8fa1b1;
+>   }
+>   #characterHoverPreview .chp-theme {
+>     margin: 0 0 9px;
+>     color: #9db0c4;
+>     font-size: 11px;
+>     line-height: 1.45;
+>   }
+>   #characterHoverPreview .chp-cost {
+>     display: flex;
+>     align-items: center;
+>     justify-content: center;
+>     gap: 6px;
+>     padding: 7px 8px;
+>     border-radius: 8px;
+>     background: rgba(102, 204, 255, 0.08);
+>     border: 1px solid rgba(102, 204, 255, 0.25);
+>     font-size: 12px;
+>     font-weight: 800;
+>     letter-spacing: 0.04em;
+>   }
+>   #characterHoverPreview .chp-cost .chp-coins { color: #ffd257; }
+>   #characterHoverPreview .chp-cost.state-owned { background: rgba(30, 129, 85, 0.16); border-color: rgba(91, 230, 156, 0.35); color: #a7f3c9; }
+>   #characterHoverPreview .chp-cost.state-equipped { background: rgba(51, 68, 85, 0.35); border-color: rgba(148, 174, 196, 0.3); color: #b9c9d6; }
+>   /* Rarity tinting: border/glow + badge colour shift per tier. client.js sets
+>      data-rarity on the popup root (starter|common|rare|epic|legendary). */
+>   #characterHoverPreview[data-rarity='common']   { --chp-accent: #5bea9c; }
+>   #characterHoverPreview[data-rarity='rare']     { --chp-accent: #66ccff; }
+>   #characterHoverPreview[data-rarity='epic']     { --chp-accent: #d8a2ff; }
+>   #characterHoverPreview[data-rarity='legendary']{ --chp-accent: #ffd257; }
+>   #characterHoverPreview[data-rarity='starter']  { --chp-accent: #93a7bb; }
+>   #characterHoverPreview[data-rarity] {
+>     border-color: color-mix(in srgb, var(--chp-accent, #66ccff) 45%, rgba(255, 255, 255, 0.08));
+>     box-shadow:
+>       0 0 0 1px color-mix(in srgb, var(--chp-accent, #66ccff) 14%, transparent),
+>       0 0 22px color-mix(in srgb, var(--chp-accent, #66ccff) 24%, transparent),
+>       0 18px 44px rgba(0, 0, 0, 0.6);
+>   }
+>   #characterHoverPreview[data-rarity] .chp-rarity { background: var(--chp-accent, #8fa1b1); }
+>   @media (max-width: 720px) {
+>     #characterHoverPreview { width: 224px; }
+>     #characterHoverPreview .chp-stage { height: 200px; }
+>   }
+>   @media (prefers-reduced-motion: reduce) {
+>     #characterHoverPreview { transition: none; }
+>   }
+> 
+1805a1970,1986
+>   </div>
+> 
+>   <!-- Full-body hover inspect popup. A single shared node positioned by
+>        client.js (#characterHoverPreview logic) whenever a Shop/Inventory
+>        card is hovered: uncropped character art, skin title, rarity + theme
+>        blurb, and the coin cost. aria-hidden is toggled with visibility. -->
+>   <div id="characterHoverPreview" data-rarity="common" aria-hidden="true">
+>     <div class="chp-stage">
+>       <img id="chpImage" class="hidden" alt="" />
+>       <span id="chpFallback" class="chp-fallback hidden" aria-hidden="true">👤</span>
+>     </div>
+>     <div class="chp-head">
+>       <h4 id="chpTitle" class="chp-title">Character</h4>
+>       <span id="chpRarity" class="chp-rarity">Common</span>
+>     </div>
+>     <p id="chpTheme" class="chp-theme">Preview unavailable.</p>
+>     <div id="chpCost" class="chp-cost"><span class="chp-coins">🪙</span><span>—</span></div>
