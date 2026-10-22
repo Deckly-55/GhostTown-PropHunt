@@ -599,7 +599,7 @@ function createZoneVisuals(zone) {
       color: 0x00ffff,
       map: texture,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.08,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
@@ -634,27 +634,6 @@ function createZoneVisuals(zone) {
   makeShieldWall(depth, zone.minX, centerZ, Math.PI / 2);
   makeShieldWall(depth, zone.maxX, centerZ, Math.PI / 2);
 
-  const canvas = document.createElement('canvas');
-  canvas.width = 1600;
-  canvas.height = 220;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(5,20,35,0.78)';
-  ctx.fillRect(10, 10, 1580, 200);
-  ctx.strokeStyle = '#00ffff';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(10, 10, 1580, 200);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 72px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(zone.name, 800, 110);
-  const signTexture = new THREE.CanvasTexture(canvas);
-  signTexture.colorSpace = THREE.SRGBColorSpace;
-  const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: signTexture, transparent: true, depthTest: false }));
-  sign.position.set(centerX, 260, centerZ);
-  sign.scale.set(Math.min(1400, Math.max(340, width * 0.7)), 193, 1);
-  zoneVisualGroup.add(sign);
   scene.add(zoneVisualGroup);
 }
 
@@ -883,7 +862,7 @@ function initThree() {
       for (let z = 0; z < 3000; z += TILE_SIZE) {
         const clone = SkeletonUtils.clone(template.scene);
         clone.scale.set(scaleX, 1, scaleZ);
-        clone.position.set(x + (TILE_SIZE / 2), 0, z + (TILE_SIZE / 2));
+        clone.position.set(x + (TILE_SIZE / 2), -10, z + (TILE_SIZE / 2));
         clone.matrixAutoUpdate = false;
         clone.traverse(child => {
           child.matrixAutoUpdate = false;
