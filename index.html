@@ -414,6 +414,104 @@
   .menu-btn-secondary { background: #444; }
   .menu-btn-secondary:hover { background: #555; }
 
+  /* Exit Button styling */
+  .menu-btn-exit {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+  .menu-btn-exit:hover {
+    background: #361717;
+    border-color: rgba(231, 76, 60, 0.5);
+    color: #ff9d9d;
+    box-shadow: 0 0 16px rgba(231, 76, 60, 0.35), inset 0 0 8px rgba(231, 76, 60, 0.15);
+  }
+
+  /* Exit Confirmation Modal */
+  #exitConfirmOverlay {
+    z-index: 50;
+    background: rgba(4, 6, 10, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .exit-panel {
+    background: radial-gradient(circle at 50% 0%, #201316, #0e0e12 80%);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(231, 76, 60, 0.2);
+    padding: 34px 38px 28px;
+    border-radius: 14px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-sizing: border-box;
+    animation: exitModalIn 0.2s ease-out;
+  }
+
+  @keyframes exitModalIn {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .exit-title {
+    color: #ff5252;
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0 0 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(231, 76, 60, 0.5);
+  }
+
+  .exit-msg {
+    color: #d0d7de;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0 0 22px;
+    letter-spacing: 0.02em;
+  }
+
+  .exit-fallback-note {
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid rgba(231, 76, 60, 0.45);
+    color: #ff9d9d;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+
+  .exit-btn-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+  }
+
+  .exit-btn-row .menu-btn {
+    margin: 0;
+    flex: 1;
+    padding: 12px 18px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .menu-btn-exit-yes {
+    background: #a93226;
+    border: 1px solid rgba(231, 76, 60, 0.45);
+    color: white;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+
+  .menu-btn-exit-yes:hover {
+    background: #c0392b;
+    box-shadow: 0 0 18px rgba(231, 76, 60, 0.55);
+  }
+
   .menu-divider {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -1833,6 +1931,7 @@
           <button class="menu-btn menu-btn-secondary" id="btn-skins">🛒 Store</button>
         </div>
         <button class="menu-btn menu-btn-secondary" id="btn-leaderboard">Leaderboard</button>
+        <button class="menu-btn menu-btn-secondary menu-btn-exit" id="btn-exit-game">Exit</button>
       </div>
 
       <div id="menu-buttons-zones" class="hidden">
@@ -1848,6 +1947,68 @@
 
     </div>
   </div>
+
+  <!-- Exit Confirmation Modal -->
+  <div id="exitConfirmOverlay" class="menu-overlay hidden">
+    <div class="menu-panel exit-panel">
+      <h2 class="exit-title">Leave Game</h2>
+      <p class="exit-msg">Are you sure you want to leave the game?</p>
+      <div id="exitFallbackMsg" class="hidden exit-fallback-note">You can safely close this tab now.</div>
+      <div class="exit-btn-row">
+        <button id="btn-exit-yes" class="menu-btn menu-btn-exit-yes" type="button">Yes</button>
+        <button id="btn-exit-no" class="menu-btn menu-btn-secondary" type="button">No</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var btnExit = document.getElementById('btn-exit-game');
+      var exitModal = document.getElementById('exitConfirmOverlay');
+      var btnYes = document.getElementById('btn-exit-yes');
+      var btnNo = document.getElementById('btn-exit-no');
+      var fallbackMsg = document.getElementById('exitFallbackMsg');
+
+      if (!btnExit || !exitModal || !btnYes || !btnNo) return;
+
+      btnExit.addEventListener('click', function () {
+        if (fallbackMsg) fallbackMsg.classList.add('hidden');
+        exitModal.classList.remove('hidden');
+      });
+
+      btnNo.addEventListener('click', function () {
+        exitModal.classList.add('hidden');
+        if (fallbackMsg) fallbackMsg.classList.add('hidden');
+      });
+
+      exitModal.addEventListener('click', function (e) {
+        if (e.target === exitModal) {
+          exitModal.classList.add('hidden');
+          if (fallbackMsg) fallbackMsg.classList.add('hidden');
+        }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !exitModal.classList.contains('hidden')) {
+          exitModal.classList.add('hidden');
+          if (fallbackMsg) fallbackMsg.classList.add('hidden');
+        }
+      });
+
+      btnYes.addEventListener('click', function () {
+        try {
+          window.close();
+        } catch (e) {}
+
+        // Fallback for regular web browsers blocking window.close()
+        setTimeout(function () {
+          if (!window.closed && fallbackMsg) {
+            fallbackMsg.textContent = 'You can safely close this tab now.';
+            fallbackMsg.classList.remove('hidden');
+          }
+        }, 150);
+      });
+    })();
+  </script>
 
   <div id="death-screen" class="menu-overlay hidden">
     <div class="menu-panel">
