@@ -426,9 +426,86 @@
     box-shadow: 0 0 16px rgba(231, 76, 60, 0.35), inset 0 0 8px rgba(231, 76, 60, 0.15);
   }
 
+  /* In-Game Pause Menu */
+  #pauseMenuOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 9000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .pause-menu-panel {
+    background: radial-gradient(circle at 50% 0%, #1e1e26, #0e0e12 80%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 0 24px rgba(241, 196, 15, 0.15);
+    padding: 38px 46px 34px;
+    border-radius: 14px;
+    min-width: 290px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-sizing: border-box;
+    animation: pauseModalIn 0.18s ease-out;
+  }
+
+  @keyframes pauseModalIn {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .pause-menu-title {
+    color: #f1c40f;
+    font-size: 38px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-shadow: 0 0 16px rgba(241, 196, 15, 0.5), 0 2px 10px rgba(0, 0, 0, 0.8);
+  }
+
+  .pause-menu-subtitle {
+    color: #8fa1b1;
+    font-size: 13px;
+    margin: 0 0 24px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pause-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pause-menu-buttons .menu-btn {
+    margin: 0;
+  }
+
+  .pause-btn-resume {
+    background: #27ae60;
+    color: white;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+
+  .pause-btn-resume:hover {
+    background: #2ecc71;
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.45);
+  }
+
   /* Exit Confirmation Modal */
   #exitConfirmOverlay {
-    z-index: 50;
+    z-index: 9500;
     background: rgba(4, 6, 10, 0.88);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -717,6 +794,7 @@
 
   /* Blocked pointer-lock hint */
   #lockHint {
+    display: none !important;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1948,6 +2026,19 @@
     </div>
   </div>
 
+  <!-- In-game Pause Menu -->
+  <div id="pauseMenuOverlay" class="hidden">
+    <div class="pause-menu-panel">
+      <h1 class="pause-menu-title">PAUSED</h1>
+      <p class="pause-menu-subtitle">Ghost Town Edition</p>
+      <div class="pause-menu-buttons">
+        <button id="btn-pause-resume" class="menu-btn pause-btn-resume" type="button">Resume</button>
+        <button id="btn-pause-main-menu" class="menu-btn menu-btn-secondary" type="button">Return to Main Menu</button>
+        <button id="btn-pause-exit" class="menu-btn menu-btn-secondary menu-btn-exit" type="button">Exit Game</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Exit Confirmation Modal -->
   <div id="exitConfirmOverlay" class="menu-overlay hidden">
     <div class="menu-panel exit-panel">
@@ -1962,50 +2053,201 @@
   </div>
   <script>
     (function () {
-      var btnExit = document.getElementById('btn-exit-game');
+      var pauseMenu = document.getElementById('pauseMenuOverlay');
+      var btnPauseResume = document.getElementById('btn-pause-resume');
+      var btnPauseMainMenu = document.getElementById('btn-pause-main-menu');
+      var btnPauseExit = document.getElementById('btn-pause-exit');
+
+      var btnExitGame = document.getElementById('btn-exit-game');
       var exitModal = document.getElementById('exitConfirmOverlay');
-      var btnYes = document.getElementById('btn-exit-yes');
-      var btnNo = document.getElementById('btn-exit-no');
-      var fallbackMsg = document.getElementById('exitFallbackMsg');
+      var btnExitYes = document.getElementById('btn-exit-yes');
+      var btnExitNo = document.getElementById('btn-exit-no');
+      var exitFallback = document.getElementById('exitFallbackMsg');
 
-      if (!btnExit || !exitModal || !btnYes || !btnNo) return;
+      var lastPointerLockExitTime = 0;
 
-      btnExit.addEventListener('click', function () {
-        if (fallbackMsg) fallbackMsg.classList.add('hidden');
-        exitModal.classList.remove('hidden');
-      });
-
-      btnNo.addEventListener('click', function () {
-        exitModal.classList.add('hidden');
-        if (fallbackMsg) fallbackMsg.classList.add('hidden');
-      });
-
-      exitModal.addEventListener('click', function (e) {
-        if (e.target === exitModal) {
-          exitModal.classList.add('hidden');
-          if (fallbackMsg) fallbackMsg.classList.add('hidden');
+      function getGameCanvas() {
+        var canvases = document.querySelectorAll('canvas');
+        for (var i = 0; i < canvases.length; i++) {
+          if (canvases[i].id !== 'minimapCanvas') return canvases[i];
         }
-      });
+        return canvases[0] || document.body;
+      }
 
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !exitModal.classList.contains('hidden')) {
-          exitModal.classList.add('hidden');
-          if (fallbackMsg) fallbackMsg.classList.add('hidden');
+      function isPlayerInMatch() {
+        var splash = document.getElementById('intro-splash');
+        if (splash && splash.style.display !== 'none' && !splash.classList.contains('splash-fade-out')) {
+          return false;
         }
-      });
+        var mainMenu = document.getElementById('main-menu');
+        if (!mainMenu || !mainMenu.classList.contains('hidden')) {
+          return false;
+        }
+        var deathScreen = document.getElementById('death-screen');
+        if (deathScreen && !deathScreen.classList.contains('hidden')) {
+          return false;
+        }
+        var starterOverlay = document.getElementById('starterOverlay');
+        if (starterOverlay && !starterOverlay.classList.contains('hidden')) {
+          return false;
+        }
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay && loadingOverlay.style.display !== 'none' && !loadingOverlay.classList.contains('hidden')) {
+          return false;
+        }
+        return true;
+      }
 
-      btnYes.addEventListener('click', function () {
-        try {
-          window.close();
-        } catch (e) {}
+      function shouldOpenPause() {
+        var store = document.getElementById('storeOverlay');
+        if (store && !store.classList.contains('hidden')) return false;
+        var hostSettings = document.getElementById('hostSettingsOverlay');
+        if (hostSettings && !hostSettings.classList.contains('hidden')) return false;
+        if (exitModal && !exitModal.classList.contains('hidden')) return false;
+        return true;
+      }
 
-        // Fallback for regular web browsers blocking window.close()
-        setTimeout(function () {
-          if (!window.closed && fallbackMsg) {
-            fallbackMsg.textContent = 'You can safely close this tab now.';
-            fallbackMsg.classList.remove('hidden');
+      function openPauseMenu() {
+        if (!pauseMenu || !isPlayerInMatch()) return;
+        if (document.exitPointerLock && document.pointerLockElement) {
+          try { document.exitPointerLock(); } catch (e) {}
+        }
+        pauseMenu.classList.remove('hidden');
+      }
+
+      function closePauseMenuAndResume() {
+        if (pauseMenu) pauseMenu.classList.add('hidden');
+        if (exitModal) exitModal.classList.add('hidden');
+        var canvas = getGameCanvas();
+        if (canvas && canvas.requestPointerLock) {
+          try { canvas.requestPointerLock(); } catch (e) {}
+        }
+      }
+
+      function returnToMainMenu() {
+        if (pauseMenu) pauseMenu.classList.add('hidden');
+        if (exitModal) exitModal.classList.add('hidden');
+        var btnIgLeave = document.getElementById('btn-ig-leave');
+        if (btnIgLeave) {
+          btnIgLeave.click();
+        }
+      }
+
+      // Block mouse clicks / canvas movement from firing through pause overlay
+      if (pauseMenu) {
+        ['click', 'mousedown', 'mouseup', 'contextmenu'].forEach(function (evt) {
+          pauseMenu.addEventListener(evt, function (e) {
+            e.stopPropagation();
+          });
+        });
+      }
+
+      // Pause Menu: Resume button
+      if (btnPauseResume) {
+        btnPauseResume.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closePauseMenuAndResume();
+        });
+      }
+
+      // Pause Menu: Return to Main Menu button
+      if (btnPauseMainMenu) {
+        btnPauseMainMenu.addEventListener('click', function (e) {
+          e.stopPropagation();
+          returnToMainMenu();
+        });
+      }
+
+      // Pause Menu: Exit Game button (opens exit confirmation modal over pause menu)
+      if (btnPauseExit) {
+        btnPauseExit.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (exitFallback) exitFallback.classList.add('hidden');
+          if (exitModal) exitModal.classList.remove('hidden');
+        });
+      }
+
+      // Main Menu: Exit button (opens exit confirmation modal over main menu)
+      if (btnExitGame) {
+        btnExitGame.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (exitFallback) exitFallback.classList.add('hidden');
+          if (exitModal) exitModal.classList.remove('hidden');
+        });
+      }
+
+      // Exit confirmation modal: "No" button
+      if (btnExitNo) {
+        btnExitNo.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (exitModal) exitModal.classList.add('hidden');
+          if (exitFallback) exitFallback.classList.add('hidden');
+        });
+      }
+
+      // Exit confirmation modal: "Yes" button
+      if (btnExitYes) {
+        btnExitYes.addEventListener('click', function (e) {
+          e.stopPropagation();
+          try {
+            window.close();
+          } catch (err) {}
+          setTimeout(function () {
+            if (!window.closed && exitFallback) {
+              exitFallback.textContent = 'You can safely close this tab now.';
+              exitFallback.classList.remove('hidden');
+            }
+          }, 150);
+        });
+      }
+
+      // Close exit confirmation if clicked outside panel
+      if (exitModal) {
+        exitModal.addEventListener('click', function (e) {
+          if (e.target === exitModal) {
+            exitModal.classList.add('hidden');
+            if (exitFallback) exitFallback.classList.add('hidden');
           }
-        }, 150);
+        });
+      }
+
+      // Handle pointer lock change: Esc in 3D game releases pointer lock
+      document.addEventListener('pointerlockchange', function () {
+        var isLocked = !!document.pointerLockElement;
+        if (!isLocked) {
+          lastPointerLockExitTime = Date.now();
+          if (isPlayerInMatch() && shouldOpenPause()) {
+            openPauseMenu();
+          }
+        }
+      });
+
+      // Handle Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' || e.code === 'Escape') {
+          // If exit confirmation popup is open: close it
+          if (exitModal && !exitModal.classList.contains('hidden')) {
+            exitModal.classList.add('hidden');
+            if (exitFallback) exitFallback.classList.add('hidden');
+            return;
+          }
+
+          // Debounce if pointerlockchange unlock just fired for this keypress
+          if (Date.now() - lastPointerLockExitTime < 300) {
+            return;
+          }
+
+          // If pause menu is open: pressing Escape closes it and resumes the match
+          if (pauseMenu && !pauseMenu.classList.contains('hidden')) {
+            closePauseMenuAndResume();
+            return;
+          }
+
+          // If actively in match: open pause menu
+          if (isPlayerInMatch() && shouldOpenPause()) {
+            openPauseMenu();
+          }
+        }
       });
     })();
   </script>
