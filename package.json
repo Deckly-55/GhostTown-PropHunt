@@ -7,7 +7,7 @@
   "scripts": {
     "server": "node server.js",
     "start": "electron .",
-    "build": "electron-packager . GhostTownPropHunt --platform=win32 --arch=x64 --out=E:\\GhostTownBuild --overwrite"
+    "build": "electron-packager . GhostTownPropHunt --platform=win32 --arch=x64 --out=E:\\GhostTownBuild --overwrite --icon=icon.ico"
   },
   "dependencies": {
     "express": "^4.19.2",
