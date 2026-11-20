@@ -324,6 +324,52 @@
     z-index: 20;
   }
 
+  /* Intro Splash Screen */
+  #intro-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.8s ease;
+    pointer-events: auto;
+  }
+
+  #intro-splash.splash-fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #splash-logo {
+    max-width: 85vw;
+    max-height: 85vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Main Menu GIF Background (Main Menu Container ONLY) */
+  #main-menu {
+    background-color: #0a0a0a;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('public/menu-bg.gif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  #main-menu .menu-panel {
+    background: rgba(26, 26, 32, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  }
+
   .menu-panel {
     background: #222;
     padding: 40px 50px;
@@ -1712,6 +1758,27 @@
 </head>
 
 <body>
+  <!-- Intro Splash Screen -->
+  <div id="intro-splash">
+    <img id="splash-logo" src="public/logo.png" alt="PropHunt Ghost Town Logo" />
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('intro-splash');
+      if (!splash) return;
+      var faded = false;
+      function fadeOut() {
+        if (faded) return;
+        faded = true;
+        splash.classList.add('splash-fade-out');
+        setTimeout(function () {
+          splash.style.display = 'none';
+        }, 800);
+      }
+      setTimeout(fadeOut, 3000);
+    })();
+  </script>
+
   <div id="loadingOverlay">Loading assets…</div>
 
   <div id="damageFlash"></div>
