@@ -19,6 +19,12 @@
 </script>
 
 <style>
+  /* Horror Dagger Custom Cursors */
+  :root {
+    --cursor-dagger: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%20fill%3D%22none%22%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%20%3CfeDropShadow%20dx%3D%221%22%20dy%3D%221.5%22%20stdDeviation%3D%221%22%20flood-color%3D%22%23000000%22%20flood-opacity%3D%220.85%22%2F%3E%20%3C%2Ffilter%3E%20%3ClinearGradient%20id%3D%22tipGlow%22%20x1%3D%221%22%20y1%3D%221%22%20x2%3D%228%22%20y2%3D%228%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ff3333%22%2F%3E%20%3Cstop%20offset%3D%2240%25%22%20stop-color%3D%22%23ff7b00%22%2F%3E%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ff7b00%22%20stop-opacity%3D%220%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Cg%20filter%3D%22url(%23shadow)%22%3E%20%3C!--%20Dark%20weapon%20border%20%2F%20outline%20--%3E%20%3Cpath%20d%3D%22M1%201%20L12%206%20L15%207%20L16%209%20L12%2011%20L18%2017%20L21%2016%20L22%2018%20L21%2021%20L18%2022%20L16%2021%20L17%2018%20L11%2012%20L9%2016%20L7%2015%20L6%2012%20Z%22%20fill%3D%22%23080a0e%22%20stroke%3D%22%23000000%22%20stroke-width%3D%220.8%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3C!--%20Blade%20top%20facet%20(burnished%20steel)%20--%3E%20%3Cpolygon%20points%3D%221%2C1%2012%2C6%209%2C9%22%20fill%3D%22%23586375%22%2F%3E%20%3C!--%20Blade%20bottom%20facet%20(shadowed%20dark%20iron)%20--%3E%20%3Cpolygon%20points%3D%221%2C1%209%2C9%206%2C12%22%20fill%3D%22%23242831%22%2F%3E%20%3C!--%20Ridge%20highlight%20--%3E%20%3Cline%20x1%3D%221%22%20y1%3D%221%22%20x2%3D%229%22%20y2%3D%229%22%20stroke%3D%22%239ba6b7%22%20stroke-width%3D%220.6%22%2F%3E%20%3C!--%20Weathered%20dagger%20scratches%20--%3E%20%3Cline%20x1%3D%225%22%20y1%3D%224%22%20x2%3D%227%22%20y2%3D%225%22%20stroke%3D%22%231d212a%22%20stroke-width%3D%220.5%22%2F%3E%20%3Cline%20x1%3D%224%22%20y1%3D%225%22%20x2%3D%225%22%20y2%3D%227%22%20stroke%3D%22%23111318%22%20stroke-width%3D%220.5%22%2F%3E%20%3C!--%20Glowing%20amber%2Fred%20tip%20--%3E%20%3Cpolygon%20points%3D%221%2C1%206%2C3%205%2C5%203%2C6%22%20fill%3D%22url(%23tipGlow)%22%2F%3E%20%3Ccircle%20cx%3D%221.5%22%20cy%3D%221.5%22%20r%3D%221.2%22%20fill%3D%22%23ff3838%22%2F%3E%20%3C!--%20Crossguard%20--%3E%20%3Cpolygon%20points%3D%2215%2C7%2016%2C9%209%2C16%207%2C15%22%20fill%3D%22%231b1e26%22%20stroke%3D%22%23b8860b%22%20stroke-width%3D%220.6%22%2F%3E%20%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%221.1%22%20fill%3D%22%23d4af37%22%2F%3E%20%3C!--%20Grip%20%2F%20Leather%20Wrap%20--%3E%20%3Cpolygon%20points%3D%2211%2C10%2018%2C17%2016%2C19%209%2C12%22%20fill%3D%22%2318191f%22%2F%3E%20%3Cline%20x1%3D%2212%22%20y1%3D%2212%22%20x2%3D%2214%22%20y2%3D%2214%22%20stroke%3D%22%237a1f1d%22%20stroke-width%3D%220.7%22%2F%3E%20%3Cline%20x1%3D%2214%22%20y1%3D%2214%22%20x2%3D%2216%22%20y2%3D%2216%22%20stroke%3D%22%237a1f1d%22%20stroke-width%3D%220.7%22%2F%3E%20%3C!--%20Pommel%20Skull%2FGem%20--%3E%20%3Ccircle%20cx%3D%2219.5%22%20cy%3D%2219.5%22%20r%3D%222.2%22%20fill%3D%22%2315171d%22%20stroke%3D%22%23b8860b%22%20stroke-width%3D%220.7%22%2F%3E%20%3Ccircle%20cx%3D%2219.5%22%20cy%3D%2219.5%22%20r%3D%221.1%22%20fill%3D%22%239e1b1b%22%2F%3E%20%3C%2Fg%3E%20%3C%2Fsvg%3E") 1 1, auto;
+    --cursor-dagger-pointer: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%20fill%3D%22none%22%3E%20%3Cdefs%3E%20%3Cfilter%20id%3D%22fieryGlow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22180%25%22%20height%3D%22180%25%22%3E%20%3CfeDropShadow%20dx%3D%220%22%20dy%3D%220%22%20stdDeviation%3D%221.5%22%20flood-color%3D%22%23ff3b30%22%20flood-opacity%3D%220.95%22%2F%3E%20%3CfeDropShadow%20dx%3D%220%22%20dy%3D%220%22%20stdDeviation%3D%223%22%20flood-color%3D%22%23ff9500%22%20flood-opacity%3D%220.75%22%2F%3E%20%3C%2Ffilter%3E%20%3ClinearGradient%20id%3D%22tipGlowActive%22%20x1%3D%221%22%20y1%3D%221%22%20x2%3D%2210%22%20y2%3D%2210%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fffb00%22%2F%3E%20%3Cstop%20offset%3D%2235%25%22%20stop-color%3D%22%23ff5722%22%2F%3E%20%3Cstop%20offset%3D%2270%25%22%20stop-color%3D%22%23e91e63%22%2F%3E%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23d63031%22%20stop-opacity%3D%220%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Cg%20filter%3D%22url(%23fieryGlow)%22%3E%20%3C!--%20Dark%20weapon%20border%20%2F%20outline%20with%20crimson%20glow%20edge%20--%3E%20%3Cpath%20d%3D%22M1%201%20L12%206%20L15%207%20L16%209%20L12%2011%20L18%2017%20L21%2016%20L22%2018%20L21%2021%20L18%2022%20L16%2021%20L17%2018%20L11%2012%20L9%2016%20L7%2015%20L6%2012%20Z%22%20fill%3D%22%230c0e14%22%20stroke%3D%22%23ff3838%22%20stroke-width%3D%220.9%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3C!--%20Blade%20top%20facet%20(burnished%20steel)%20--%3E%20%3Cpolygon%20points%3D%221%2C1%2012%2C6%209%2C9%22%20fill%3D%22%23717d91%22%2F%3E%20%3C!--%20Blade%20bottom%20facet%20(shadowed%20dark%20iron)%20--%3E%20%3Cpolygon%20points%3D%221%2C1%209%2C9%206%2C12%22%20fill%3D%22%23383d47%22%2F%3E%20%3C!--%20Ridge%20highlight%20--%3E%20%3Cline%20x1%3D%221%22%20y1%3D%221%22%20x2%3D%229%22%20y2%3D%229%22%20stroke%3D%22%23ffdd59%22%20stroke-width%3D%220.8%22%2F%3E%20%3C!--%20Intensely%20glowing%20tip%20and%20edges%20--%3E%20%3Cpolygon%20points%3D%221%2C1%208%2C4%206%2C6%204%2C8%22%20fill%3D%22url(%23tipGlowActive)%22%2F%3E%20%3Ccircle%20cx%3D%221.5%22%20cy%3D%221.5%22%20r%3D%221.5%22%20fill%3D%22%23fffb00%22%2F%3E%20%3C!--%20Crossguard%20with%20gold%20highlights%20--%3E%20%3Cpolygon%20points%3D%2215%2C7%2016%2C9%209%2C16%207%2C15%22%20fill%3D%22%232c2820%22%20stroke%3D%22%23ffd700%22%20stroke-width%3D%220.8%22%2F%3E%20%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%221.3%22%20fill%3D%22%23ffe066%22%2F%3E%20%3C!--%20Grip%20%2F%20Leather%20Wrap%20--%3E%20%3Cpolygon%20points%3D%2211%2C10%2018%2C17%2016%2C19%209%2C12%22%20fill%3D%22%231f1818%22%2F%3E%20%3Cline%20x1%3D%2212%22%20y1%3D%2212%22%20x2%3D%2214%22%20y2%3D%2214%22%20stroke%3D%22%23ff4757%22%20stroke-width%3D%220.8%22%2F%3E%20%3Cline%20x1%3D%2214%22%20y1%3D%2214%22%20x2%3D%2216%22%20y2%3D%2216%22%20stroke%3D%22%23ff4757%22%20stroke-width%3D%220.8%22%2F%3E%20%3C!--%20Pommel%20glowing%20ruby%20--%3E%20%3Ccircle%20cx%3D%2219.5%22%20cy%3D%2219.5%22%20r%3D%222.2%22%20fill%3D%22%231d1215%22%20stroke%3D%22%23ffd700%22%20stroke-width%3D%220.8%22%2F%3E%20%3Ccircle%20cx%3D%2219.5%22%20cy%3D%2219.5%22%20r%3D%221.3%22%20fill%3D%22%23ff2d55%22%2F%3E%20%3C%2Fg%3E%20%3C%2Fsvg%3E") 1 1, pointer;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
@@ -27,6 +33,44 @@
     overflow: hidden;
     background: #1a1a1a;
     font-family: sans-serif;
+    cursor: var(--cursor-dagger);
+  }
+
+  *, *::before, *::after {
+    cursor: inherit;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  summary,
+  .menu-btn,
+  .settings-tab-btn,
+  .settings-close-x,
+  .keybind-keycap-btn,
+  .main-settings-cog,
+  .store-tab-btn,
+  .store-item,
+  .store-action,
+  .loadout-equip-button,
+  [role="button"],
+  [role="tab"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="range"],
+  [type="checkbox"],
+  [type="radio"],
+  .settings-switch,
+  .settings-slider-round {
+    cursor: var(--cursor-dagger-pointer) !important;
+  }
+
+  :disabled, [disabled], .disabled, .store-action:disabled, #starterConfirmBtn:disabled {
+    cursor: not-allowed !important;
   }
 
   /* Three.js canvas fills the window */
@@ -589,6 +633,501 @@
     box-shadow: 0 0 18px rgba(231, 76, 60, 0.55);
   }
 
+  /* Main Menu Settings Cog Button */
+  .main-settings-cog {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(18, 22, 28, 0.85);
+    border: 1px solid rgba(241, 196, 15, 0.35);
+    color: #cfd8dc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 25;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    transition: all 0.25s ease;
+  }
+  .main-settings-cog:hover {
+    color: #f1c40f;
+    border-color: rgba(241, 196, 15, 0.85);
+    background: rgba(28, 34, 44, 0.95);
+    transform: rotate(45deg) scale(1.08);
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.45);
+  }
+
+  /* Settings Modal Overlay & Panel */
+  #settingsModalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 10, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .settings-modal-panel {
+    position: relative;
+    background: radial-gradient(circle at 50% 0%, #1e2029 0%, #0d0f14 85%);
+    border: 1px solid rgba(241, 196, 15, 0.28);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 25px rgba(241, 196, 15, 0.12);
+    border-radius: 14px;
+    width: min(720px, 94vw);
+    height: 85vh;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 26px 32px 22px;
+    box-sizing: border-box;
+    color: #fff;
+    animation: settingsModalIn 0.2s ease-out;
+  }
+
+  /* Settings Background Horror Video & Dark Vignette Overlay */
+  .settings-bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .settings-video-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65);
+    background-image: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .settings-header,
+  .settings-tabs,
+  .settings-content,
+  .settings-footer {
+    position: relative;
+    z-index: 2;
+  }
+
+  @keyframes settingsModalIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .settings-title-wrap h2 {
+    margin: 0 0 3px;
+    color: #f1c40f;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
+  }
+
+  .settings-title-wrap p {
+    margin: 0;
+    color: #8fa1b1;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .settings-close-x {
+    background: transparent;
+    border: none;
+    color: #8fa1b1;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+  .settings-close-x:hover {
+    color: #ff6b6b;
+    background: rgba(231, 76, 60, 0.15);
+  }
+
+  /* Settings Tab Navigation */
+  .settings-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 18px;
+    padding-bottom: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    align-items: flex-end;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .settings-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .settings-tab-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: #8fa1b1;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .settings-tab-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .settings-tab-btn.active {
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.12);
+    border-bottom: 2px solid #f1c40f;
+    box-shadow: none;
+    text-shadow: 0 0 8px rgba(241, 196, 15, 0.35);
+  }
+
+  /* Explicit parity for Controls tab so it matches Game, Sound, Video identically */
+  #tab-btn-controls {
+    padding: 10px 18px;
+    line-height: 1.2;
+    border-bottom: 2px solid transparent;
+  }
+  #tab-btn-controls.active {
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.12);
+    border-bottom: 2px solid #f1c40f;
+  }
+
+  .settings-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    position: relative;
+    padding-right: 6px;
+  }
+  .settings-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .settings-content::-webkit-scrollbar-thumb {
+    background: #3b4656;
+    border-radius: 6px;
+  }
+
+  .settings-pane {
+    display: none;
+  }
+  .settings-pane.active {
+    display: block;
+  }
+
+  /* Setting Row Controls */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .settings-row:last-child {
+    border-bottom: none;
+  }
+  .settings-row-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .settings-row-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #eaf0f6;
+    margin-bottom: 3px;
+  }
+  .settings-row-desc {
+    font-size: 12px;
+    color: #8b96a5;
+    line-height: 1.4;
+  }
+  .settings-row-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 200px;
+    justify-content: flex-end;
+  }
+
+  .settings-badge {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.12);
+    border: 1px solid rgba(241, 196, 15, 0.3);
+    padding: 3px 8px;
+    border-radius: 6px;
+    min-width: 48px;
+    text-align: center;
+  }
+
+  .settings-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #181d24;
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .settings-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f1c40f;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
+    border: 2px solid #14171d;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .settings-range::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    background: #ffd54f;
+  }
+
+  .settings-select {
+    background: #0f131a;
+    color: #ffd700;
+    border: 1px solid rgba(241, 196, 15, 0.4);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Custom Toggle Switch */
+  .settings-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 25px;
+    flex: 0 0 48px;
+  }
+  .settings-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .settings-slider-round {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #252b36;
+    transition: .22s ease;
+    border-radius: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .settings-slider-round:before {
+    position: absolute;
+    content: "";
+    height: 17px;
+    width: 17px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #8fa1b1;
+    transition: .22s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  }
+  .settings-switch input:checked + .settings-slider-round {
+    background-color: #27ae60;
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+  }
+  .settings-switch input:checked + .settings-slider-round:before {
+    transform: translateX(23px);
+    background-color: #fff;
+  }
+
+  /* Controls Keybind Table */
+  .keybind-group-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #f1c40f;
+    margin: 14px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed rgba(241, 196, 15, 0.25);
+  }
+  .keybind-group-title:first-child {
+    margin-top: 0;
+  }
+  .keybind-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+  .keybind-table th {
+    text-align: left;
+    font-size: 11px;
+    color: #8fa1b1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .keybind-table td {
+    padding: 8px;
+    font-size: 13px;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .keybind-table tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .keybind-keycap-btn {
+    background: #14171d;
+    color: #f1c40f;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(241, 196, 15, 0.4);
+    padding: 5px 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+    transition: all 0.15s ease;
+    min-width: 52px;
+    text-align: center;
+  }
+  .keybind-keycap-btn:hover {
+    background: #202630;
+    border-color: #f1c40f;
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+  }
+  .keybind-keycap-btn.rebinding {
+    background: #501616;
+    border-color: #ff4d4d;
+    color: #ff9d9d;
+    animation: rebindPulse 0.8s infinite alternate;
+  }
+  @keyframes rebindPulse {
+    from { box-shadow: 0 0 4px #ff4d4d; }
+    to { box-shadow: 0 0 16px #ff4d4d; }
+  }
+
+  /* Settings Footer */
+  .settings-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .settings-btn-reset {
+    background: transparent;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    color: #ff8a7a;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .settings-btn-reset:hover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: #e74c3c;
+    color: #ffb3a7;
+  }
+  .settings-btn-close {
+    background: linear-gradient(180deg, #2ecc71, #27ae60);
+    border: 1px solid rgba(46, 204, 113, 0.6);
+    color: #07170d;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 12px rgba(46, 204, 113, 0.3);
+  }
+  .settings-btn-close:hover {
+    background: linear-gradient(180deg, #3adb7f, #2ecc71);
+    box-shadow: 0 0 18px rgba(46, 204, 113, 0.55);
+  }
+
+  /* FPS Counter in gameplay */
+  #fpsCounter {
+    position: fixed;
+    top: 12px;
+    left: 175px;
+    background: rgba(5, 7, 10, 0.75);
+    backdrop-filter: blur(4px);
+    color: #2ecc71;
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.25);
+    z-index: 15;
+    pointer-events: none;
+    transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* Hint user-hidden */
+  #hint.user-hidden {
+    display: none !important;
+  }
+
   .menu-divider {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -1111,14 +1650,73 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
     background:
-      radial-gradient(circle at 12% 0%, rgba(83, 123, 164, 0.13), transparent 34%),
-      linear-gradient(180deg, #161f2d 0%, #0f151f 100%);
-    border: 1px solid rgba(137, 179, 219, 0.24);
+      radial-gradient(ellipse at 50% 0%, rgba(255, 140, 30, 0.09) 0%, transparent 45%),
+      radial-gradient(circle at 10% 10%, rgba(64, 224, 208, 0.04) 0%, transparent 40%),
+      linear-gradient(180deg, #181412 0%, #100e0d 50%, #0a0909 100%);
+    border: 2px solid rgba(184, 134, 11, 0.42);
     border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.58), inset 0 0 40px rgba(99, 174, 232, 0.035);
+    box-shadow:
+      0 25px 75px rgba(0, 0, 0, 0.95),
+      0 -6px 36px rgba(255, 130, 20, 0.16),
+      inset 0 1px 0 rgba(255, 215, 0, 0.2),
+      inset 0 12px 32px rgba(255, 130, 20, 0.1),
+      inset 0 0 60px rgba(0, 0, 0, 0.9);
     padding: 24px 26px 20px;
-    color: #fff;
+    color: #f0eae1;
+    animation: cursedLanternFlicker 7s ease-in-out infinite alternate;
+  }
+
+  /* Subtle warm lantern/ember glow strip at the top of the Cursed Market */
+  .store-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255, 120, 20, 0.3) 15%, rgba(255, 175, 40, 0.9) 50%, rgba(255, 120, 20, 0.3) 85%, transparent);
+    filter: drop-shadow(0 0 8px rgba(255, 140, 20, 0.85));
+    pointer-events: none;
+    z-index: 3;
+    animation: emberFlameDrift 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes cursedLanternFlicker {
+    0%, 100% {
+      box-shadow:
+        0 25px 75px rgba(0, 0, 0, 0.95),
+        0 -8px 40px rgba(255, 130, 20, 0.18),
+        inset 0 1px 0 rgba(255, 215, 0, 0.22),
+        inset 0 14px 38px rgba(255, 130, 20, 0.12),
+        inset 0 0 65px rgba(0, 0, 0, 0.9);
+      border-color: rgba(184, 134, 11, 0.45);
+    }
+    30% {
+      box-shadow:
+        0 25px 75px rgba(0, 0, 0, 0.95),
+        0 -5px 28px rgba(255, 100, 10, 0.11),
+        inset 0 1px 0 rgba(255, 215, 0, 0.14),
+        inset 0 8px 22px rgba(255, 100, 15, 0.07),
+        inset 0 0 65px rgba(0, 0, 0, 0.9);
+      border-color: rgba(160, 110, 10, 0.35);
+    }
+    65% {
+      box-shadow:
+        0 25px 75px rgba(0, 0, 0, 0.95),
+        0 -11px 48px rgba(255, 150, 25, 0.24),
+        inset 0 1px 0 rgba(255, 215, 0, 0.26),
+        inset 0 16px 44px rgba(255, 150, 30, 0.16),
+        inset 0 0 65px rgba(0, 0, 0, 0.9);
+      border-color: rgba(212, 155, 20, 0.52);
+    }
+  }
+
+  @keyframes emberFlameDrift {
+    0% { opacity: 0.65; transform: scaleX(0.96); }
+    50% { opacity: 0.95; transform: scaleX(1.02); }
+    100% { opacity: 0.75; transform: scaleX(0.98); }
   }
 
   .store-header {
@@ -1128,6 +1726,46 @@
     gap: 20px;
     flex: 0 0 auto;
     margin-bottom: 16px;
+    position: relative;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(184, 134, 11, 0.22);
+    overflow: hidden;
+  }
+  /* Drifting dark mist behind the store header */
+  .store-header::before {
+    content: '';
+    position: absolute;
+    inset: -30px -60px;
+    background:
+      radial-gradient(ellipse 45% 45% at 20% 40%, rgba(55, 30, 15, 0.55) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 50% at 75% 55%, rgba(15, 40, 38, 0.45) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 60% at 50% 50%, rgba(20, 18, 22, 0.75) 0%, transparent 75%);
+    filter: blur(16px);
+    pointer-events: none;
+    z-index: 0;
+    animation: headerMistDrift 16s ease-in-out infinite alternate;
+  }
+  .store-header > * {
+    position: relative;
+    z-index: 1;
+  }
+  @keyframes headerMistDrift {
+    0% { transform: translate3d(-18%, 0, 0) scale(1); opacity: 0.45; }
+    50% { transform: translate3d(6%, -4px, 0) scale(1.12); opacity: 0.78; }
+    100% { transform: translate3d(20%, 3px, 0) scale(1.04); opacity: 0.52; }
+  }
+
+  .cursed-market-brand {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    color: #f1c40f;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .store-header > div:first-child {
     min-width: 0;
@@ -1135,33 +1773,34 @@
   }
   .store-header p {
     margin: 9px 0 0;
-    color: #91a2b5;
+    color: #a49685;
     font-size: 13px;
     line-height: 1.45;
+    letter-spacing: 0.02em;
   }
 
-  /* Sleek dark-mode Shop / Inventory tabs */
+  /* Gothic Cursed Market Shop / Inventory tabs */
   .store-tabs {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 5px;
-    background: #0b111a;
-    border: 1px solid rgba(125, 164, 198, 0.2);
+    background: #0d0a08;
+    border: 1px solid rgba(184, 134, 11, 0.32);
     border-radius: 11px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
   }
   .store-tab {
     appearance: none;
     border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
-    color: #8191a3;
+    color: #9d9082;
     cursor: pointer;
     font-family: inherit;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    font-weight: 800;
+    letter-spacing: 0.16em;
     line-height: 1;
     min-width: 112px;
     padding: 11px 16px;
@@ -1169,19 +1808,21 @@
     transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
   }
   .store-tab:hover {
-    color: #e7f5ff;
-    background: rgba(89, 129, 164, 0.16);
+    color: #fff4ea;
+    background: rgba(184, 134, 11, 0.14);
+    border-color: rgba(241, 196, 15, 0.3);
     transform: translateY(-1px);
   }
   .store-tab:focus-visible {
-    outline: 2px solid #66ccff;
+    outline: 2px solid #f1c40f;
     outline-offset: 2px;
   }
   .store-tab.active {
-    color: #eaf8ff;
-    background: linear-gradient(180deg, #263b50 0%, #1b2b3d 100%);
-    border-color: rgba(102, 204, 255, 0.82);
-    box-shadow: 0 0 0 1px rgba(102, 204, 255, 0.12), 0 5px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    color: #ffd866;
+    background: linear-gradient(180deg, #2f2216 0%, #18120c 100%);
+    border-color: rgba(241, 196, 15, 0.75);
+    box-shadow: 0 0 14px rgba(241, 196, 15, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-shadow: 0 0 8px rgba(241, 196, 15, 0.4);
   }
 
   #storeCoinBalance {
@@ -1190,11 +1831,13 @@
     font-size: 18px;
     font-weight: bold;
     color: #f1c40f;
-    background: rgba(241, 196, 15, 0.08);
-    border: 1px solid rgba(241, 196, 15, 0.28);
+    background: linear-gradient(180deg, rgba(45, 33, 16, 0.9) 0%, rgba(20, 15, 8, 0.95) 100%);
+    border: 1px solid rgba(241, 196, 15, 0.45);
     border-radius: 10px;
-    padding: 9px 13px;
+    padding: 9px 15px;
     white-space: nowrap;
+    text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 215, 0, 0.2);
   }
 
   /* Each tab is an independent scroll container. The inner item wrappers are
@@ -1220,18 +1863,18 @@
   }
   .store-tab-content::-webkit-scrollbar-track,
   .store-items::-webkit-scrollbar-track {
-    background: rgba(7, 12, 19, 0.72);
+    background: rgba(10, 8, 7, 0.85);
     border-radius: 10px;
   }
   .store-tab-content::-webkit-scrollbar-thumb,
   .store-items::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #476983, #2a4053);
-    border: 2px solid rgba(7, 12, 19, 0.72);
+    background: linear-gradient(180deg, #6e4e26, #3b2a14);
+    border: 2px solid rgba(10, 8, 7, 0.85);
     border-radius: 10px;
   }
   .store-tab-content::-webkit-scrollbar-thumb:hover,
   .store-items::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #66ccff, #3e89af);
+    background: linear-gradient(180deg, #f1c40f, #a06e18);
   }
 
   .store-items {
@@ -1250,7 +1893,8 @@
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #8ee8ff;
+    color: #e6b840;
+    text-shadow: 0 0 8px rgba(230, 160, 30, 0.35);
   }
   .store-slot-current {
     min-width: 0;
@@ -1270,20 +1914,50 @@
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 12px;
   }
+  /* Worn dark metallic/wood relic plaque styling */
   .store-card {
     min-width: 0;
     box-sizing: border-box;
-    background: linear-gradient(145deg, rgba(19, 29, 42, 0.98), rgba(12, 18, 27, 0.98));
-    border: 1px solid rgba(151, 188, 218, 0.13);
+    background:
+      linear-gradient(175deg, rgba(28, 22, 17, 0.96) 0%, rgba(15, 13, 11, 0.98) 55%, rgba(9, 10, 12, 0.98) 100%),
+      radial-gradient(circle at 50% 0%, rgba(255, 140, 40, 0.07), transparent 70%);
+    border: 1px solid rgba(180, 130, 70, 0.28);
     border-radius: 12px;
     padding: 13px;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 215, 0, 0.1),
+      inset 0 0 20px rgba(0, 0, 0, 0.65);
+    transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.22s ease;
+    position: relative;
+    overflow: hidden;
   }
+  .store-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(241, 196, 15, 0.35), transparent);
+    pointer-events: none;
+  }
+  /* Relic cards lift slightly and glow eerie amber on hover */
   .store-card:hover {
-    border-color: rgba(102, 204, 255, 0.4);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.012);
+    border-color: rgba(241, 196, 15, 0.72);
+    box-shadow:
+      0 14px 30px rgba(0, 0, 0, 0.75),
+      0 0 22px rgba(241, 160, 25, 0.42),
+      inset 0 0 16px rgba(241, 140, 25, 0.12);
+  }
+  /* Alternating cards glow ghostly teal on hover */
+  .store-card:nth-child(even):hover {
+    border-color: rgba(80, 230, 210, 0.72);
+    box-shadow:
+      0 14px 30px rgba(0, 0, 0, 0.75),
+      0 0 22px rgba(64, 224, 208, 0.42),
+      inset 0 0 16px rgba(64, 224, 208, 0.12);
   }
   .store-swatch {
     height: 66px;
@@ -1291,7 +1965,9 @@
     padding: 5px;
     border-radius: 9px;
     margin-bottom: 11px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(160, 115, 65, 0.26);
+    background: radial-gradient(circle at 50% 50%, rgba(22, 18, 15, 0.95), rgba(7, 7, 8, 0.98));
+    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1343,49 +2019,136 @@
   .preview-preview-img {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
   }
-  .store-card h3 { margin: 0 0 5px; font-size: 15px; line-height: 1.25; }
-  .store-card .store-desc { min-height: 34px; margin: 0 0 10px; color: #8b96a3; font-size: 12px; line-height: 1.42; }
+  .store-card h3 {
+    margin: 0 0 5px;
+    font-size: 15px;
+    line-height: 1.25;
+    color: #f5eedf;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  }
+  .store-card .store-desc {
+    min-height: 34px;
+    margin: 0 0 10px;
+    color: #9d9182;
+    font-size: 12px;
+    line-height: 1.42;
+  }
   .store-action {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(102, 204, 255, 0.32);
+    border: 1px solid rgba(255, 140, 40, 0.5);
     border-radius: 8px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     cursor: pointer;
-    background: #1d6f9b;
-    color: #f4fbff;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    background: linear-gradient(180deg, #873616 0%, #4f1e0a 100%);
+    color: #fff4ea;
+    text-shadow: 0 0 6px rgba(255, 100, 20, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
   .store-action:hover:not(:disabled) {
-    background: #258abf;
-    border-color: #66ccff;
+    background: linear-gradient(180deg, #aa4419 0%, #68250b 100%);
+    border-color: #ffaa44;
+    box-shadow: 0 0 16px rgba(255, 130, 30, 0.55);
     transform: translateY(-1px);
   }
-  .store-action.owned { background: #1e8155; border-color: rgba(91, 230, 156, 0.42); color: #eafff2; }
+  .store-action.owned {
+    background: linear-gradient(180deg, #18593a 0%, #0d3623 100%);
+    border: 1px solid rgba(75, 225, 150, 0.5);
+    color: #eafbf2;
+    text-shadow: 0 0 6px rgba(64, 224, 150, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+  .store-action.owned:hover:not(:disabled) {
+    background: linear-gradient(180deg, #1e7049 0%, #10462d 100%);
+    border-color: #64e090;
+    box-shadow: 0 0 16px rgba(64, 224, 150, 0.5);
+  }
   /* Inventory "Equipped" badge overlaid on owned item cards. */
   .equipped-badge {
     position: absolute;
     top: 8px;
     right: 8px;
     z-index: 2;
-    padding: 3px 7px;
+    padding: 3px 8px;
     border-radius: 6px;
-    background: rgba(30, 129, 85, 0.9);
-    border: 1px solid rgba(91, 230, 156, 0.5);
-    color: #eafff2;
+    background: rgba(18, 60, 42, 0.92);
+    border: 1px solid rgba(64, 224, 150, 0.65);
+    color: #9effd4;
     font-size: 9px;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(64, 224, 150, 0.35);
+    text-shadow: 0 0 6px rgba(64, 224, 150, 0.6);
   }
   .equipped-badge.hidden { display: none; }
   .store-card { position: relative; }
-  .store-action.equipped { background: #334455; border-color: rgba(148, 174, 196, 0.28); color: #b9c9d6; cursor: default; }
+  .store-action.equipped {
+    background: #171f1a;
+    border-color: rgba(90, 125, 105, 0.35);
+    color: #7b9487;
+    cursor: default;
+    box-shadow: none;
+    text-shadow: none;
+  }
   .store-action:disabled { opacity: 0.78; cursor: not-allowed; }
+
+  /* Brief Horror Animation: Glow pulse + subtle shake on buy / equip */
+  @keyframes relicHorrorPulse {
+    0% {
+      transform: scale(1) translate(0, 0);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+    15% {
+      transform: scale(1.035) translate(-2px, 1px) rotate(-0.5deg);
+      box-shadow:
+        0 0 35px rgba(255, 150, 30, 0.85),
+        inset 0 0 20px rgba(255, 100, 0, 0.55);
+      border-color: #ffaa33;
+    }
+    35% {
+      transform: scale(1.025) translate(2px, -1px) rotate(0.5deg);
+      box-shadow:
+        0 0 45px rgba(64, 224, 208, 0.9),
+        inset 0 0 25px rgba(64, 224, 208, 0.45);
+      border-color: #64e0d0;
+    }
+    55% {
+      transform: scale(1.012) translate(-1px, -1px) rotate(-0.2deg);
+      box-shadow:
+        0 0 28px rgba(255, 180, 40, 0.6),
+        inset 0 0 15px rgba(255, 140, 20, 0.3);
+    }
+    75% {
+      transform: scale(1.005) translate(1px, 0) rotate(0deg);
+      box-shadow: 0 0 16px rgba(64, 224, 208, 0.4);
+    }
+    100% {
+      transform: scale(1) translate(0, 0);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .relic-horror-anim {
+    animation: relicHorrorPulse 0.7s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    z-index: 10 !important;
+  }
+
+  @keyframes cursedMarketShudder {
+    0% { transform: scale(1) translate(0, 0); }
+    20% { transform: scale(1.003) translate(-1.5px, 1px); }
+    40% { transform: scale(0.998) translate(1.5px, -1px); }
+    60% { transform: scale(1.001) translate(-1px, 0); }
+    100% { transform: scale(1) translate(0, 0); }
+  }
+
+  .store-panel-shudder {
+    animation: cursedMarketShudder 0.55s ease-out !important;
+  }
 
   /* ------------------------------------------------------------------
      Full-body hover inspect popup (#characterHoverPreview)
@@ -1617,15 +2380,15 @@
   .inventory-loadout-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; color: #eaf8ff; font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
   .inventory-loadout-heading small { color: #8194a7; font-size: 10px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; }
   .loadout-slot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .loadout-slot-card { min-width: 0; padding: 10px; border: 1px solid rgba(151, 188, 218, 0.14); border-radius: 10px; background: rgba(24, 36, 50, 0.8); }
+  .loadout-slot-card { min-width: 0; padding: 10px; border: 1px solid rgba(180, 130, 70, 0.25); border-radius: 10px; background: rgba(25, 20, 16, 0.92); box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.6); }
   .loadout-slot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .loadout-slot-header h3 { min-width: 0; margin: 0; overflow: hidden; color: #e7f5ff; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-  .loadout-slot-key { flex: 0 0 auto; padding: 3px 5px; border-radius: 4px; background: rgba(102, 204, 255, 0.14); color: #8ee8ff; font-family: monospace; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; }
+  .loadout-slot-header h3 { min-width: 0; margin: 0; overflow: hidden; color: #f5eedf; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .loadout-slot-key { flex: 0 0 auto; padding: 3px 6px; border-radius: 4px; background: rgba(241, 196, 15, 0.16); color: #f1c40f; font-family: monospace; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; border: 1px solid rgba(241, 196, 15, 0.35); }
   .loadout-slot-card > .loadout-slot-current { display: block; margin-bottom: 8px; text-align: left; }
   .loadout-options { display: flex; flex-wrap: wrap; gap: 6px; }
-  .loadout-equip-button { max-width: 100%; overflow: hidden; padding: 7px 8px; border: 1px solid rgba(102, 204, 255, 0.22); border-radius: 6px; background: #162432; color: #cdeeff; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; transition: background 0.18s ease, border-color 0.18s ease; }
-  .loadout-equip-button:hover:not(:disabled) { background: #20516e; border-color: #66ccff; }
-  .loadout-equip-button.active { background: #276847; border-color: rgba(91, 230, 156, 0.55); color: #dfffea; cursor: default; }
+  .loadout-equip-button { max-width: 100%; overflow: hidden; padding: 7px 9px; border: 1px solid rgba(180, 130, 70, 0.32); border-radius: 6px; background: #1a1512; color: #e6ded3; cursor: pointer; font-family: inherit; font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; }
+  .loadout-equip-button:hover:not(:disabled) { background: #2f2218; border-color: #ffd700; box-shadow: 0 0 10px rgba(241, 196, 15, 0.35); }
+  .loadout-equip-button.active { background: #1b5e3a; border-color: rgba(64, 224, 150, 0.65); color: #dfffea; cursor: default; box-shadow: 0 0 10px rgba(64, 224, 150, 0.3); }
   .loadout-equip-button:disabled { opacity: 0.9; }
   .loadout-empty { color: #8194a7; font-size: 10px; font-style: italic; }
 
@@ -1643,16 +2406,21 @@
     width: 100%;
     margin-top: 12px;
     padding: 11px;
-    border: 1px solid rgba(148, 174, 196, 0.25);
+    border: 1px solid rgba(184, 134, 11, 0.45);
     border-radius: 8px;
-    background: #26394b;
-    color: #cfe3f5;
+    background: linear-gradient(180deg, #2c2018 0%, #17120e 100%);
+    color: #ebdcd0;
     font-family: inherit;
     font-weight: 800;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   }
-  #storeCloseBtn:hover { background: #34536e; border-color: rgba(102, 204, 255, 0.55); }
+  #storeCloseBtn:hover {
+    background: linear-gradient(180deg, #3d2d22 0%, #201914 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 16px rgba(241, 196, 15, 0.4);
+  }
 
   @media (max-width: 720px) {
     #storeOverlay { padding: 8px; }
@@ -1959,6 +2727,7 @@
 
   <div id="damageFlash"></div>
   <canvas id="minimapCanvas" width="150" height="150" class="hidden"></canvas>
+  <div id="fpsCounter" class="hidden">FPS: --</div>
   <div id="crosshair" class="hidden"></div>
   <div id="lockHint" class="hidden">
     <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Game Paused</div>
@@ -1970,6 +2739,12 @@
   <div id="lobbyComputerHint" class="hidden">Press [F] to Customize Match Settings</div>
 
   <div id="main-menu" class="menu-overlay hidden">
+    <button id="btn-main-settings" class="main-settings-cog" title="Settings" aria-label="Settings" type="button">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
     <div class="menu-panel">
       <h1 class="game-title">
         PropHunt<span class="title-io">.io</span>
@@ -2033,8 +2808,322 @@
       <p class="pause-menu-subtitle">Ghost Town Edition</p>
       <div class="pause-menu-buttons">
         <button id="btn-pause-resume" class="menu-btn pause-btn-resume" type="button">Resume</button>
+        <button id="btn-pause-settings" class="menu-btn menu-btn-secondary" type="button">⚙ Settings</button>
         <button id="btn-pause-main-menu" class="menu-btn menu-btn-secondary" type="button">Return to Main Menu</button>
         <button id="btn-pause-exit" class="menu-btn menu-btn-secondary menu-btn-exit" type="button">Exit Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed Settings Modal -->
+  <div id="settingsModalOverlay" class="hidden">
+    <div class="settings-modal-panel">
+      <!-- Looping Horror Background Video & Dark Vignette Overlay -->
+      <video id="settingsBgVideo" class="settings-bg-video" autoplay loop muted playsinline src="public/settings-bg.mp4">
+        <source src="public/settings-bg.mp4" type="video/mp4" />
+        <source src="settings-bg.mp4" type="video/mp4" />
+      </video>
+      <div class="settings-video-overlay" aria-hidden="true"></div>
+
+      <div class="settings-header">
+        <div class="settings-title-wrap">
+          <h2>⚙ Settings</h2>
+          <p>Ghost Town Gameplay, Sound, Display &amp; Controls</p>
+        </div>
+        <button id="btn-settings-x" class="settings-close-x" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <nav class="settings-tabs" aria-label="Settings categories">
+        <button id="tab-btn-game" class="settings-tab-btn active" type="button" data-tab="game">Game</button>
+        <button id="tab-btn-controls" class="settings-tab-btn" type="button" data-tab="controls">Controls</button>
+        <button id="tab-btn-sound" class="settings-tab-btn" type="button" data-tab="sound">Sound</button>
+        <button id="tab-btn-video" class="settings-tab-btn" type="button" data-tab="video">Video</button>
+      </nav>
+
+      <div class="settings-content">
+        <!-- Game Tab -->
+        <div id="tab-pane-game" class="settings-pane active">
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Mouse Sensitivity</div>
+              <div class="settings-row-desc">Adjust camera look speed in first-person view</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-sensitivity" class="settings-range" type="range" min="0.2" max="3.0" step="0.1" value="1.0" />
+              <span id="val-sensitivity" class="settings-badge">1.0x</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Invert Y-Axis</div>
+              <div class="settings-row-desc">Invert vertical pitch (pull back to pitch upward)</div>
+            </div>
+            <div class="settings-row-control">
+              <label class="settings-switch">
+                <input id="setting-invert-y" type="checkbox" />
+                <span class="settings-slider-round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">In-Game Control Prompts</div>
+              <div class="settings-row-desc">Display keybinding hints at the bottom of the HUD during matches</div>
+            </div>
+            <div class="settings-row-control">
+              <label class="settings-switch">
+                <input id="setting-hints" type="checkbox" checked />
+                <span class="settings-slider-round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Tab -->
+        <div id="tab-pane-controls" class="settings-pane">
+          <p style="margin: 0 0 12px; font-size: 12px; color: #8fa1b1;">
+            Click any highlighted keycap below to rebind that key, then press your desired key (or Esc to cancel).
+          </p>
+
+          <div class="keybind-group-title">Movement</div>
+          <table class="keybind-table">
+            <thead>
+              <tr><th>Action</th><th>Keybind</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Move Forward</td>
+                <td><button class="keybind-keycap-btn" data-action="forward" type="button">W</button></td>
+                <td>Walk / Run forward</td>
+              </tr>
+              <tr>
+                <td>Move Backward</td>
+                <td><button class="keybind-keycap-btn" data-action="backward" type="button">S</button></td>
+                <td>Walk backward</td>
+              </tr>
+              <tr>
+                <td>Strafe Left</td>
+                <td><button class="keybind-keycap-btn" data-action="left" type="button">A</button></td>
+                <td>Step sideways to left</td>
+              </tr>
+              <tr>
+                <td>Strafe Right</td>
+                <td><button class="keybind-keycap-btn" data-action="right" type="button">D</button></td>
+                <td>Step sideways to right</td>
+              </tr>
+              <tr>
+                <td>Jump</td>
+                <td><button class="keybind-keycap-btn" data-action="jump" type="button">Space</button></td>
+                <td>Vault over obstacles</td>
+              </tr>
+              <tr>
+                <td>Crouch</td>
+                <td><button class="keybind-keycap-btn" data-action="crouch" type="button">C</button></td>
+                <td>Low-profile sneak &amp; hide</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="keybind-group-title">Combat &amp; Weapons</div>
+          <table class="keybind-table">
+            <thead>
+              <tr><th>Action</th><th>Keybind</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Shoot / Melee Slash</td>
+                <td><span class="keybind-keycap-btn" style="cursor: default;">L-Click</span></td>
+                <td>Fire equipped firearm (Hunter) / Knife slash (Prop)</td>
+              </tr>
+              <tr>
+                <td>Aim Down Sights</td>
+                <td><span class="keybind-keycap-btn" style="cursor: default;">R-Click</span></td>
+                <td>Zoom scope for precision accuracy (Hunter)</td>
+              </tr>
+              <tr>
+                <td>Primary Weapon</td>
+                <td><button class="keybind-keycap-btn" data-action="primary" type="button">1</button></td>
+                <td>Equip primary firearm slot</td>
+              </tr>
+              <tr>
+                <td>Secondary Weapon</td>
+                <td><button class="keybind-keycap-btn" data-action="secondary" type="button">2</button></td>
+                <td>Equip secondary firearm slot</td>
+              </tr>
+              <tr>
+                <td>Reload Weapon</td>
+                <td><button class="keybind-keycap-btn" data-action="reload" type="button">R</button></td>
+                <td>Reload firearm magazine</td>
+              </tr>
+              <tr>
+                <td>Throw Knife</td>
+                <td><button class="keybind-keycap-btn" data-action="throwKnife" type="button">G</button></td>
+                <td>Hurl ranged blade at hunters (Prop)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="keybind-group-title">Abilities &amp; System</div>
+          <table class="keybind-table">
+            <thead>
+              <tr><th>Action</th><th>Keybind</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Disguise / Transform / Unhide</td>
+                <td><button class="keybind-keycap-btn" data-action="disguise" type="button">E</button></td>
+                <td>Camouflage as targeted prop or unhide</td>
+              </tr>
+              <tr>
+                <td>Channel Healing</td>
+                <td><button class="keybind-keycap-btn" data-action="heal" type="button">H</button></td>
+                <td>Restore health over 3s stationary channel</td>
+              </tr>
+              <tr>
+                <td>Lobby Match Settings</td>
+                <td><button class="keybind-keycap-btn" data-action="lobbySettings" type="button">F</button></td>
+                <td>Customize round rules (Host near Terminal)</td>
+              </tr>
+              <tr>
+                <td>In-Game Pause Menu</td>
+                <td><span class="keybind-keycap-btn" style="cursor: default;">Esc</span></td>
+                <td>Pause match, adjust settings, return to menu</td>
+              </tr>
+            </tbody>
+          </table>
+          <button id="btn-reset-keybinds" class="settings-btn-reset" type="button" style="margin-top: 8px;">Reset Default Keybinds</button>
+        </div>
+
+        <!-- Sound Tab -->
+        <div id="tab-pane-sound" class="settings-pane">
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Master Volume</div>
+              <div class="settings-row-desc">Overall game audio output level</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-master-vol" class="settings-range" type="range" min="0" max="100" step="1" value="100" />
+              <span id="val-master-vol" class="settings-badge">100%</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Sound Effects (SFX) Volume</div>
+              <div class="settings-row-desc">Gunshots, knife slashes, footsteps, and creature screeches</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-sfx-vol" class="settings-range" type="range" min="0" max="100" step="1" value="80" />
+              <span id="val-sfx-vol" class="settings-badge">80%</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Ambience &amp; Music Volume</div>
+              <div class="settings-row-desc">Environmental background ambience, wind, and water sounds</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-ambience-vol" class="settings-range" type="range" min="0" max="100" step="1" value="70" />
+              <span id="val-ambience-vol" class="settings-badge">70%</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Mute All Audio</div>
+              <div class="settings-row-desc">Silences all game sound completely</div>
+            </div>
+            <div class="settings-row-control">
+              <label class="settings-switch">
+                <input id="setting-mute-all" type="checkbox" />
+                <span class="settings-slider-round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Tab -->
+        <div id="tab-pane-video" class="settings-pane">
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Graphics Quality</div>
+              <div class="settings-row-desc">Adjust 3D rendering resolution scale and shadow filters</div>
+            </div>
+            <div class="settings-row-control">
+              <select id="setting-graphics" class="settings-select">
+                <option value="high">High (Full Resolution &amp; Soft Shadows)</option>
+                <option value="medium">Medium (1.0x Scale, Hard Shadows)</option>
+                <option value="low">Low (0.6x Scale, Shadows Disabled)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Field of View (FOV)</div>
+              <div class="settings-row-desc">Horizontal camera viewing angle (60° to 110°)</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-fov" class="settings-range" type="range" min="60" max="110" step="1" value="75" />
+              <span id="val-fov" class="settings-badge">75°</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">View / Fog Distance</div>
+              <div class="settings-row-desc">Horror fog distance across the town (Wrap player vs. see far)</div>
+            </div>
+            <div class="settings-row-control">
+              <input id="setting-fog-dist" class="settings-range" type="range" min="400" max="3000" step="50" value="1800" />
+              <span id="val-fog-dist" class="settings-badge">1800m</span>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Dynamic Shadows</div>
+              <div class="settings-row-desc">Render dynamic sunlight and entity cast shadows</div>
+            </div>
+            <div class="settings-row-control">
+              <label class="settings-switch">
+                <input id="setting-shadows" type="checkbox" checked />
+                <span class="settings-slider-round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Show FPS Counter</div>
+              <div class="settings-row-desc">Display real-time frames per second in the upper HUD</div>
+            </div>
+            <div class="settings-row-control">
+              <label class="settings-switch">
+                <input id="setting-fps" type="checkbox" />
+                <span class="settings-slider-round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Display Mode</div>
+              <div class="settings-row-desc">Toggle between windowed and fullscreen view</div>
+            </div>
+            <div class="settings-row-control">
+              <button id="setting-btn-fullscreen" class="menu-btn menu-btn-secondary" style="margin: 0; padding: 8px 14px; font-size: 13px;" type="button">Toggle Fullscreen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <button id="btn-settings-reset" class="settings-btn-reset" type="button">Reset to Defaults</button>
+        <button id="btn-settings-close" class="settings-btn-close" type="button">Close &amp; Save</button>
       </div>
     </div>
   </div>
@@ -2053,10 +3142,136 @@
   </div>
   <script>
     (function () {
+      // ----------------------------------------------------
+      // Settings State & Persistence
+      // ----------------------------------------------------
+      var DEFAULT_SETTINGS = {
+        sensitivity: 1.0,
+        invertY: false,
+        showHints: true,
+        masterVolume: 100,
+        sfxVolume: 80,
+        ambienceVolume: 70,
+        muteAll: false,
+        graphicsQuality: 'high',
+        fov: 75,
+        viewDistance: 1800,
+        shadows: true,
+        showFps: false,
+        keybinds: {
+          forward: 'W',
+          backward: 'S',
+          left: 'A',
+          right: 'D',
+          jump: 'SPACE',
+          crouch: 'C',
+          disguise: 'E',
+          heal: 'H',
+          primary: '1',
+          secondary: '2',
+          reload: 'R',
+          throwKnife: 'G',
+          lobbySettings: 'F'
+        }
+      };
+
+      var DEFAULT_KEY_MAP = {
+        forward: { origKey: 'w', origCode: 'KeyW' },
+        backward: { origKey: 's', origCode: 'KeyS' },
+        left: { origKey: 'a', origCode: 'KeyA' },
+        right: { origKey: 'd', origCode: 'KeyD' },
+        jump: { origKey: ' ', origCode: 'Space' },
+        crouch: { origKey: 'c', origCode: 'KeyC' },
+        disguise: { origKey: 'e', origCode: 'KeyE' },
+        heal: { origKey: 'h', origCode: 'KeyH' },
+        primary: { origKey: '1', origCode: 'Digit1' },
+        secondary: { origKey: '2', origCode: 'Digit2' },
+        reload: { origKey: 'r', origCode: 'KeyR' },
+        throwKnife: { origKey: 'g', origCode: 'KeyG' },
+        lobbySettings: { origKey: 'f', origCode: 'KeyF' }
+      };
+
+      function loadSavedSettings() {
+        var saved = null;
+        try {
+          saved = JSON.parse(localStorage.getItem('ghosttown_settings'));
+        } catch (e) {}
+        var s = Object.assign({}, DEFAULT_SETTINGS, saved || {});
+        s.keybinds = Object.assign({}, DEFAULT_SETTINGS.keybinds, (saved && saved.keybinds) || {});
+        return s;
+      }
+
+      function persistSettings(s) {
+        try {
+          localStorage.setItem('ghosttown_settings', JSON.stringify(s));
+        } catch (e) {}
+      }
+
+      var currentSettings = loadSavedSettings();
+      window.__gameSettings = currentSettings;
+
+      // ----------------------------------------------------
+      // DOM Elements
+      // ----------------------------------------------------
       var pauseMenu = document.getElementById('pauseMenuOverlay');
       var btnPauseResume = document.getElementById('btn-pause-resume');
+      var btnPauseSettings = document.getElementById('btn-pause-settings');
       var btnPauseMainMenu = document.getElementById('btn-pause-main-menu');
       var btnPauseExit = document.getElementById('btn-pause-exit');
+
+      var btnMainSettings = document.getElementById('btn-main-settings');
+      var settingsModal = document.getElementById('settingsModalOverlay');
+      var settingsBgVideo = document.getElementById('settingsBgVideo');
+      var btnSettingsClose = document.getElementById('btn-settings-close');
+      var btnSettingsX = document.getElementById('btn-settings-x');
+      var btnSettingsReset = document.getElementById('btn-settings-reset');
+      var btnResetKeybinds = document.getElementById('btn-reset-keybinds');
+      var btnFullscreen = document.getElementById('setting-btn-fullscreen');
+
+      function playSettingsVideo() {
+        if (!settingsBgVideo) settingsBgVideo = document.getElementById('settingsBgVideo');
+        if (settingsBgVideo && typeof settingsBgVideo.play === 'function') {
+          try {
+            var playPromise = settingsBgVideo.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch(function () {});
+            }
+          } catch (e) {}
+        }
+      }
+
+      function pauseSettingsVideo() {
+        if (!settingsBgVideo) settingsBgVideo = document.getElementById('settingsBgVideo');
+        if (settingsBgVideo && typeof settingsBgVideo.pause === 'function') {
+          try {
+            settingsBgVideo.pause();
+          } catch (e) {}
+        }
+      }
+
+      // Ensure video is paused on initial load while Settings modal is closed
+      pauseSettingsVideo();
+      if (settingsBgVideo) {
+        settingsBgVideo.addEventListener('loadeddata', function () {
+          if (settingsModal && settingsModal.classList.contains('hidden')) {
+            pauseSettingsVideo();
+          }
+        });
+      }
+
+      // MutationObserver to auto-pause video when modal closes and resume when opened
+      if (settingsModal && typeof MutationObserver !== 'undefined') {
+        try {
+          var modalObs = new MutationObserver(function () {
+            if (settingsModal.classList.contains('hidden')) {
+              pauseSettingsVideo();
+            } else {
+              playSettingsVideo();
+            }
+          });
+          modalObs.observe(settingsModal, { attributes: true, attributeFilter: ['class'] });
+        } catch (e) {}
+      }
 
       var btnExitGame = document.getElementById('btn-exit-game');
       var exitModal = document.getElementById('exitConfirmOverlay');
@@ -2064,8 +3279,560 @@
       var btnExitNo = document.getElementById('btn-exit-no');
       var exitFallback = document.getElementById('exitFallbackMsg');
 
+      var fpsCounter = document.getElementById('fpsCounter');
+
+      // Inputs
+      var inSensitivity = document.getElementById('setting-sensitivity');
+      var valSensitivity = document.getElementById('val-sensitivity');
+      var inInvertY = document.getElementById('setting-invert-y');
+      var inHints = document.getElementById('setting-hints');
+
+      var inMasterVol = document.getElementById('setting-master-vol');
+      var valMasterVol = document.getElementById('val-master-vol');
+      var inSfxVol = document.getElementById('setting-sfx-vol');
+      var valSfxVol = document.getElementById('val-sfx-vol');
+      var inAmbienceVol = document.getElementById('setting-ambience-vol');
+      var valAmbienceVol = document.getElementById('val-ambience-vol');
+      var inMuteAll = document.getElementById('setting-mute-all');
+
+      var inGraphics = document.getElementById('setting-graphics');
+      var inFov = document.getElementById('setting-fov');
+      var valFov = document.getElementById('val-fov');
+      var inFogDist = document.getElementById('setting-fog-dist');
+      var valFogDist = document.getElementById('val-fog-dist');
+      var inShadows = document.getElementById('setting-shadows');
+      var inFps = document.getElementById('setting-fps');
+
+      var openedFromMenu = 'main'; // 'main' or 'pause'
+      var activeRebindingBtn = null;
+      var activeRebindingAction = null;
       var lastPointerLockExitTime = 0;
 
+      // ----------------------------------------------------
+      // Apply Settings Live to Three.js / Audio / DOM
+      // ----------------------------------------------------
+      function applySettings() {
+        window.__gameSettings = currentSettings;
+
+        // 1. Controls Hints
+        var hintEl = document.getElementById('hint');
+        if (hintEl) {
+          hintEl.classList.toggle('user-hidden', !currentSettings.showHints);
+        }
+
+        // 2. Camera Field of View (FOV)
+        var userFov = Number(currentSettings.fov || 75);
+        if (window.__gameCamera) {
+          window.__gameCamera.fov = userFov;
+          window.__gameCamera.updateProjectionMatrix();
+        }
+
+        // 3. Renderer: Resolution / Render Scale & Shadow Maps
+        if (window.__gameRenderer) {
+          var qual = currentSettings.graphicsQuality || 'high';
+          var scale = 1.0;
+          if (qual === 'low') {
+            scale = 0.6;
+          } else if (qual === 'medium') {
+            scale = 1.0;
+          } else {
+            scale = Math.min(window.devicePixelRatio || 1, 2);
+          }
+          window.__gameRenderer.setPixelRatio(scale);
+          window.__gameRenderer.setSize(window.innerWidth, window.innerHeight, false);
+
+          var shadowsOn = Boolean(currentSettings.shadows);
+          window.__gameRenderer.shadowMap.enabled = shadowsOn;
+          if (window.__threePCFSoftShadowMap) {
+            window.__gameRenderer.shadowMap.type = window.__threePCFSoftShadowMap;
+          }
+          window.__gameRenderer.shadowMap.needsUpdate = true;
+        }
+
+        // 4. Scene: Dynamic Shadows on Lights & Meshes
+        var shadowsEnabled = Boolean(currentSettings.shadows);
+        if (window.__gameScene) {
+          window.__gameScene.traverse(function (obj) {
+            // Directional / Spot / Point Light shadows
+            if (obj.isDirectionalLight || obj.isSpotLight || obj.isPointLight) {
+              obj.castShadow = shadowsEnabled;
+              if (shadowsEnabled && obj.shadow) {
+                obj.shadow.mapSize.width = 2048;
+                obj.shadow.mapSize.height = 2048;
+                if (obj.shadow.camera) {
+                  obj.shadow.camera.near = 1;
+                  obj.shadow.camera.far = 2000;
+                  if (obj.isDirectionalLight) {
+                    obj.shadow.camera.left = -800;
+                    obj.shadow.camera.right = 800;
+                    obj.shadow.camera.top = 800;
+                    obj.shadow.camera.bottom = -800;
+                  }
+                  obj.shadow.camera.updateProjectionMatrix();
+                }
+              }
+            }
+            // Mesh shadows
+            if (obj.isMesh) {
+              if (obj.geometry && obj.geometry.type === 'WireframeGeometry') return;
+              if (obj.name && obj.name.toLowerCase().includes('helper')) return;
+              obj.castShadow = shadowsEnabled;
+              obj.receiveShadow = shadowsEnabled;
+              if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                  obj.material.forEach(function (m) { m.needsUpdate = true; });
+                } else {
+                  obj.material.needsUpdate = true;
+                }
+              }
+            }
+          });
+
+          // 5. Scene: Fog Distance
+          var fogDist = Number(currentSettings.viewDistance || 1800);
+          if (!window.__gameScene.fog || !window.__gameScene.fog.isFog) {
+            if (window.__THREE) {
+              window.__gameScene.fog = new window.__THREE.Fog(0x10151f, Math.max(50, Math.round(fogDist * 0.25)), fogDist);
+            }
+          } else {
+            window.__gameScene.fog.far = fogDist;
+            window.__gameScene.fog.near = Math.max(50, Math.round(fogDist * 0.25));
+          }
+        }
+
+        // 6. Audio: Master Volume, SFX, Ambience & Mute
+        var mute = Boolean(currentSettings.muteAll);
+        var masterMult = mute ? 0 : ((typeof currentSettings.masterVolume === 'number' ? currentSettings.masterVolume : 100) / 100);
+        var sfxFactor = (typeof currentSettings.sfxVolume === 'number' ? currentSettings.sfxVolume : 80) / 100;
+        var ambFactor = (typeof currentSettings.ambienceVolume === 'number' ? currentSettings.ambienceVolume : 70) / 100;
+
+        window.__sfxMultiplier = sfxFactor;
+        window.__ambienceMultiplier = ambFactor;
+
+        // Three.js AudioListener Master Gain
+        if (window.__gameAudioListener) {
+          try {
+            window.__gameAudioListener.setMasterVolume(masterMult);
+            if (window.__gameAudioListener.gain && window.__gameAudioListener.gain.gain) {
+              window.__gameAudioListener.gain.gain.value = masterMult;
+            }
+          } catch (e) {}
+        }
+
+        // SFX Audio nodes
+        if (window.__gameSfxSounds) {
+          window.__gameSfxSounds.forEach(function (snd) {
+            if (snd && snd.gain && snd.gain.gain) {
+              var base = typeof snd._baseVolume === 'number' ? snd._baseVolume : 1.0;
+              var eff = base * sfxFactor;
+              try {
+                if (snd.context) {
+                  snd.gain.gain.setTargetAtTime(eff, snd.context.currentTime, 0.01);
+                } else {
+                  snd.gain.gain.value = eff;
+                }
+              } catch (e) {
+                snd.gain.gain.value = eff;
+              }
+            }
+          });
+        }
+
+        // Ambience Audio nodes
+        if (window.__gameAmbienceSounds) {
+          window.__gameAmbienceSounds.forEach(function (snd) {
+            if (snd && snd.gain && snd.gain.gain) {
+              var base = typeof snd._baseVolume === 'number' ? snd._baseVolume : 1.0;
+              var eff = base * ambFactor;
+              try {
+                if (snd.context) {
+                  snd.gain.gain.setTargetAtTime(eff, snd.context.currentTime, 0.01);
+                } else {
+                  snd.gain.gain.value = eff;
+                }
+              } catch (e) {
+                snd.gain.gain.value = eff;
+              }
+            }
+          });
+        }
+
+        // HTML <audio> and <video> elements
+        var allHtmlAudios = Array.from(document.querySelectorAll('audio, video'));
+        if (window.__gameHtmlAudioElements) {
+          window.__gameHtmlAudioElements.forEach(function (el) {
+            if (!allHtmlAudios.includes(el)) allHtmlAudios.push(el);
+          });
+        }
+        allHtmlAudios.forEach(function (el) {
+          if (el) {
+            if (el._baseVolume === undefined) el._baseVolume = (typeof el.volume === 'number' ? el.volume : 1.0);
+            el.muted = mute;
+            el.volume = mute ? 0 : Math.max(0, Math.min(1, el._baseVolume * masterMult * sfxFactor));
+          }
+        });
+
+        // 7. FPS counter visibility
+        if (fpsCounter) {
+          fpsCounter.classList.toggle('hidden', !currentSettings.showFps || !isPlayerInMatch());
+        }
+      }
+      window.__applyGameSettings = applySettings;
+
+      // ----------------------------------------------------
+      // UI Sync
+      // ----------------------------------------------------
+      function syncSettingsUI() {
+        if (inSensitivity) inSensitivity.value = currentSettings.sensitivity;
+        if (valSensitivity) valSensitivity.textContent = Number(currentSettings.sensitivity).toFixed(1) + 'x';
+        if (inInvertY) inInvertY.checked = Boolean(currentSettings.invertY);
+        if (inHints) inHints.checked = Boolean(currentSettings.showHints);
+
+        if (inMasterVol) inMasterVol.value = currentSettings.masterVolume;
+        if (valMasterVol) valMasterVol.textContent = currentSettings.masterVolume + '%';
+        if (inSfxVol) inSfxVol.value = currentSettings.sfxVolume;
+        if (valSfxVol) valSfxVol.textContent = currentSettings.sfxVolume + '%';
+        if (inAmbienceVol) inAmbienceVol.value = currentSettings.ambienceVolume;
+        if (valAmbienceVol) valAmbienceVol.textContent = currentSettings.ambienceVolume + '%';
+        if (inMuteAll) inMuteAll.checked = Boolean(currentSettings.muteAll);
+
+        if (inGraphics) inGraphics.value = currentSettings.graphicsQuality || 'high';
+        if (inFov) inFov.value = currentSettings.fov || 75;
+        if (valFov) valFov.textContent = (currentSettings.fov || 75) + '°';
+        if (inFogDist) inFogDist.value = currentSettings.viewDistance || 1800;
+        if (valFogDist) valFogDist.textContent = (currentSettings.viewDistance || 1800) + 'm';
+        if (inShadows) inShadows.checked = Boolean(currentSettings.shadows);
+        if (inFps) inFps.checked = Boolean(currentSettings.showFps);
+
+        updateFullscreenButtonText();
+        renderKeybindButtons();
+      }
+
+      function updateFullscreenButtonText() {
+        if (!btnFullscreen) return;
+        if (document.fullscreenElement) {
+          btnFullscreen.textContent = 'Exit Fullscreen (Active)';
+          btnFullscreen.style.borderColor = '#2ecc71';
+        } else {
+          btnFullscreen.textContent = 'Toggle Fullscreen';
+          btnFullscreen.style.borderColor = '';
+        }
+      }
+
+      function renderKeybindButtons() {
+        var btns = document.querySelectorAll('.keybind-keycap-btn[data-action]');
+        btns.forEach(function (btn) {
+          var act = btn.getAttribute('data-action');
+          if (act && currentSettings.keybinds && currentSettings.keybinds[act]) {
+            btn.textContent = currentSettings.keybinds[act];
+            btn.classList.remove('rebinding');
+          }
+        });
+      }
+
+      // ----------------------------------------------------
+      // Modal Open & Close
+      // ----------------------------------------------------
+      function openSettingsModal(from) {
+        openedFromMenu = from || 'main';
+        cancelKeyRebinding();
+        syncSettingsUI();
+        if (settingsModal) settingsModal.classList.remove('hidden');
+        playSettingsVideo();
+      }
+
+      function closeSettingsModal() {
+        cancelKeyRebinding();
+        persistSettings(currentSettings);
+        applySettings();
+        if (settingsModal) settingsModal.classList.add('hidden');
+        pauseSettingsVideo();
+      }
+
+      // Tab Switching
+      var tabBtns = document.querySelectorAll('.settings-tab-btn');
+      var tabPanes = document.querySelectorAll('.settings-pane');
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var targetTab = btn.getAttribute('data-tab');
+          tabBtns.forEach(function (b) { b.classList.remove('active'); });
+          tabPanes.forEach(function (p) { p.classList.remove('active'); });
+          btn.classList.add('active');
+          var pane = document.getElementById('tab-pane-' + targetTab);
+          if (pane) pane.classList.add('active');
+        });
+      });
+
+      // Settings Inputs Listeners (Immediate Live Update & localStorage Persistence)
+      if (inSensitivity) {
+        inSensitivity.addEventListener('input', function () {
+          currentSettings.sensitivity = parseFloat(inSensitivity.value);
+          if (valSensitivity) valSensitivity.textContent = currentSettings.sensitivity.toFixed(1) + 'x';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inInvertY) {
+        inInvertY.addEventListener('change', function () {
+          currentSettings.invertY = inInvertY.checked;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inHints) {
+        inHints.addEventListener('change', function () {
+          currentSettings.showHints = inHints.checked;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inMasterVol) {
+        inMasterVol.addEventListener('input', function () {
+          currentSettings.masterVolume = parseInt(inMasterVol.value, 10);
+          if (valMasterVol) valMasterVol.textContent = currentSettings.masterVolume + '%';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inSfxVol) {
+        inSfxVol.addEventListener('input', function () {
+          currentSettings.sfxVolume = parseInt(inSfxVol.value, 10);
+          if (valSfxVol) valSfxVol.textContent = currentSettings.sfxVolume + '%';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inAmbienceVol) {
+        inAmbienceVol.addEventListener('input', function () {
+          currentSettings.ambienceVolume = parseInt(inAmbienceVol.value, 10);
+          if (valAmbienceVol) valAmbienceVol.textContent = currentSettings.ambienceVolume + '%';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inMuteAll) {
+        inMuteAll.addEventListener('change', function () {
+          currentSettings.muteAll = inMuteAll.checked;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inGraphics) {
+        inGraphics.addEventListener('change', function () {
+          currentSettings.graphicsQuality = inGraphics.value;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inFov) {
+        inFov.addEventListener('input', function () {
+          currentSettings.fov = parseInt(inFov.value, 10);
+          if (valFov) valFov.textContent = currentSettings.fov + '°';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inFogDist) {
+        inFogDist.addEventListener('input', function () {
+          currentSettings.viewDistance = parseInt(inFogDist.value, 10);
+          if (valFogDist) valFogDist.textContent = currentSettings.viewDistance + 'm';
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inShadows) {
+        inShadows.addEventListener('change', function () {
+          currentSettings.shadows = inShadows.checked;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+      if (inFps) {
+        inFps.addEventListener('change', function () {
+          currentSettings.showFps = inFps.checked;
+          persistSettings(currentSettings);
+          applySettings();
+        });
+      }
+
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', function () {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(function () {});
+          } else if (document.exitFullscreen) {
+            document.exitFullscreen().catch(function () {});
+          }
+        });
+      }
+      document.addEventListener('fullscreenchange', updateFullscreenButtonText);
+
+      // Reset to defaults
+      if (btnSettingsReset) {
+        btnSettingsReset.addEventListener('click', function () {
+          currentSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+          persistSettings(currentSettings);
+          syncSettingsUI();
+          applySettings();
+        });
+      }
+
+      // Reset keybinds
+      if (btnResetKeybinds) {
+        btnResetKeybinds.addEventListener('click', function () {
+          currentSettings.keybinds = JSON.parse(JSON.stringify(DEFAULT_SETTINGS.keybinds));
+          persistSettings(currentSettings);
+          renderKeybindButtons();
+        });
+      }
+
+      // Close buttons
+      if (btnSettingsClose) btnSettingsClose.addEventListener('click', closeSettingsModal);
+      if (btnSettingsX) btnSettingsX.addEventListener('click', closeSettingsModal);
+      if (settingsModal) {
+        settingsModal.addEventListener('click', function (e) {
+          if (e.target === settingsModal) closeSettingsModal();
+        });
+      }
+
+      // ----------------------------------------------------
+      // Keybinding Rebind Logic
+      // ----------------------------------------------------
+      function cancelKeyRebinding() {
+        if (activeRebindingBtn) {
+          activeRebindingBtn.classList.remove('rebinding');
+          renderKeybindButtons();
+          activeRebindingBtn = null;
+          activeRebindingAction = null;
+        }
+      }
+
+      document.querySelectorAll('.keybind-keycap-btn[data-action]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var action = btn.getAttribute('data-action');
+          if (activeRebindingBtn === btn) {
+            cancelKeyRebinding();
+            return;
+          }
+          cancelKeyRebinding();
+          activeRebindingBtn = btn;
+          activeRebindingAction = action;
+          btn.textContent = 'PRESS KEY...';
+          btn.classList.add('rebinding');
+        });
+      });
+
+      // Key Translation Capture (so rebound keys trigger in game)
+      window.addEventListener('keydown', function (e) {
+        // Handle active rebinding in Settings modal
+        if (activeRebindingAction) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.key === 'Escape') {
+            cancelKeyRebinding();
+            return;
+          }
+          var keyStr = e.key.length === 1 ? e.key.toUpperCase() : (e.code === 'Space' ? 'SPACE' : e.key.toUpperCase());
+          currentSettings.keybinds[activeRebindingAction] = keyStr;
+          persistSettings(currentSettings);
+          cancelKeyRebinding();
+          return;
+        }
+
+        // Remap dispatch to client.js
+        if (!e.__rebound && isPlayerInMatch() && currentSettings.keybinds) {
+          var pressedKey = (e.key || '').toUpperCase();
+          for (var act in currentSettings.keybinds) {
+            if (currentSettings.keybinds[act] === pressedKey && DEFAULT_KEY_MAP[act]) {
+              var map = DEFAULT_KEY_MAP[act];
+              if (map.origKey.toUpperCase() !== pressedKey) {
+                var syn = new KeyboardEvent('keydown', {
+                  key: map.origKey,
+                  code: map.origCode,
+                  bubbles: true,
+                  cancelable: true
+                });
+                syn.__rebound = true;
+                window.dispatchEvent(syn);
+              }
+            }
+          }
+        }
+      }, true);
+
+      window.addEventListener('keyup', function (e) {
+        if (!e.__rebound && isPlayerInMatch() && currentSettings.keybinds) {
+          var pressedKey = (e.key || '').toUpperCase();
+          for (var act in currentSettings.keybinds) {
+            if (currentSettings.keybinds[act] === pressedKey && DEFAULT_KEY_MAP[act]) {
+              var map = DEFAULT_KEY_MAP[act];
+              if (map.origKey.toUpperCase() !== pressedKey) {
+                var syn = new KeyboardEvent('keyup', {
+                  key: map.origKey,
+                  code: map.origCode,
+                  bubbles: true,
+                  cancelable: true
+                });
+                syn.__rebound = true;
+                window.dispatchEvent(syn);
+              }
+            }
+          }
+        }
+      }, true);
+
+      // ----------------------------------------------------
+      // Real-Time Smooth FPS Counter Loop (500ms Rolling Window)
+      // ----------------------------------------------------
+      var fpsFrameTimes = [];
+      var lastFpsUiUpdate = 0;
+      function runFpsLoop(timestamp) {
+        var now = timestamp || performance.now();
+        fpsFrameTimes.push(now);
+
+        // Keep only frames within the last 500ms rolling window
+        var cutoff = now - 500;
+        while (fpsFrameTimes.length > 0 && fpsFrameTimes[0] < cutoff) {
+          fpsFrameTimes.shift();
+        }
+
+        // Update the displayed counter smoothly over the 500ms rolling window
+        if (now - lastFpsUiUpdate >= 200) {
+          lastFpsUiUpdate = now;
+          if (fpsCounter) {
+            var inMatch = isPlayerInMatch();
+            var shouldShow = Boolean(currentSettings && currentSettings.showFps && inMatch);
+            fpsCounter.classList.toggle('hidden', !shouldShow);
+
+            if (shouldShow && fpsFrameTimes.length >= 2) {
+              var windowDuration = now - fpsFrameTimes[0];
+              var avgFps = Math.round(((fpsFrameTimes.length - 1) * 1000) / (windowDuration || 1));
+
+              // Color-coding: green >= 50, amber 30-49, red < 30
+              var fpsColor = '#2ecc71'; // Green (>= 50)
+              var glowColor = 'rgba(46, 204, 113, 0.35)';
+              if (avgFps < 30) {
+                fpsColor = '#e74c3c'; // Red (< 30)
+                glowColor = 'rgba(231, 76, 60, 0.45)';
+              } else if (avgFps < 50) {
+                fpsColor = '#f39c12'; // Amber (30-49)
+                glowColor = 'rgba(243, 156, 18, 0.35)';
+              }
+
+              fpsCounter.textContent = 'FPS: ' + avgFps;
+              fpsCounter.style.color = fpsColor;
+              fpsCounter.style.borderColor = fpsColor;
+              fpsCounter.style.boxShadow = '0 0 8px ' + glowColor;
+            }
+          }
+        }
+        requestAnimationFrame(runFpsLoop);
+      }
+      requestAnimationFrame(runFpsLoop);
+
+      // ----------------------------------------------------
+      // Match Detection & Canvas Helpers
+      // ----------------------------------------------------
       function getGameCanvas() {
         var canvases = document.querySelectorAll('canvas');
         for (var i = 0; i < canvases.length; i++) {
@@ -2104,6 +3871,7 @@
         var hostSettings = document.getElementById('hostSettingsOverlay');
         if (hostSettings && !hostSettings.classList.contains('hidden')) return false;
         if (exitModal && !exitModal.classList.contains('hidden')) return false;
+        if (settingsModal && !settingsModal.classList.contains('hidden')) return false;
         return true;
       }
 
@@ -2118,6 +3886,8 @@
       function closePauseMenuAndResume() {
         if (pauseMenu) pauseMenu.classList.add('hidden');
         if (exitModal) exitModal.classList.add('hidden');
+        if (settingsModal) settingsModal.classList.add('hidden');
+        pauseSettingsVideo();
         var canvas = getGameCanvas();
         if (canvas && canvas.requestPointerLock) {
           try { canvas.requestPointerLock(); } catch (e) {}
@@ -2127,38 +3897,43 @@
       function returnToMainMenu() {
         if (pauseMenu) pauseMenu.classList.add('hidden');
         if (exitModal) exitModal.classList.add('hidden');
+        if (settingsModal) settingsModal.classList.add('hidden');
+        pauseSettingsVideo();
         var btnIgLeave = document.getElementById('btn-ig-leave');
         if (btnIgLeave) {
           btnIgLeave.click();
         }
       }
 
-      // Block mouse clicks / canvas movement from firing through pause overlay
-      if (pauseMenu) {
+      // Block clicks on pause & settings from bubbling to canvas
+      [pauseMenu, settingsModal].forEach(function (modalEl) {
+        if (!modalEl) return;
         ['click', 'mousedown', 'mouseup', 'contextmenu'].forEach(function (evt) {
-          pauseMenu.addEventListener(evt, function (e) {
+          modalEl.addEventListener(evt, function (e) {
             e.stopPropagation();
           });
         });
-      }
+      });
 
-      // Pause Menu: Resume button
+      // Pause Menu Button Listeners
       if (btnPauseResume) {
         btnPauseResume.addEventListener('click', function (e) {
           e.stopPropagation();
           closePauseMenuAndResume();
         });
       }
-
-      // Pause Menu: Return to Main Menu button
+      if (btnPauseSettings) {
+        btnPauseSettings.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openSettingsModal('pause');
+        });
+      }
       if (btnPauseMainMenu) {
         btnPauseMainMenu.addEventListener('click', function (e) {
           e.stopPropagation();
           returnToMainMenu();
         });
       }
-
-      // Pause Menu: Exit Game button (opens exit confirmation modal over pause menu)
       if (btnPauseExit) {
         btnPauseExit.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -2167,7 +3942,15 @@
         });
       }
 
-      // Main Menu: Exit button (opens exit confirmation modal over main menu)
+      // Main Menu Settings Cog Button
+      if (btnMainSettings) {
+        btnMainSettings.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openSettingsModal('main');
+        });
+      }
+
+      // Main Menu Exit Button
       if (btnExitGame) {
         btnExitGame.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -2176,7 +3959,7 @@
         });
       }
 
-      // Exit confirmation modal: "No" button
+      // Exit confirmation modal buttons
       if (btnExitNo) {
         btnExitNo.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -2184,14 +3967,10 @@
           if (exitFallback) exitFallback.classList.add('hidden');
         });
       }
-
-      // Exit confirmation modal: "Yes" button
       if (btnExitYes) {
         btnExitYes.addEventListener('click', function (e) {
           e.stopPropagation();
-          try {
-            window.close();
-          } catch (err) {}
+          try { window.close(); } catch (err) {}
           setTimeout(function () {
             if (!window.closed && exitFallback) {
               exitFallback.textContent = 'You can safely close this tab now.';
@@ -2200,8 +3979,6 @@
           }, 150);
         });
       }
-
-      // Close exit confirmation if clicked outside panel
       if (exitModal) {
         exitModal.addEventListener('click', function (e) {
           if (e.target === exitModal) {
@@ -2211,7 +3988,7 @@
         });
       }
 
-      // Handle pointer lock change: Esc in 3D game releases pointer lock
+      // Handle pointer lock change
       document.addEventListener('pointerlockchange', function () {
         var isLocked = !!document.pointerLockElement;
         if (!isLocked) {
@@ -2222,33 +3999,48 @@
         }
       });
 
-      // Handle Escape key
+      // Handle Escape key with priority chain
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' || e.code === 'Escape') {
-          // If exit confirmation popup is open: close it
+          // 1. If currently rebinding a key: cancel rebinding
+          if (activeRebindingAction) {
+            cancelKeyRebinding();
+            return;
+          }
+
+          // 2. If exit confirmation popup is open: close it
           if (exitModal && !exitModal.classList.contains('hidden')) {
             exitModal.classList.add('hidden');
             if (exitFallback) exitFallback.classList.add('hidden');
             return;
           }
 
-          // Debounce if pointerlockchange unlock just fired for this keypress
+          // 3. If settings modal is open: close it and return cleanly to openedFromMenu
+          if (settingsModal && !settingsModal.classList.contains('hidden')) {
+            closeSettingsModal();
+            return;
+          }
+
+          // 4. Debounce against pointerlockchange unlock
           if (Date.now() - lastPointerLockExitTime < 300) {
             return;
           }
 
-          // If pause menu is open: pressing Escape closes it and resumes the match
+          // 5. If pause menu is open: close it and resume
           if (pauseMenu && !pauseMenu.classList.contains('hidden')) {
             closePauseMenuAndResume();
             return;
           }
 
-          // If actively in match: open pause menu
+          // 6. If actively in match: open pause menu
           if (isPlayerInMatch() && shouldOpenPause()) {
             openPauseMenu();
           }
         }
       });
+
+      // Initial apply
+      applySettings();
     })();
   </script>
 
@@ -2364,6 +4156,22 @@
         <option value="1200">20 minutes</option>
       </select>
 
+      <label for="settingsHunterFogSelect">Hunter View Distance</label>
+      <select id="settingsHunterFogSelect" class="settings-dropdown">
+        <option value="350">Near (350 units — Challenging)</option>
+        <option value="550" selected>Medium / Default (550 units — Balanced)</option>
+        <option value="800">Far (800 units — Clear Sight)</option>
+        <option value="1200">Max (1200 units — Wide View)</option>
+      </select>
+
+      <label for="settingsPropFogSelect">Prop View Distance</label>
+      <select id="settingsPropFogSelect" class="settings-dropdown">
+        <option value="120">Terrifying (120 units — Blind Fear)</option>
+        <option value="200" selected>Short / Default (200 units — Pure Horror)</option>
+        <option value="350">Medium (350 units — Moderate)</option>
+        <option value="550">Equal (550 units — Same as Hunter)</option>
+      </select>
+
       <div class="settings-buttons">
         <button class="settings-btn" id="settingsApplyBtn" type="button">Apply Settings</button>
         <button class="settings-btn" id="settingsCloseBtn" type="button">Close</button>
@@ -2398,6 +4206,7 @@
     <div class="store-panel">
       <div class="store-header">
         <div>
+          <div class="cursed-market-brand">✦ CURSED MARKET ✦</div>
           <nav class="store-tabs" aria-label="Store sections">
             <button id="storeTab-shop" class="store-tab active" type="button" data-tab="shop">Shop</button>
             <button id="storeTab-inventory" class="store-tab" type="button" data-tab="inventory">Inventory</button>
@@ -2505,6 +4314,590 @@
 
   <!-- Socket.io (global `io`) must load before the ES module -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Settings & Three.js Hooks (Sensitivity, Invert Y, FOV, Shadows, Audio & Controls) -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+    window.__THREE = THREE;
+    window.__threeBasicShadowMap = THREE.BasicShadowMap;
+    window.__threePCFSoftShadowMap = THREE.PCFSoftShadowMap;
+
+    // Track SFX, Ambience, and HTML audio
+    window.__gameSfxSounds = window.__gameSfxSounds || [];
+    window.__gameAmbienceSounds = window.__gameAmbienceSounds || [];
+    window.__gameHtmlAudioElements = window.__gameHtmlAudioElements || [];
+
+    // -------------------------------------------------------------
+    // Role-Based Vision / Fog Distance & Private Lobby Host Controls
+    // -------------------------------------------------------------
+    let activeHunterFog = 550;
+    let activePropFog = 200;
+    let targetFogFar = 550;
+    let targetFogNear = 120;
+    let currentFogFar = null;
+    let currentFogNear = null;
+    let currentRole = 'waiting';
+    let currentAlive = true;
+    let currentMatchState = 'waiting';
+
+    window.__activeHunterFog = activeHunterFog;
+    window.__activePropFog = activePropFog;
+    window.__currentRole = currentRole;
+    window.__currentAlive = currentAlive;
+    window.__currentMatchState = currentMatchState;
+
+    function syncFogSelectElements() {
+      const hunterSelect = document.getElementById('settingsHunterFogSelect');
+      const propSelect = document.getElementById('settingsPropFogSelect');
+      if (hunterSelect && window.__activeHunterFog) {
+        hunterSelect.value = String(window.__activeHunterFog);
+      }
+      if (propSelect && window.__activePropFog) {
+        propSelect.value = String(window.__activePropFog);
+      }
+    }
+
+    function updateRoleFog(role, alive, matchState) {
+      if (role !== undefined && role !== null) currentRole = role;
+      if (typeof alive === 'boolean') currentAlive = alive;
+      if (matchState !== undefined && matchState !== null) currentMatchState = matchState;
+
+      window.__currentRole = currentRole;
+      window.__currentAlive = currentAlive;
+      window.__currentMatchState = currentMatchState;
+
+      const hunterDist = Number(window.__activeHunterFog || activeHunterFog || 550);
+      const propDist = Number(window.__activePropFog || activePropFog || 200);
+
+      if (currentMatchState === 'waiting') {
+        // Staging ground / Lobby: clear wide view
+        targetFogFar = Math.max(550, hunterDist);
+        targetFogNear = 120;
+      } else if (currentRole === 'prop' && currentAlive !== false) {
+        // Active Prop in match: tight, terrifying horror fog
+        targetFogFar = propDist;
+        targetFogNear = Math.max(10, Math.round(propDist * 0.2));
+      } else if (currentRole === 'hunter') {
+        // Hunter: long-range vision
+        targetFogFar = hunterDist;
+        targetFogNear = Math.max(30, Math.round(hunterDist * 0.25));
+      } else if (currentRole === 'eliminated' || currentAlive === false) {
+        // Eliminated / Spectating: wide clear vision
+        targetFogFar = Math.max(450, hunterDist);
+        targetFogNear = Math.max(30, Math.round(hunterDist * 0.22));
+      } else {
+        // Fallback default
+        targetFogFar = hunterDist;
+        targetFogNear = Math.max(30, Math.round(hunterDist * 0.25));
+      }
+    }
+    window.__updateRoleFog = updateRoleFog;
+
+    // Smooth lerp loop for scene.fog (approx 0.5-0.8s smooth transition on role/settings changes)
+    function animateFogDistance() {
+      requestAnimationFrame(animateFogDistance);
+      const sc = window.__gameScene;
+      if (!sc || !sc.fog) return;
+
+      if (currentFogFar === null) {
+        currentFogFar = sc.fog.far || 600;
+        currentFogNear = sc.fog.near || 120;
+      }
+
+      const lerpSpeed = 0.06;
+      const dFar = targetFogFar - currentFogFar;
+      const dNear = targetFogNear - currentFogNear;
+
+      if (Math.abs(dFar) > 0.4) {
+        currentFogFar += dFar * lerpSpeed;
+      } else {
+        currentFogFar = targetFogFar;
+      }
+      sc.fog.far = currentFogFar;
+
+      if (Math.abs(dNear) > 0.4) {
+        currentFogNear += dNear * lerpSpeed;
+      } else {
+        currentFogNear = targetFogNear;
+      }
+      sc.fog.near = currentFogNear;
+    }
+    requestAnimationFrame(animateFogDistance);
+
+    // Setup Socket hooks & listeners for fog settings and role changes
+    function setupFogSocketListeners(sock) {
+      if (!sock || sock.__fogHooked) return;
+      sock.__fogHooked = true;
+      window.__gameSocket = sock;
+
+      const origEmit = sock.emit;
+      sock.emit = function(ev, ...args) {
+        if (ev === 'updateRoomSettings' && args[0] && typeof args[0] === 'object') {
+          const hunterSelect = document.getElementById('settingsHunterFogSelect');
+          const propSelect = document.getElementById('settingsPropFogSelect');
+          if (hunterSelect && args[0].hunterFogDistance == null) {
+            args[0].hunterFogDistance = parseInt(hunterSelect.value, 10) || 550;
+          }
+          if (propSelect && args[0].propFogDistance == null) {
+            args[0].propFogDistance = parseInt(propSelect.value, 10) || 200;
+          }
+        }
+        return origEmit.apply(this, [ev, ...args]);
+      };
+
+      sock.on('init', (data) => {
+        if (!data) return;
+        if (data.id) window.__myPlayerId = data.id;
+        if (typeof data.hunterFogDistance === 'number') window.__activeHunterFog = data.hunterFogDistance;
+        if (typeof data.propFogDistance === 'number') window.__activePropFog = data.propFogDistance;
+        syncFogSelectElements();
+        const myId = window.__myPlayerId || sock.id;
+        if (data.players && myId && data.players[myId]) {
+          const me = data.players[myId];
+          updateRoleFog(me.role, me.alive, data.matchState);
+        } else if (data.matchState) {
+          updateRoleFog(null, null, data.matchState);
+        }
+      });
+
+      sock.on('matchStarted', (data) => {
+        if (!data) return;
+        if (typeof data.hunterFogDistance === 'number') window.__activeHunterFog = data.hunterFogDistance;
+        if (typeof data.propFogDistance === 'number') window.__activePropFog = data.propFogDistance;
+        syncFogSelectElements();
+        const myId = window.__myPlayerId || sock.id;
+        if (data.players && myId && data.players[myId]) {
+          const me = data.players[myId];
+          updateRoleFog(me.role, me.alive, 'playing');
+        } else {
+          updateRoleFog(null, true, 'playing');
+        }
+      });
+
+      sock.on('roomSettingsChanged', (data) => {
+        if (!data) return;
+        if (typeof data.hunterFogDistance === 'number') window.__activeHunterFog = data.hunterFogDistance;
+        if (typeof data.propFogDistance === 'number') window.__activePropFog = data.propFogDistance;
+        syncFogSelectElements();
+        updateRoleFog(currentRole, currentAlive, currentMatchState);
+      });
+
+      sock.on('stateUpdate', (data) => {
+        if (!data || !data.players) return;
+        const myId = window.__myPlayerId || sock.id;
+        if (myId && data.players[myId]) {
+          const me = data.players[myId];
+          updateRoleFog(me.role, me.alive, currentMatchState);
+        }
+      });
+
+      sock.on('matchOver', () => {
+        updateRoleFog('waiting', true, 'ended');
+      });
+
+      sock.on('buyResult', (data) => {
+        if (data && data.ok) {
+          triggerCursedRelicEffect(data.itemId, 'buy');
+        }
+      });
+
+      sock.on('equipResult', (data) => {
+        if (data && data.ok) {
+          triggerCursedRelicEffect(data.itemId, 'equip');
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Procedural Web Audio Chime & Whisper Horror Effect + Relic Anim
+    // -------------------------------------------------------------
+    function playCursedRelicSound() {
+      try {
+        const s = window.__gameSettings || {};
+        if (s.muteAll) return;
+        const master = (typeof s.masterVolume === 'number' ? s.masterVolume : 100) / 100;
+        const sfx = (typeof s.sfxVolume === 'number' ? s.sfxVolume : 80) / 100;
+        const totalVol = master * sfx;
+        if (totalVol <= 0.001) return;
+
+        const ctx = (window.__gameAudioListener && window.__gameAudioListener.context) ||
+                    (window.__cursedAudioCtx = window.__cursedAudioCtx || new (window.AudioContext || window.webkitAudioContext)());
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+
+        const now = ctx.currentTime;
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(totalVol * 0.42, now);
+        masterGain.connect(ctx.destination);
+
+        // 1. Eerie Chime (Spectral minor bells with subtle detuning)
+        const freqs = [587.33, 880, 1046.5]; // D5, A5, C6 (haunting relic chime)
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const oscGain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq + (idx === 1 ? 3 : -2), now);
+          osc.frequency.exponentialRampToValueAtTime(freq * 0.985, now + 1.2);
+
+          const amp = 0.24 / (idx + 1);
+          oscGain.gain.setValueAtTime(0, now);
+          oscGain.gain.linearRampToValueAtTime(amp, now + 0.015);
+          oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1 + idx * 0.1);
+
+          osc.connect(oscGain);
+          oscGain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 1.3);
+        });
+
+        // 2. Ghostly Whisper (Filtered Noise Sweep)
+        const bufferSize = Math.floor(ctx.sampleRate * 0.7);
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+
+        const whisperFilter = ctx.createBiquadFilter();
+        whisperFilter.type = 'bandpass';
+        whisperFilter.Q.setValueAtTime(4.5, now);
+        whisperFilter.frequency.setValueAtTime(2400, now);
+        whisperFilter.frequency.exponentialRampToValueAtTime(380, now + 0.65);
+
+        const whisperGain = ctx.createGain();
+        whisperGain.gain.setValueAtTime(0, now);
+        whisperGain.gain.linearRampToValueAtTime(0.2, now + 0.07);
+        whisperGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+
+        whiteNoise.connect(whisperFilter);
+        whisperFilter.connect(whisperGain);
+        whisperGain.connect(masterGain);
+        whiteNoise.start(now);
+        whiteNoise.stop(now + 0.75);
+
+        // 3. Subtle Dark Sub-rumble (giving the curse weight)
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'triangle';
+        subOsc.frequency.setValueAtTime(85, now);
+        subOsc.frequency.exponentialRampToValueAtTime(40, now + 0.55);
+
+        subGain.gain.setValueAtTime(0.14, now);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+
+        subOsc.connect(subGain);
+        subGain.connect(masterGain);
+        subOsc.start(now);
+        subOsc.stop(now + 0.65);
+      } catch (err) {}
+    }
+    window.__playCursedRelicSound = playCursedRelicSound;
+
+    function triggerCursedRelicEffect(itemId, type) {
+      playCursedRelicSound();
+
+      // Find the card element to animate
+      let card = null;
+      if (itemId) {
+        const btn = document.getElementById(`storeBuy-${itemId}`);
+        if (btn) card = btn.closest('.store-card');
+      }
+      if (!card) {
+        card = window.__lastClickedStoreCard || document.querySelector('.store-card:hover');
+      }
+
+      if (card) {
+        card.classList.remove('relic-horror-anim');
+        void card.offsetWidth;
+        card.classList.add('relic-horror-anim');
+        setTimeout(() => {
+          card.classList.remove('relic-horror-anim');
+        }, 750);
+      }
+
+      // Also shudder the store panel
+      const storePanel = document.querySelector('.store-panel');
+      if (storePanel) {
+        storePanel.classList.remove('store-panel-shudder');
+        void storePanel.offsetWidth;
+        storePanel.classList.add('store-panel-shudder');
+        setTimeout(() => {
+          storePanel.classList.remove('store-panel-shudder');
+        }, 600);
+      }
+
+      // Also pulse the inventory preview stage if equipping
+      if (type === 'equip') {
+        const stage = document.querySelector('.preview-stage');
+        if (stage) {
+          stage.classList.remove('relic-horror-anim');
+          void stage.offsetWidth;
+          stage.classList.add('relic-horror-anim');
+          setTimeout(() => {
+            stage.classList.remove('relic-horror-anim');
+          }, 750);
+        }
+      }
+    }
+    window.__triggerCursedRelicEffect = triggerCursedRelicEffect;
+
+    document.addEventListener('click', (e) => {
+      const actionBtn = e.target.closest('.store-action, .loadout-equip-button, [id^="storeBuy-"]');
+      if (actionBtn) {
+        window.__lastClickedStoreCard = actionBtn.closest('.store-card') || actionBtn.closest('.loadout-slot-card') || actionBtn;
+      }
+    }, true);
+
+    // Intercept window.io so the socket instance is immediately captured
+    if (typeof window.io === 'function') {
+      const origIo = window.io;
+      const wrappedIo = function(...args) {
+        const sock = origIo.apply(this, args);
+        setupFogSocketListeners(sock);
+        return sock;
+      };
+      for (const k in origIo) {
+        wrappedIo[k] = origIo[k];
+      }
+      if (origIo.connect) {
+        wrappedIo.connect = function(...args) {
+          const sock = origIo.connect.apply(this, args);
+          setupFogSocketListeners(sock);
+          return sock;
+        };
+      }
+      window.io = wrappedIo;
+    }
+
+    if (window.__gameSocket) {
+      setupFogSocketListeners(window.__gameSocket);
+    }
+    const sockCheckTimer = setInterval(() => {
+      if (window.__gameSocket && !window.__gameSocket.__fogHooked) {
+        setupFogSocketListeners(window.__gameSocket);
+      }
+    }, 250);
+
+    // Redundant observer and UI sync
+    syncFogSelectElements();
+    const roleEl = document.getElementById('roleDisplay');
+    if (roleEl) {
+      const observer = new MutationObserver(() => {
+        const txt = (roleEl.textContent || '').toLowerCase();
+        if (txt.includes('hunter')) {
+          updateRoleFog('hunter', true, 'playing');
+        } else if (txt.includes('prop')) {
+          updateRoleFog('prop', true, 'playing');
+        } else if (txt.includes('staging')) {
+          updateRoleFog('waiting', true, 'waiting');
+        } else if (txt.includes('eliminated')) {
+          updateRoleFog('eliminated', false, 'playing');
+        }
+      });
+      observer.observe(roleEl, { childList: true, characterData: true, subtree: true });
+    }
+
+    const applyBtn = document.getElementById('settingsApplyBtn');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        const hunterSelect = document.getElementById('settingsHunterFogSelect');
+        const propSelect = document.getElementById('settingsPropFogSelect');
+        if (hunterSelect && propSelect) {
+          window.__activeHunterFog = parseInt(hunterSelect.value, 10) || 550;
+          window.__activePropFog = parseInt(propSelect.value, 10) || 200;
+        }
+      }, true);
+    }
+
+    // Hook Scene
+    const origScene = THREE.Scene;
+    THREE.Scene = function(...args) {
+      const sc = new origScene(...args);
+      window.__gameScene = sc;
+
+      let _fog = null;
+      Object.defineProperty(sc, 'fog', {
+        get() { return _fog; },
+        set(newFog) {
+          _fog = newFog;
+          if (_fog) {
+            if (currentFogFar !== null) {
+              _fog.far = currentFogFar;
+              _fog.near = currentFogNear;
+            } else {
+              currentFogFar = _fog.far;
+              currentFogNear = _fog.near;
+            }
+          }
+        },
+        configurable: true,
+        enumerable: true
+      });
+
+      const origAdd = sc.add;
+      sc.add = function(...objs) {
+        const res = origAdd.apply(this, objs);
+        if (window.__applyGameSettings) {
+          window.__applyGameSettings();
+        }
+        return res;
+      };
+
+      setTimeout(() => {
+        if (window.__applyGameSettings) window.__applyGameSettings();
+      }, 50);
+      return sc;
+    };
+    THREE.Scene.prototype = origScene.prototype;
+
+    // Hook PointerLockControls connect
+    const origConnect = PointerLockControls.prototype.connect;
+    PointerLockControls.prototype.connect = function() {
+      window.__gameControls = this;
+      window.__gameCamera = this.camera;
+
+      const self = this;
+      this.domElement.ownerDocument.removeEventListener('mousemove', this._onMouseMove);
+
+      this._onMouseMove = function(event) {
+        if (self.isLocked === false) return;
+        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+        const camera = self.camera;
+        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        euler.setFromQuaternion(camera.quaternion);
+
+        const s = window.__gameSettings || { sensitivity: 1.0, invertY: false };
+        const sens = typeof s.sensitivity === 'number' ? s.sensitivity : 1.0;
+        const invertY = Boolean(s.invertY);
+
+        euler.y -= movementX * 0.002 * sens;
+        const ySign = invertY ? -1 : 1;
+        euler.x -= movementY * 0.002 * sens * ySign;
+
+        const PI_2 = Math.PI / 2;
+        euler.x = Math.max(PI_2 - self.maxPolarAngle, Math.min(PI_2 - self.minPolarAngle, euler.x));
+
+        camera.quaternion.setFromEuler(euler);
+        self.dispatchEvent({ type: 'change' });
+      };
+
+      origConnect.call(this);
+      if (window.__applyGameSettings) window.__applyGameSettings();
+    };
+
+    // Hook PerspectiveCamera
+    const origCamera = THREE.PerspectiveCamera;
+    THREE.PerspectiveCamera = function(...args) {
+      const cam = new origCamera(...args);
+      window.__gameCamera = cam;
+
+      let _currentFovVal = Number(window.__gameSettings?.fov || 75);
+
+      // Define smart fov getter/setter to smoothly support hunter ADS zooming while respecting user's FOV slider
+      Object.defineProperty(cam, 'fov', {
+        get() {
+          return _currentFovVal;
+        },
+        set(val) {
+          const userFov = Number(window.__gameSettings?.fov || 75);
+          if (val === 75 || Math.abs(val - 75) < 0.05) {
+            _currentFovVal = userFov;
+          } else if (val === 40 || Math.abs(val - 40) < 0.05) {
+            _currentFovVal = 40;
+          } else {
+            // Hunter ADS lerp progress between 40 and 75
+            const t = Math.max(0, Math.min(1, (val - 40) / 35));
+            _currentFovVal = 40 + t * (userFov - 40);
+          }
+        },
+        configurable: true,
+        enumerable: true
+      });
+
+      cam.fov = Number(window.__gameSettings?.fov || 75);
+      cam.updateProjectionMatrix();
+      return cam;
+    };
+    THREE.PerspectiveCamera.prototype = origCamera.prototype;
+
+    // Hook WebGLRenderer
+    const origRenderer = THREE.WebGLRenderer;
+    THREE.WebGLRenderer = function(...args) {
+      const rend = new origRenderer(...args);
+      window.__gameRenderer = rend;
+      setTimeout(() => {
+        if (window.__applyGameSettings) window.__applyGameSettings();
+      }, 50);
+      return rend;
+    };
+    THREE.WebGLRenderer.prototype = origRenderer.prototype;
+
+    // Hook AudioListener
+    const origAudioListener = THREE.AudioListener;
+    THREE.AudioListener = function(...args) {
+      const listener = new origAudioListener(...args);
+      window.__gameAudioListener = listener;
+      setTimeout(() => {
+        if (window.__applyGameSettings) window.__applyGameSettings();
+      }, 50);
+      return listener;
+    };
+    THREE.AudioListener.prototype = origAudioListener.prototype;
+
+    // Intercept setVolume on THREE.Audio prototype so user multipliers always scale volumes
+    const origSetVolume = THREE.Audio.prototype.setVolume;
+    THREE.Audio.prototype.setVolume = function(value) {
+      this._baseVolume = value;
+      const isAmb = this.isPositionalAudio || (window.__gameAmbienceSounds && window.__gameAmbienceSounds.includes(this));
+      const mult = isAmb ? (window.__ambienceMultiplier ?? 0.7) : (window.__sfxMultiplier ?? 0.8);
+      return origSetVolume.call(this, value * mult);
+    };
+
+    // Hook Audio (SFX)
+    const origAudio = THREE.Audio;
+    THREE.Audio = function(...args) {
+      const a = new origAudio(...args);
+      a._baseVolume = 1.0;
+      window.__gameSfxSounds.push(a);
+      return a;
+    };
+    THREE.Audio.prototype = origAudio.prototype;
+
+    // Hook PositionalAudio (Ambience)
+    const origPosAudio = THREE.PositionalAudio;
+    THREE.PositionalAudio = function(...args) {
+      const pa = new origPosAudio(...args);
+      pa._baseVolume = 1.0;
+      window.__gameAmbienceSounds.push(pa);
+      return pa;
+    };
+    THREE.PositionalAudio.prototype = origPosAudio.prototype;
+
+    // Hook window.Audio for HTML5 Audio instances
+    const origHtmlAudio = window.Audio;
+    window.Audio = function(...args) {
+      const el = new origHtmlAudio(...args);
+      el._baseVolume = 1.0;
+      window.__gameHtmlAudioElements.push(el);
+      return el;
+    };
+    window.Audio.prototype = origHtmlAudio.prototype;
+
+    // Ensure custom resolution scale is preserved across window resizes
+    window.addEventListener('resize', () => {
+      setTimeout(() => {
+        if (window.__applyGameSettings) window.__applyGameSettings();
+      }, 50);
+    });
+  </script>
   <!-- Main 3D client as ES module (uses import map for Three.js + GLTFLoader) -->
   <script type="module" src="client.js"></script>
 

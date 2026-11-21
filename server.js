@@ -395,6 +395,9 @@ const PRIVATE_TIME_LIMIT_OPTIONS = [180, 300, 600, 1200];
 const GLOBAL_TIME_LIMIT_OPTIONS = [300, 600, 1200];       
 const DEFAULT_PRIVATE_TIME_LIMIT = 300;
 
+const DEFAULT_HUNTER_FOG_DISTANCE = 550;
+const DEFAULT_PROP_FOG_DISTANCE = 200;
+
 function getRoomState(roomName) {
   return roomStates.get(roomName) || null;
 }
@@ -413,6 +416,11 @@ function getOrCreateRoomState(roomName, zone, requestedTimeLimit, hostId) {
       : DEFAULT_PRIVATE_TIME_LIMIT)
     : randomGlobalTimeLimit();
 
+  const code = isPrivate ? roomName.slice('private_'.length) : null;
+  const privateRoom = code ? privateRooms.get(code) : null;
+  const hunterFogDistance = (privateRoom && privateRoom.hunterFogDistance) || DEFAULT_HUNTER_FOG_DISTANCE;
+  const propFogDistance = (privateRoom && privateRoom.propFogDistance) || DEFAULT_PROP_FOG_DISTANCE;
+
   const rs = {
     state: 'waiting',
     timeLeft: isPrivate ? durationSec : GLOBAL_LOBBY_SECONDS,
@@ -421,7 +429,9 @@ function getOrCreateRoomState(roomName, zone, requestedTimeLimit, hostId) {
     zoneId: zone.id,
     hostId: isPrivate ? hostId : null,
     resetTimeout: null,
-    intermissionSeconds: INTERMISSION_SECONDS
+    intermissionSeconds: INTERMISSION_SECONDS,
+    hunterFogDistance,
+    propFogDistance
   };
   roomStates.set(roomName, rs);
   return rs;
@@ -500,7 +510,9 @@ function startRoom(roomName) {
     timeLeft: rs.timeLeft,
     timeLimit: rs.timeLimit,
     originalDuration: rs.originalDuration,
-    state: rs.state
+    state: rs.state,
+    hunterFogDistance: rs.hunterFogDistance || DEFAULT_HUNTER_FOG_DISTANCE,
+    propFogDistance: rs.propFogDistance || DEFAULT_PROP_FOG_DISTANCE
   });
   io.to(roomName).emit('stateUpdate', buildStateUpdatePayload(roomName)); broadcastLeaderboard(roomName); broadcastTimeUpdate(roomName); sendRadarAfterStateChange();
 }
@@ -566,7 +578,9 @@ function resetRoom(roomName) {
     timeLeft: rs.timeLeft,
     timeLimit: rs.timeLimit,
     originalDuration: rs.originalDuration,
-    state: rs.state
+    state: rs.state,
+    hunterFogDistance: rs.hunterFogDistance || DEFAULT_HUNTER_FOG_DISTANCE,
+    propFogDistance: rs.propFogDistance || DEFAULT_PROP_FOG_DISTANCE
   });
   io.to(roomName).emit('stateUpdate', buildStateUpdatePayload(roomName));
   broadcastLeaderboard(roomName);
@@ -1407,7 +1421,12 @@ io.on('connection', (socket) => {
         roomCode = generateRoomCode();
         zone = fallbackZone;
         roomName = `private_${roomCode}`;
-        privateRooms.set(roomCode, { roomName, zoneId: zone.id });
+        privateRooms.set(roomCode, {
+          roomName,
+          zoneId: zone.id,
+          hunterFogDistance: DEFAULT_HUNTER_FOG_DISTANCE,
+          propFogDistance: DEFAULT_PROP_FOG_DISTANCE
+        });
       }
     } else {
       zone = fallbackZone;
@@ -1502,7 +1521,9 @@ io.on('connection', (socket) => {
       timeLeft: roomState.timeLeft,
       timeLimit: roomState.timeLimit,
       originalDuration: roomState.originalDuration,
-      matchState: roomState.state
+      matchState: roomState.state,
+      hunterFogDistance: roomState.hunterFogDistance || DEFAULT_HUNTER_FOG_DISTANCE,
+      propFogDistance: roomState.propFogDistance || DEFAULT_PROP_FOG_DISTANCE
     });
 
     socket.emit('timeUpdate', {
@@ -1859,9 +1880,26 @@ io.on('connection', (socket) => {
     rs.timeLeft = timeLimit;
     rs.originalDuration = timeLimit;
 
+    if (data.hunterFogDistance != null) {
+      const parsedHunter = Number.parseInt(data.hunterFogDistance, 10);
+      if (!Number.isNaN(parsedHunter) && parsedHunter >= 150 && parsedHunter <= 3000) {
+        rs.hunterFogDistance = parsedHunter;
+      }
+    }
+    if (data.propFogDistance != null) {
+      const parsedProp = Number.parseInt(data.propFogDistance, 10);
+      if (!Number.isNaN(parsedProp) && parsedProp >= 50 && parsedProp <= 3000) {
+        rs.propFogDistance = parsedProp;
+      }
+    }
+
     const code = roomName.slice('private_'.length);
     const privateRoom = privateRooms.get(code);
-    if (privateRoom) privateRoom.zoneId = zone.id;
+    if (privateRoom) {
+      privateRoom.zoneId = zone.id;
+      privateRoom.hunterFogDistance = rs.hunterFogDistance;
+      privateRoom.propFogDistance = rs.propFogDistance;
+    }
 
     for (const [id, pl] of Object.entries(players)) {
       if (pl.roomName === roomName) {
@@ -1874,7 +1912,9 @@ io.on('connection', (socket) => {
       zoneId: zone.id,
       zone,
       timeLimit,
-      timeLeft: rs.timeLeft
+      timeLeft: rs.timeLeft,
+      hunterFogDistance: rs.hunterFogDistance,
+      propFogDistance: rs.propFogDistance
     });
     broadcastTimeUpdate(roomName);
   });
