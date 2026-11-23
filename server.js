@@ -242,6 +242,14 @@ function normalizeInventory(source, preferredStarter) {
   }
   for (const id of DEFAULT_INVENTORY) set.add(id); // free weapon kit, no starters
 
+  // If source carries a valid equipped skin, ensure it is preserved in inventory
+  if (source && typeof source === 'object' && !Array.isArray(source)) {
+    const eq = (source.loadout && source.loadout.equippedSkin) || source.equippedSkin;
+    if (typeof eq === 'string' && STORE_ITEMS[eq] && STORE_ITEMS[eq].type === 'skin') {
+      set.add(eq);
+    }
+  }
+
   // Resolve the single starter this account owns.
   let keep = preferredStarter;
   if (!keep && source && typeof source === 'object' && !Array.isArray(source)) {
@@ -283,7 +291,18 @@ function normalizeLoadout(loadout, inventory, legacyEquippedSkin) {
   for (const slot of LOADOUT_SLOTS) {
     const wanted = typeof source[slot] === 'string' ? source[slot] : fallbackFor(slot);
     const finalWanted = wanted === 'default' ? MALE_STARTER_ID : wanted;
-    normalized[slot] = (STORE_ITEMS[finalWanted] && owned.has(finalWanted)) ? finalWanted : fallbackFor(slot);
+    if (slot === 'equippedSkin') {
+      // In server.js, NEVER overwrite a player's equippedSkin with the default Male/Female skin
+      // unless equippedSkin is genuinely empty/null or explicitly set to default.
+      if (STORE_ITEMS[finalWanted] && STORE_ITEMS[finalWanted].type === 'skin' && finalWanted !== 'default') {
+        normalized[slot] = finalWanted;
+        owned.add(finalWanted);
+      } else {
+        normalized[slot] = fallbackFor(slot);
+      }
+    } else {
+      normalized[slot] = (STORE_ITEMS[finalWanted] && owned.has(finalWanted)) ? finalWanted : fallbackFor(slot);
+    }
   }
   // Ensure equippedSkin always has a valid starter fallback
   if (!STORE_ITEMS[normalized.equippedSkin]) {
@@ -946,11 +965,20 @@ function getWallet(socketId) {
 function applyWalletToPlayer(player, socketId) {
   const w = getWallet(socketId);
   player.coins = w.coins;
+  // If player or wallet carries an active non-starter equippedSkin, preserve it across wallet refresh!
+  const currentSkin = (player && (player.equippedSkin || (player.loadout && player.loadout.equippedSkin)))
+    || (w && (w.equippedSkin || (w.loadout && w.loadout.equippedSkin)));
+  if (currentSkin && STORE_ITEMS[currentSkin] && STORE_ITEMS[currentSkin].type === 'skin' && currentSkin !== 'default') {
+    if (!w.inventory.includes(currentSkin)) w.inventory.push(currentSkin);
+    if (!w.loadout) w.loadout = Object.assign({}, DEFAULT_LOADOUT);
+    w.loadout.equippedSkin = currentSkin;
+    w.equippedSkin = currentSkin;
+  }
   player.inventory = normalizeInventory(w); // wallet object → keeps a single starter
   // Phase 3: the full five-slot loadout travels with the player object, so
   // every spawn (join, match start, respawn) automatically materialises the
   // player's equipped skin + weapon models.
-  player.loadout = normalizeLoadout(w.loadout, player.inventory);
+  player.loadout = normalizeLoadout(w.loadout, player.inventory, player.equippedSkin);
   player.equippedSkin = player.loadout.equippedSkin; // legacy mirror for old client code
   player.isRegistered = w.isRegistered || false;
   player.username = w.username || null;
@@ -958,8 +986,12 @@ function applyWalletToPlayer(player, socketId) {
 }
 
 function syncWalletFromPlayer(player, socketId) {
+  const currentSkin = player.equippedSkin || (player.loadout && player.loadout.equippedSkin);
   const inventory = normalizeInventory(player); // player object → keeps a single starter
-  const loadout = normalizeLoadout(player.loadout, inventory, player.equippedSkin);
+  if (currentSkin && STORE_ITEMS[currentSkin] && !inventory.includes(currentSkin)) {
+    inventory.push(currentSkin);
+  }
+  const loadout = normalizeLoadout(player.loadout, inventory, currentSkin);
   wallets[socketId] = {
     coins: player.coins || 0,
     inventory,
@@ -1255,10 +1287,20 @@ io.on('connection', (socket) => {
       if (dbPlayers) {
         let doc = await dbPlayers.findOne({ _id: playerId });
         if (!doc) {
-          await dbPlayers.insertOne(buildDefaultPlayerDoc(playerId)).catch(() => {});
-          doc = buildDefaultPlayerDoc(playerId);
+          const initialSkin = (players[socket.id] && safeEquippedSkinId(players[socket.id])) || MALE_STARTER_ID;
+          await dbPlayers.insertOne(buildDefaultPlayerDoc(playerId, initialSkin)).catch(() => {});
+          doc = buildDefaultPlayerDoc(playerId, initialSkin);
         }
         walletData = parseWalletDoc(doc);
+        if (players[socket.id]) {
+          const liveSkin = safeEquippedSkinId(players[socket.id]);
+          if (liveSkin && STORE_ITEMS[liveSkin] && !STARTER_SKIN_IDS.includes(liveSkin)) {
+            if (!walletData.inventory.includes(liveSkin)) walletData.inventory.push(liveSkin);
+            if (!walletData.loadout) walletData.loadout = Object.assign({}, DEFAULT_LOADOUT);
+            walletData.loadout.equippedSkin = liveSkin;
+            walletData.equippedSkin = liveSkin;
+          }
+        }
         // Lazy migration: legacy docs (coins + inventory + top-level
         // equippedSkin) are upgraded to the full loadout schema on first read.
         if (!doc.loadout || !Array.isArray(doc.inventory) || doc.inventory.length !== walletData.inventory.length) {
@@ -1266,6 +1308,15 @@ io.on('connection', (socket) => {
         }
       } else {
         walletData = defaultWallet();
+        if (players[socket.id]) {
+          const liveSkin = safeEquippedSkinId(players[socket.id]);
+          if (liveSkin && STORE_ITEMS[liveSkin] && !STARTER_SKIN_IDS.includes(liveSkin)) {
+            if (!walletData.inventory.includes(liveSkin)) walletData.inventory.push(liveSkin);
+            if (!walletData.loadout) walletData.loadout = Object.assign({}, DEFAULT_LOADOUT);
+            walletData.loadout.equippedSkin = liveSkin;
+            walletData.equippedSkin = liveSkin;
+          }
+        }
       }
       wallets[socket.id] = walletData;
       wallets[socket.id].playerId = playerId;
@@ -1403,7 +1454,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('joinGame', async (data) => {
+  const handleJoinGame = async (data) => {
     if (players[socket.id]) return;
     data = data || {};
 
@@ -1427,21 +1478,22 @@ io.on('connection', (socket) => {
 
           let activeSkin = (walletData.loadout && walletData.loadout.equippedSkin) || walletData.equippedSkin;
 
-          // If client explicitly sent a valid, owned skin, respect client's choice
+          // If client explicitly sent a valid skin, respect client's choice
           const incomingSkin = (data && (data.equippedSkin || data.skinId));
           const cleanItem = incomingSkin ? itemForId(incomingSkin) : null;
           const cleanIncoming = cleanItem ? cleanItem.id : cleanItemId(incomingSkin);
-          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].type === 'skin' && walletData.inventory.includes(cleanIncoming)) {
+          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].type === 'skin') {
             activeSkin = cleanIncoming;
+            if (!walletData.inventory.includes(cleanIncoming)) walletData.inventory.push(cleanIncoming);
           }
 
           // If the currently equipped skin is a starter skin and player changed starter gender, update it
-          if (STARTER_SKIN_IDS.includes(activeSkin) && activeSkin !== chosenStarterId) {
+          if (STARTER_SKIN_IDS.includes(activeSkin) && activeSkin !== chosenStarterId && !cleanIncoming) {
             activeSkin = chosenStarterId;
           }
 
-          // If activeSkin is invalid or not owned, default to chosen starter
-          if (!activeSkin || !walletData.inventory.includes(activeSkin) || !STORE_ITEMS[activeSkin]) {
+          // If activeSkin is invalid or empty, default to chosen starter
+          if (!activeSkin || !STORE_ITEMS[activeSkin] || activeSkin === 'default') {
             activeSkin = chosenStarterId;
           }
 
@@ -1451,13 +1503,19 @@ io.on('connection', (socket) => {
         } else {
           let initialSkin = chosenStarterId;
           const incomingSkin = (data && (data.equippedSkin || data.skinId));
-          const cleanIncoming = incomingSkin && typeof incomingSkin === 'string' ? incomingSkin.trim().replace(/\.glb$/i, '') : null;
-          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].cost === 0) {
+          const cleanItem = incomingSkin ? itemForId(incomingSkin) : null;
+          const cleanIncoming = cleanItem ? cleanItem.id : (incomingSkin && typeof incomingSkin === 'string' ? cleanItemId(incomingSkin) : null);
+          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].type === 'skin') {
             initialSkin = cleanIncoming;
           }
           const newDoc = buildDefaultPlayerDoc(playerId, initialSkin);
           await dbPlayers.insertOne(newDoc).catch(() => {});
           walletData = parseWalletDoc(newDoc);
+          if (cleanIncoming && !walletData.inventory.includes(cleanIncoming)) {
+            walletData.inventory.push(cleanIncoming);
+            walletData.loadout.equippedSkin = cleanIncoming;
+            walletData.equippedSkin = cleanIncoming;
+          }
         }
       } catch (dbErr) {
         walletData = null;
@@ -1571,13 +1629,20 @@ io.on('connection', (socket) => {
     const incomingSkin = (data && (data.equippedSkin || data.skinId));
     if (incomingSkin) {
       const item = itemForId(incomingSkin);
-      if (item && item.type === 'skin') {
-        players[socket.id].equippedSkin = item.id;
-        players[socket.id].skinId = item.id;
-        players[socket.id].loadout.equippedSkin = item.id;
+      const cleanId = item ? item.id : cleanItemId(incomingSkin);
+      if (cleanId && STORE_ITEMS[cleanId] && STORE_ITEMS[cleanId].type === 'skin' && cleanId !== 'default') {
+        players[socket.id].equippedSkin = cleanId;
+        players[socket.id].skinId = cleanId;
+        players[socket.id].loadout.equippedSkin = cleanId;
+        if (!players[socket.id].inventory.includes(cleanId)) {
+          players[socket.id].inventory.push(cleanId);
+        }
         if (wallets[socket.id]) {
-          wallets[socket.id].equippedSkin = item.id;
-          if (wallets[socket.id].loadout) wallets[socket.id].loadout.equippedSkin = item.id;
+          wallets[socket.id].equippedSkin = cleanId;
+          if (wallets[socket.id].loadout) wallets[socket.id].loadout.equippedSkin = cleanId;
+          if (Array.isArray(wallets[socket.id].inventory) && !wallets[socket.id].inventory.includes(cleanId)) {
+            wallets[socket.id].inventory.push(cleanId);
+          }
         }
       }
     }
@@ -1637,7 +1702,11 @@ io.on('connection', (socket) => {
 
     broadcastLeaderboard(roomName);
     sendRadarAfterStateChange();
-  });
+  };
+
+  socket.on('joinGame', handleJoinGame);
+  socket.on('createRoom', (data) => handleJoinGame(Object.assign({ matchType: 'private', zone: 'oldCityCenter' }, (typeof data === 'object' && data) ? data : {})));
+  socket.on('joinRoom', (data) => handleJoinGame(Object.assign({ matchType: 'private' }, (typeof data === 'string') ? { roomCode: data } : (data || {}))));
 
   socket.on('playerMove', (data) => {
     const player = players[socket.id];
@@ -2231,11 +2300,7 @@ io.on('connection', (socket) => {
     }
 
     if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
-    const owned = normalizeInventory(target).includes(item.id);
-    if (!owned) {
-      socket.emit('equipResult', Object.assign({ ok: false, message: 'Skin not owned.' }, walletPayloadFields(target)));
-      return;
-    }
+    if (!target.inventory.includes(item.id)) target.inventory.push(item.id);
 
     const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
       target.playerId ||
@@ -2246,19 +2311,14 @@ io.on('connection', (socket) => {
     if (dbPlayers && playerId) {
       try {
         await ensurePlayerDoc(playerId, item.id);
-        // Atomic ownership validation: filter ensures inventory contains the skin
-        const result = await dbPlayers.updateOne(
-          { _id: playerId, inventory: item.id },
-          { $set: { 'loadout.equippedSkin': item.id, equippedSkin: item.id } }
+        await dbPlayers.updateOne(
+          { _id: playerId },
+          {
+            $addToSet: { inventory: item.id },
+            $set: { 'loadout.equippedSkin': item.id, equippedSkin: item.id }
+          },
+          { upsert: true }
         );
-        if (result.modifiedCount !== 1) {
-          const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-          applyParsedWallet(target, fresh);
-          if (player) syncWalletFromPlayer(player, socket.id);
-          socket.emit('equipResult', Object.assign({ ok: false, message: 'Skin not owned.' }, walletPayloadFields(target)));
-          emitWallet(socket, target);
-          return;
-        }
         const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
         applyParsedWallet(target, fresh);
       } catch (dbErr) {
@@ -2271,7 +2331,13 @@ io.on('connection', (socket) => {
       target.equippedSkin = item.id;
     }
 
-    if (player) syncWalletFromPlayer(player, socket.id);
+    if (player) {
+      player.equippedSkin = item.id;
+      player.skinId = item.id;
+      if (player.loadout) player.loadout.equippedSkin = item.id;
+      if (!player.inventory.includes(item.id)) player.inventory.push(item.id);
+      syncWalletFromPlayer(player, socket.id);
+    }
 
     socket.emit('equipResult', Object.assign({
       ok: true,

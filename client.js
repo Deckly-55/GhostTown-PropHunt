@@ -1720,6 +1720,18 @@ function skinFileForId(skinId) {
   return STORE_CATALOG[MALE_STARTER_ID].file;
 }
 
+const SKIN_FACING_OFFSETS = {
+  Casual_Character: 0,
+  Casual_w: 0,
+  Astronaut: 0
+};
+
+function getSkinFacingOffset(skinId) {
+  if (!skinId) return 0;
+  const clean = cleanSkinId(skinId);
+  return SKIN_FACING_OFFSETS[clean] || 0;
+}
+
 function getCandidateSkinUrls(fileOrPath) {
   if (!fileOrPath) return ['/Skins/Players/Casual_Character.glb', '/Casual_Character.glb'];
   if (fileOrPath.startsWith('http://') || fileOrPath.startsWith('https://')) {
@@ -1939,6 +1951,7 @@ function attachSkinToPlayer(id, playerRoot, skinId) {
         scaledBox.getCenter(scaledCenter);
 
         model.position.set(-scaledCenter.x, -scaledBox.min.y, -scaledCenter.z);
+        model.rotation.y = getSkinFacingOffset(skinId);
         model.updateMatrixWorld(true);
 
         model.traverse((child) => {
@@ -2251,6 +2264,10 @@ function getOrCreatePlayerMesh(id, player) {
   const skinId = resolvePlayerSkinId(player);
   const wantsCharacter = !disguised;
 
+  if (!isMe && (!playerRoot || playerRoot.userData.lastLoggedSkin !== skinId)) {
+    console.log('[skin-sync]', player.username, 'equippedSkin:', player.equippedSkin);
+  }
+
   if (!playerRoot) {
     playerRoot = new THREE.Group();
     playerRoot.name = `playerRoot_${id}`;
@@ -2267,6 +2284,7 @@ function getOrCreatePlayerMesh(id, player) {
     playerRoot.userData.lastPos = null;
     playerRoot.userData.lastPosTime = performance.now();
     playerRoot.userData.initializedPos = false;
+    playerRoot.userData.lastLoggedSkin = skinId;
 
     // bodyContainer holds ONLY the active skin .glb, procedural fallback body, or prop box
     const bodyContainer = new THREE.Group();
@@ -2370,6 +2388,7 @@ function getOrCreatePlayerMesh(id, player) {
     }
   }
 
+  playerRoot.userData.lastLoggedSkin = skinId;
   if (wantsCharacter) {
     attachSkinToPlayer(id, playerRoot, skinId);
   }
@@ -3132,11 +3151,16 @@ function joinGame(options) {
   const starterId = chosenStarterSkinId || defaultEquippedSkinId();
   opts.starterSkin = starterId;
   const savedSkin = readSavedEquippedSkin();
-  const activeSkin = myLoadout.equippedSkin || savedSkin || starterId;
+  const activeSkin = myLoadout.equippedSkin || myEquippedSkin || savedSkin || starterId;
   opts.equippedSkin = activeSkin;
   opts.skinId = activeSkin;
   opts.gender = starterGender || (starterId === FEMALE_STARTER_ID ? 'female' : 'male');
   socket.emit('joinGame', opts);
+  if (opts.matchType === 'private' && !opts.roomCode) {
+    socket.emit('createRoom', opts);
+  } else if (opts.roomCode) {
+    socket.emit('joinRoom', opts);
+  }
   hideMainMenu();
   hideDeathScreen();
   hideMatchOver();
@@ -3144,6 +3168,32 @@ function joinGame(options) {
   if (lockHint && !controls.isLocked) {
     lockHint.classList.remove('hidden');
   }
+}
+
+function createRoom(options) {
+  const savedSkin = readSavedEquippedSkin();
+  const activeSkin = myLoadout.equippedSkin || myEquippedSkin || savedSkin || (chosenStarterSkinId || defaultEquippedSkinId());
+  const opts = Object.assign({
+    matchType: 'private',
+    zone: 'oldCityCenter',
+    timeLimit: DEFAULT_PRIVATE_TIME_LIMIT,
+    roomCode: null,
+    equippedSkin: activeSkin,
+    skinId: activeSkin
+  }, options || {});
+  joinGame(opts);
+}
+
+function joinRoom(roomCode) {
+  const savedSkin = readSavedEquippedSkin();
+  const activeSkin = myLoadout.equippedSkin || myEquippedSkin || savedSkin || (chosenStarterSkinId || defaultEquippedSkinId());
+  joinGame({
+    matchType: 'private',
+    zone: null,
+    roomCode: roomCode,
+    equippedSkin: activeSkin,
+    skinId: activeSkin
+  });
 }
 
 function showJoinError(message) {
@@ -3308,13 +3358,23 @@ if (settingsCloseBtn) {
 
 function normalizeMyLoadout(loadout, inventory) {
   const owned = new Set(Array.isArray(inventory) ? inventory : myInventory);
+  const savedSkin = readSavedEquippedSkin();
+  if (savedSkin) owned.add(savedSkin);
+  if (myEquippedSkin) owned.add(myEquippedSkin);
   const source = (loadout && typeof loadout === 'object') ? loadout : {};
   const normalized = {};
   for (const slot of LOADOUT_SLOTS) {
     let wanted = typeof source[slot] === 'string' ? source[slot] : DEFAULT_LOADOUT[slot];
     if (slot === 'equippedSkin' && wanted === 'default') wanted = MALE_STARTER_ID;
-    normalized[slot] = (STORE_CATALOG[wanted] && owned.has(wanted)) ? wanted
-      : (slot === 'equippedSkin' ? defaultEquippedSkinId() : DEFAULT_LOADOUT[slot]);
+    if (slot === 'equippedSkin') {
+      if (STORE_CATALOG[wanted] && (owned.has(wanted) || !STARTER_SKIN_IDS.includes(wanted))) {
+        normalized[slot] = wanted;
+      } else {
+        normalized[slot] = savedSkin || defaultEquippedSkinId();
+      }
+    } else {
+      normalized[slot] = (STORE_CATALOG[wanted] && owned.has(wanted)) ? wanted : DEFAULT_LOADOUT[slot];
+    }
   }
   if (STARTER_SKIN_IDS.includes(normalized.equippedSkin)
       && normalized.equippedSkin !== chosenStarterSkinId
@@ -3330,18 +3390,23 @@ function ensureExclusiveStarterInventory() {
 }
 
 function applyLoadoutState(inventory, loadout) {
+  const savedSkin = readSavedEquippedSkin();
   if (Array.isArray(inventory)) {
     const set = new Set(inventory);
     for (const id of DEFAULT_INVENTORY) set.add(id);
     set.add(guaranteedStarterSkinId());
+    if (savedSkin) set.add(savedSkin);
+    if (myEquippedSkin) set.add(myEquippedSkin);
     myInventory = Array.from(set);
   }
   ensureExclusiveStarterInventory();
+  if (savedSkin && !myInventory.includes(savedSkin)) {
+    myInventory.push(savedSkin);
+  }
   myLoadout = normalizeMyLoadout(loadout, myInventory);
 
-  const savedSkin = readSavedEquippedSkin();
-  if (savedSkin && myInventory.includes(savedSkin)) {
-    if (!loadout || !loadout.equippedSkin || STARTER_SKIN_IDS.includes(loadout.equippedSkin)) {
+  if (savedSkin && STORE_CATALOG[savedSkin]) {
+    if (!myLoadout.equippedSkin || STARTER_SKIN_IDS.includes(myLoadout.equippedSkin) || !STORE_CATALOG[myLoadout.equippedSkin]) {
       if (!STARTER_SKIN_IDS.includes(savedSkin)) {
         myLoadout.equippedSkin = savedSkin;
       }
@@ -4224,7 +4289,8 @@ function attachSocketListeners() {
   socket.on('playerJoined', (data) => {
     if (!data || !data.id) return;
     players[data.id] = data.player;
-    if (data.id !== myId) {
+    if (data.id !== myId && data.player) {
+      console.log('[skin-sync]', data.player.username, 'equippedSkin:', data.player.equippedSkin);
       getOrCreatePlayerMesh(data.id, data.player);
     }
     updatePlayerMeshes(); updateLobbyStats();
@@ -4364,6 +4430,9 @@ function attachSocketListeners() {
       let mesh = playerMeshes[data.id];
       if (!mesh && players[data.id]) {
         mesh = getOrCreatePlayerMesh(data.id, players[data.id]);
+      }
+      if (players[data.id]) {
+        console.log('[skin-sync]', players[data.id].username, 'equippedSkin:', skin);
       }
       if (mesh && !players[data.id]?.isProp) {
         attachSkinToPlayer(data.id, mesh, skin);
@@ -4809,16 +4878,20 @@ function updateAimDownSights(dt) {
 
 let lastSentYaw = null;
 function emitMoveIfChanged() {
-  if (!socket || !hasJoined || !amAlive || isDisguised || !players[myId]) return;
+  if (!socket || !hasJoined || !amAlive || !players[myId]) return;
   const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
-  const euler = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
-  const yaw = euler.y;
+  const _dir = new THREE.Vector3();
+  camera.getWorldDirection(_dir);
+  const yaw = Math.atan2(_dir.x, _dir.z);
   const isMoving = keys.w || keys.a || keys.s || keys.d;
+  let yawDiff = Math.abs(yaw - (lastSentYaw !== null ? lastSentYaw : yaw));
+  while (yawDiff > Math.PI) yawDiff = Math.abs(yawDiff - Math.PI * 2);
+  const yawChanged = lastSentYaw === null || yawDiff > 0.005;
   if (lastSentX === null ||
       Math.abs(px - lastSentX) > 0.001 ||
       Math.abs(py - lastSentY) > 0.001 ||
       Math.abs(pz - lastSentZ) > 0.001 ||
-      Math.abs(yaw - (lastSentYaw || 0)) > 0.01) {
+      yawChanged) {
     socket.emit('playerMove', { x: px, y: py, z: pz, rotation: yaw, yaw: yaw, isMoving: isMoving });
     lastSentX = px; lastSentY = py; lastSentZ = pz; lastSentYaw = yaw;
   }
@@ -5059,6 +5132,7 @@ function animate() {
   Object.values(npcMixers).forEach(mixer => mixer.update(dt));
   updateNpcVisuals(dt);
   updatePlayerAnimations(dt);
+  updatePlayerMeshes();
 
   for (const mesh of Object.values(lootMeshes)) {
     mesh.rotation.y += 3 * dt;
