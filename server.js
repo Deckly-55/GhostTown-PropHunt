@@ -16,6 +16,9 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+app.use('/public/Skins/Players', express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
+app.use('/Skins/Players', express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
+app.use(express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -197,8 +200,25 @@ function getChosenStarterFromData(data) {
   return resolved || MALE_STARTER_ID;
 }
 
+function cleanItemId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return null;
+  let s = rawId.trim().split('?')[0].split('#')[0];
+  const parts = s.split(/[\/\\]/);
+  s = parts[parts.length - 1];
+  return s.replace(/\.glb$/i, '').trim();
+}
+
 function itemForId(itemId) {
-  return STORE_ITEMS[itemId] || null;
+  if (!itemId || typeof itemId !== 'string') return null;
+  if (STORE_ITEMS[itemId]) return STORE_ITEMS[itemId];
+  const clean = cleanItemId(itemId);
+  if (clean && STORE_ITEMS[clean]) return STORE_ITEMS[clean];
+  const lower = (clean || itemId).toLowerCase().replace(/[\s\-_]/g, '');
+  for (const [key, item] of Object.entries(STORE_ITEMS)) {
+    if (key.toLowerCase().replace(/[\s\-_]/g, '') === lower) return item;
+    if (item.file && cleanItemId(item.file).toLowerCase().replace(/[\s\-_]/g, '') === lower) return item;
+  }
+  return null;
 }
 
 // Normalizes an inventory: keeps known item ids, drops junk/dupes and
@@ -645,28 +665,48 @@ function safeEquippedSkinId(player) {
     : (typeof (player && player.equippedSkin) === 'string' && player.equippedSkin)
       ? player.equippedSkin
       : DEFAULT_SKIN_ID;
-  return resolved;
+  const item = itemForId(resolved);
+  return item ? item.id : (cleanItemId(resolved) || DEFAULT_SKIN_ID);
 }
 
-function publicPlayerPayload(player) {
+function publicPlayerPayload(player, id) {
   if (!player) return player;
   // Shallow copy so mutating the wire packet never touches the live player.
   const packet = Object.assign({}, player);
+  if (id && !packet.id) packet.id = id;
   const equippedSkin = safeEquippedSkinId(player);
   packet.loadout = Object.assign(
     {},
     (player.loadout && typeof player.loadout === 'object') ? player.loadout : DEFAULT_LOADOUT,
     { equippedSkin }
   );
-  // Top-level mirror so legacy client logic can always read it directly.
+  // Top-level mirrors so client logic can always read it directly.
   packet.equippedSkin = equippedSkin;
+  packet.skinId = equippedSkin;
+  packet.username = player.username || player.displayName || 'Survivor';
+  packet.role = player.role || 'waiting';
+  packet.x = typeof player.x === 'number' ? player.x : 0;
+  packet.y = typeof player.y === 'number' ? player.y : PLAYER_EYE_LEVEL;
+  packet.z = typeof player.z === 'number' ? player.z : 0;
+  packet.position = { x: packet.x, y: packet.y, z: packet.z };
+  packet.rotation = (typeof player.rotation === 'number') ? player.rotation : ((typeof player.yaw === 'number') ? player.yaw : 0);
+  packet.yaw = packet.rotation;
+  packet.propType = player.propId || player.propType || null;
+  packet.propId = player.propId || null;
+  packet.isProp = !!player.isProp;
+  packet.equippedWeapon = (packet.loadout && (packet.loadout.primaryGun || packet.loadout.equippedWeapon)) || 'standardGun';
+  packet.alive = player.alive !== false;
+  packet.isMoving = !!player.isMoving;
   return packet;
 }
 
 function getRoomPlayers(roomName) {
   const roomPlayers = {};
   for (const [id, player] of Object.entries(players)) {
-    if (player.roomName === roomName) roomPlayers[id] = publicPlayerPayload(player);
+    if (player.roomName === roomName) {
+      if (!player.id) player.id = id;
+      roomPlayers[id] = publicPlayerPayload(player, id);
+    }
   }
   return roomPlayers;
 }
@@ -701,7 +741,12 @@ function serializeNPCs() {
 }
 
 function buildStateUpdatePayload(roomName) {
-  return { players: getRoomPlayers(roomName), npcs: serializeNPCs(), lootDrops };
+  const roomPlayers = getRoomPlayers(roomName);
+  const payload = { players: roomPlayers, npcs: serializeNPCs(), lootDrops };
+  for (const [id, pl] of Object.entries(roomPlayers)) {
+    if (!payload[id]) payload[id] = pl;
+  }
+  return payload;
 }
 
 function zoneForRoomName(roomName) {
@@ -1375,23 +1420,43 @@ io.on('connection', (socket) => {
         const existing = await dbPlayers.findOne({ _id: playerId });
         if (existing) {
           walletData = parseWalletDoc(existing);
-          // The player's chosen starter is authoritative at join time: it is the
-          // ONE owned starter, it is equipped, and the opposite starter uniform
-          // is stripped (exclusive ownership — a female starter never inherits
-          // the male uniform and vice-versa).
-          const currentStarter = (walletData.loadout && walletData.loadout.equippedSkin) || walletData.equippedSkin;
-          const needsMigration = !existing.loadout || !Array.isArray(existing.inventory) ||
-            !walletData.inventory.includes(chosenStarterId) ||
-            currentStarter !== chosenStarterId;
-          if (needsMigration) {
+          // Ensure the chosen starter is in inventory
+          if (!walletData.inventory.includes(chosenStarterId)) {
             walletData.inventory = normalizeInventory(walletData.inventory, chosenStarterId);
-            walletData.loadout.equippedSkin = chosenStarterId;
-            walletData.equippedSkin = chosenStarterId;
-            await persistNormalizedWallet(playerId, walletData);
           }
+
+          let activeSkin = (walletData.loadout && walletData.loadout.equippedSkin) || walletData.equippedSkin;
+
+          // If client explicitly sent a valid, owned skin, respect client's choice
+          const incomingSkin = (data && (data.equippedSkin || data.skinId));
+          const cleanItem = incomingSkin ? itemForId(incomingSkin) : null;
+          const cleanIncoming = cleanItem ? cleanItem.id : cleanItemId(incomingSkin);
+          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].type === 'skin' && walletData.inventory.includes(cleanIncoming)) {
+            activeSkin = cleanIncoming;
+          }
+
+          // If the currently equipped skin is a starter skin and player changed starter gender, update it
+          if (STARTER_SKIN_IDS.includes(activeSkin) && activeSkin !== chosenStarterId) {
+            activeSkin = chosenStarterId;
+          }
+
+          // If activeSkin is invalid or not owned, default to chosen starter
+          if (!activeSkin || !walletData.inventory.includes(activeSkin) || !STORE_ITEMS[activeSkin]) {
+            activeSkin = chosenStarterId;
+          }
+
+          walletData.loadout.equippedSkin = activeSkin;
+          walletData.equippedSkin = activeSkin;
+          await persistNormalizedWallet(playerId, walletData);
         } else {
-          const newDoc = buildDefaultPlayerDoc(playerId, chosenStarterId);
-          await dbPlayers.insertOne(newDoc);
+          let initialSkin = chosenStarterId;
+          const incomingSkin = (data && (data.equippedSkin || data.skinId));
+          const cleanIncoming = incomingSkin && typeof incomingSkin === 'string' ? incomingSkin.trim().replace(/\.glb$/i, '') : null;
+          if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].cost === 0) {
+            initialSkin = cleanIncoming;
+          }
+          const newDoc = buildDefaultPlayerDoc(playerId, initialSkin);
+          await dbPlayers.insertOne(newDoc).catch(() => {});
           walletData = parseWalletDoc(newDoc);
         }
       } catch (dbErr) {
@@ -1472,9 +1537,13 @@ io.on('connection', (socket) => {
     }
 
     players[socket.id] = {
+      id: socket.id,
       x: spawnX,
       y: PLAYER_EYE_LEVEL, 
-      z: spawnZ,           
+      z: spawnZ,
+      rotation: 0,
+      yaw: 0,
+      isMoving: false,
       zoneId: zone.id,     
       zone,                
       roomName,            
@@ -1498,6 +1567,20 @@ io.on('connection', (socket) => {
 
     if (walletData) wallets[socket.id] = walletData;
     applyWalletToPlayer(players[socket.id], socket.id);
+
+    const incomingSkin = (data && (data.equippedSkin || data.skinId));
+    if (incomingSkin) {
+      const item = itemForId(incomingSkin);
+      if (item && item.type === 'skin') {
+        players[socket.id].equippedSkin = item.id;
+        players[socket.id].skinId = item.id;
+        players[socket.id].loadout.equippedSkin = item.id;
+        if (wallets[socket.id]) {
+          wallets[socket.id].equippedSkin = item.id;
+          if (wallets[socket.id].loadout) wallets[socket.id].loadout.equippedSkin = item.id;
+        }
+      }
+    }
 
     socket.join(roomName);
 
@@ -1541,7 +1624,15 @@ io.on('connection', (socket) => {
       id: socket.id,
       // Serialized player: equippedSkin + loadout are ALWAYS present on the
       // packet, so existing clients can render the new player immediately.
-      player: publicPlayerPayload(players[socket.id])
+      player: publicPlayerPayload(players[socket.id], socket.id)
+    });
+    socket.broadcast.to(roomName).emit('playerSkinUpdated', {
+      id: socket.id,
+      playerId: players[socket.id].playerId,
+      equippedSkin: safeEquippedSkinId(players[socket.id]),
+      skinId: safeEquippedSkinId(players[socket.id]),
+      loadout: players[socket.id].loadout,
+      player: publicPlayerPayload(players[socket.id], socket.id)
     });
 
     broadcastLeaderboard(roomName);
@@ -1550,7 +1641,7 @@ io.on('connection', (socket) => {
 
   socket.on('playerMove', (data) => {
     const player = players[socket.id];
-    if (!player || !player.alive || player.isProp) return;
+    if (!player || !player.alive) return;
     if (!data || typeof data.x !== 'number' || typeof data.z !== 'number') {
       return;
     }
@@ -1566,6 +1657,32 @@ io.on('connection', (socket) => {
     if (typeof data.y === 'number' && Number.isFinite(data.y)) {
       player.y = Math.max(0, Math.min(MAX_PLAYER_HEIGHT, data.y));
     }
+
+    const rot = (typeof data.rotation === 'number') ? data.rotation : ((typeof data.yaw === 'number') ? data.yaw : (player.rotation || 0));
+    player.rotation = rot;
+    player.yaw = rot;
+    player.isMoving = !!data.isMoving;
+
+    // Fast direct broadcast to all other clients in room for smooth real-time interpolation
+    const movePacket = {
+      id: socket.id,
+      x: player.x,
+      y: player.y,
+      z: player.z,
+      position: { x: player.x, y: player.y, z: player.z },
+      rotation: player.rotation,
+      yaw: player.rotation,
+      isMoving: player.isMoving,
+      role: player.role,
+      isProp: !!player.isProp,
+      propType: player.propId || null,
+      equippedSkin: safeEquippedSkinId(player),
+      skinId: safeEquippedSkinId(player),
+      equippedWeapon: (player.loadout && (player.loadout.primaryGun || player.loadout.equippedWeapon)) || 'standardGun',
+      alive: player.alive !== false
+    };
+    socket.to(player.roomName).emit('playerMoved', movePacket);
+
     io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     sendRadarAfterStateChange();
   });
@@ -1590,6 +1707,12 @@ io.on('connection', (socket) => {
         player.disguiseBrokenAt = 0;
       }
     }
+    io.to(player.roomName).emit('playerDisguised', {
+      id: socket.id,
+      isProp: !!player.isProp,
+      propId: player.propId || null,
+      propType: player.propId || null
+    });
     io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     sendRadarAfterStateChange();
   });
@@ -1947,7 +2070,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const playerId = target.playerId || (player && player.playerId) || null;
+    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+      target.playerId ||
+      (player && player.playerId) ||
+      (wallets[socket.id] && wallets[socket.id].playerId) ||
+      null;
 
     // ---- Database-backed purchase: ONE atomic conditional update. -----------
     // The filter itself enforces affordability ($gte) and non-ownership
@@ -2018,7 +2145,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const playerId = target.playerId || (player && player.playerId) || null;
+    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+      target.playerId ||
+      (player && player.playerId) ||
+      (wallets[socket.id] && wallets[socket.id].playerId) ||
+      null;
 
     // ---- Database-backed equip: ownership is enforced ATOMICALLY in the ----
     // query filter (`inventory: item.id`), so an item that is not in the
@@ -2062,6 +2193,18 @@ io.on('connection', (socket) => {
     }, walletPayloadFields(target)));
     emitWallet(socket, target);
     if (player && player.roomName) {
+      if (item.type === 'skin' || slot === 'equippedSkin') {
+        player.equippedSkin = item.id;
+        if (player.loadout) player.loadout.equippedSkin = item.id;
+        io.to(player.roomName).emit('playerSkinUpdated', {
+          id: socket.id,
+          playerId: player.playerId,
+          equippedSkin: item.id,
+          skinId: item.id,
+          loadout: player.loadout,
+          player: publicPlayerPayload(player, socket.id)
+        });
+      }
       io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     }
   });
@@ -2081,16 +2224,7 @@ io.on('connection', (socket) => {
       rawId = skinId.skinId || skinId.id || skinId.equippedSkin || skinId.skin || null;
     }
 
-    const itemId = typeof rawId === 'string' ? rawId.trim().replace(/\.glb$/i, '') : null;
-    // Also allow full .glb name: strip extension for lookup, but keep original for file mapping
-    const lookupId = itemId && STORE_ITEMS[itemId] ? itemId : (rawId && typeof rawId === 'string' ? rawId.replace(/\.glb$/i, '').trim() : null);
-
-    if (!lookupId) {
-      socket.emit('equipResult', Object.assign({ ok: false, message: 'Missing skin id.' }, walletPayloadFields(target)));
-      return;
-    }
-
-    const item = itemForId(lookupId) || itemForId(rawId);
+    const item = itemForId(rawId);
     if (!item || item.type !== 'skin') {
       socket.emit('equipResult', Object.assign({ ok: false, message: 'Unknown skin.' }, walletPayloadFields(target)));
       return;
@@ -2103,7 +2237,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const playerId = target.playerId || (player && player.playerId) || null;
+    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+      target.playerId ||
+      (player && player.playerId) ||
+      (wallets[socket.id] && wallets[socket.id].playerId) ||
+      null;
 
     if (dbPlayers && playerId) {
       try {
@@ -2142,6 +2280,16 @@ io.on('connection', (socket) => {
     }, walletPayloadFields(target)));
     emitWallet(socket, target);
     if (player && player.roomName) {
+      player.equippedSkin = item.id;
+      if (player.loadout) player.loadout.equippedSkin = item.id;
+      io.to(player.roomName).emit('playerSkinUpdated', {
+        id: socket.id,
+        playerId: player.playerId,
+        equippedSkin: item.id,
+        skinId: item.id,
+        loadout: player.loadout,
+        player: publicPlayerPayload(player, socket.id)
+      });
       io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     }
   });
@@ -2177,7 +2325,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const playerId = target.playerId || (player && player.playerId) || null;
+    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+      target.playerId ||
+      (player && player.playerId) ||
+      (wallets[socket.id] && wallets[socket.id].playerId) ||
+      null;
 
     if (dbPlayers && playerId) {
       try {
@@ -2220,6 +2372,10 @@ io.on('connection', (socket) => {
 
     const roomName = player.roomName;
     socket.leave(roomName);           
+    syncWalletFromPlayer(player, socket.id);
+    if (dbPlayers && player.playerId) {
+      persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => {});
+    }
     delete players[socket.id];
     reassignHostIfNeeded(roomName, socket.id);
     cleanupEmptyRoom(roomName);       
@@ -2227,22 +2383,28 @@ io.on('connection', (socket) => {
     io.to(roomName).emit('playerLeft', socket.id);
     sendRadarAfterStateChange();
     broadcastLeaderboard(roomName);
+    emitWallet(socket, wallets[socket.id]);
   });
 
   socket.on('disconnect', () => {
     const player = players[socket.id];
-    if (!player) return;
+    if (player) {
+      const roomName = player.roomName;
+      syncWalletFromPlayer(player, socket.id);
+      if (dbPlayers && player.playerId) {
+        persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => {});
+      }
+      delete players[socket.id];
+      delete wallets[socket.id];
+      reassignHostIfNeeded(roomName, socket.id);
+      cleanupEmptyRoom(roomName);
 
-    const roomName = player.roomName;
-    syncWalletFromPlayer(player, socket.id);
-    delete players[socket.id];
-    delete wallets[socket.id];
-    reassignHostIfNeeded(roomName, socket.id);
-    cleanupEmptyRoom(roomName);
-
-    io.to(roomName).emit('playerLeft', socket.id);
-    sendRadarAfterStateChange();
-    broadcastLeaderboard(roomName);
+      io.to(roomName).emit('playerLeft', socket.id);
+      sendRadarAfterStateChange();
+      broadcastLeaderboard(roomName);
+    } else {
+      delete wallets[socket.id];
+    }
   });
 });
 
@@ -2714,7 +2876,7 @@ setInterval(() => {
 
   const activeRooms = new Set();
   Object.values(players).forEach(p => {
-    if (getRoomState(p.roomName)?.state === 'playing') activeRooms.add(p.roomName);
+    if (p.roomName) activeRooms.add(p.roomName);
   });
   for (const r of activeRooms) {
     io.to(r).emit('stateUpdate', buildStateUpdatePayload(r));

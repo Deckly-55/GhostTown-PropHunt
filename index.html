@@ -3899,6 +3899,9 @@
         if (exitModal) exitModal.classList.add('hidden');
         if (settingsModal) settingsModal.classList.add('hidden');
         pauseSettingsVideo();
+        if (window.__clearAllRemotePlayers) {
+          try { window.__clearAllRemotePlayers(); } catch (e) {}
+        }
         var btnIgLeave = document.getElementById('btn-ig-leave');
         if (btnIgLeave) {
           btnIgLeave.click();
@@ -4318,6 +4321,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
     window.__THREE = THREE;
     window.__threeBasicShadowMap = THREE.BasicShadowMap;
@@ -4425,6 +4430,32 @@
     }
     requestAnimationFrame(animateFogDistance);
 
+    function getMyEquippedSkinId() {
+      if (window.__myEquippedSkin) {
+        return window.__myEquippedSkin;
+      }
+      let stored = null;
+      try {
+        stored = localStorage.getItem('prophunt.equippedSkin') ||
+                 localStorage.getItem('prophunt.starterSkinId');
+        if (!stored) {
+          const model = localStorage.getItem('prophunt.starterModel') || localStorage.getItem('starterModel');
+          if (model === 'Casual_w.glb') stored = 'Casual_w';
+          else if (model === 'Casual_Character.glb') stored = 'Casual_Character';
+        }
+        if (!stored) {
+          const g = localStorage.getItem('prophunt.starterGender') || localStorage.getItem('starterGender');
+          if (g === 'female') stored = 'Casual_w';
+          else if (g === 'male') stored = 'Casual_Character';
+        }
+      } catch (e) {}
+      if (stored) {
+        return stored.replace(/\.glb$/i, '').trim();
+      }
+      return 'Casual_Character';
+    }
+    window.__getMyEquippedSkinId = getMyEquippedSkinId;
+
     // Setup Socket hooks & listeners for fog settings and role changes
     function setupFogSocketListeners(sock) {
       if (!sock || sock.__fogHooked) return;
@@ -4433,7 +4464,11 @@
 
       const origEmit = sock.emit;
       sock.emit = function(ev, ...args) {
-        if (ev === 'updateRoomSettings' && args[0] && typeof args[0] === 'object') {
+        if (ev === 'joinGame' && args[0] && typeof args[0] === 'object') {
+          const mySkin = getMyEquippedSkinId();
+          args[0].equippedSkin = mySkin;
+          args[0].skinId = mySkin;
+        } else if (ev === 'updateRoomSettings' && args[0] && typeof args[0] === 'object') {
           const hunterSelect = document.getElementById('settingsHunterFogSelect');
           const propSelect = document.getElementById('settingsPropFogSelect');
           if (hunterSelect && args[0].hunterFogDistance == null) {
@@ -4505,6 +4540,14 @@
       sock.on('equipResult', (data) => {
         if (data && data.ok) {
           triggerCursedRelicEffect(data.itemId, 'equip');
+          if (data.slot === 'equippedSkin' || data.itemId) {
+            const skinId = data.itemId;
+            window.__myEquippedSkin = skinId;
+            try {
+              localStorage.setItem('prophunt.equippedSkin', skinId);
+              localStorage.setItem('prophunt.starterSkinId', skinId);
+            } catch (e) {}
+          }
         }
       });
     }
@@ -4651,6 +4694,18 @@
       const actionBtn = e.target.closest('.store-action, .loadout-equip-button, [id^="storeBuy-"]');
       if (actionBtn) {
         window.__lastClickedStoreCard = actionBtn.closest('.store-card') || actionBtn.closest('.loadout-slot-card') || actionBtn;
+        const card = window.__lastClickedStoreCard;
+        const itemId = actionBtn.dataset?.item || card?.dataset?.item || actionBtn.id?.replace(/^storeBuy-/, '');
+        if (itemId) {
+          window.__myEquippedSkin = itemId;
+          try {
+            localStorage.setItem('prophunt.equippedSkin', itemId);
+            localStorage.setItem('prophunt.starterSkinId', itemId);
+          } catch (err) {}
+          if (window.__gameSocket && window.__gameSocket.connected) {
+            window.__gameSocket.emit('equipSkin', { skinId: itemId, equippedSkin: itemId });
+          }
+        }
       }
     }, true);
 
@@ -4715,181 +4770,71 @@
       }, true);
     }
 
-    // Hook Scene
-    const origScene = THREE.Scene;
-    THREE.Scene = function(...args) {
-      const sc = new origScene(...args);
-      window.__gameScene = sc;
+    // Hook PointerLockControls connect for mouse sensitivity & invert Y
+    if (typeof PointerLockControls === 'function' && PointerLockControls.prototype) {
+      const origConnect = PointerLockControls.prototype.connect;
+      PointerLockControls.prototype.connect = function() {
+        window.__gameControls = this;
+        window.__gameCamera = this.camera;
 
-      let _fog = null;
-      Object.defineProperty(sc, 'fog', {
-        get() { return _fog; },
-        set(newFog) {
-          _fog = newFog;
-          if (_fog) {
-            if (currentFogFar !== null) {
-              _fog.far = currentFogFar;
-              _fog.near = currentFogNear;
-            } else {
-              currentFogFar = _fog.far;
-              currentFogNear = _fog.near;
-            }
-          }
-        },
-        configurable: true,
-        enumerable: true
-      });
+        const self = this;
+        if (this.domElement && this.domElement.ownerDocument) {
+          this.domElement.ownerDocument.removeEventListener('mousemove', this._onMouseMove);
 
-      const origAdd = sc.add;
-      sc.add = function(...objs) {
-        const res = origAdd.apply(this, objs);
-        if (window.__applyGameSettings) {
-          window.__applyGameSettings();
+          this._onMouseMove = function(event) {
+            if (self.isLocked === false) return;
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+            const camera = self.camera;
+            const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+            euler.setFromQuaternion(camera.quaternion);
+
+            const s = window.__gameSettings || { sensitivity: 1.0, invertY: false };
+            const sens = typeof s.sensitivity === 'number' ? s.sensitivity : 1.0;
+            const invertY = Boolean(s.invertY);
+
+            euler.y -= movementX * 0.002 * sens;
+            const ySign = invertY ? -1 : 1;
+            euler.x -= movementY * 0.002 * sens * ySign;
+
+            const PI_2 = Math.PI / 2;
+            euler.x = Math.max(PI_2 - self.maxPolarAngle, Math.min(PI_2 - self.minPolarAngle, euler.x));
+
+            camera.quaternion.setFromEuler(euler);
+            self.dispatchEvent({ type: 'change' });
+          };
         }
-        return res;
+
+        if (origConnect) origConnect.call(this);
+        if (window.__applyGameSettings) window.__applyGameSettings();
       };
-
-      setTimeout(() => {
-        if (window.__applyGameSettings) window.__applyGameSettings();
-      }, 50);
-      return sc;
-    };
-    THREE.Scene.prototype = origScene.prototype;
-
-    // Hook PointerLockControls connect
-    const origConnect = PointerLockControls.prototype.connect;
-    PointerLockControls.prototype.connect = function() {
-      window.__gameControls = this;
-      window.__gameCamera = this.camera;
-
-      const self = this;
-      this.domElement.ownerDocument.removeEventListener('mousemove', this._onMouseMove);
-
-      this._onMouseMove = function(event) {
-        if (self.isLocked === false) return;
-        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-        const camera = self.camera;
-        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-        euler.setFromQuaternion(camera.quaternion);
-
-        const s = window.__gameSettings || { sensitivity: 1.0, invertY: false };
-        const sens = typeof s.sensitivity === 'number' ? s.sensitivity : 1.0;
-        const invertY = Boolean(s.invertY);
-
-        euler.y -= movementX * 0.002 * sens;
-        const ySign = invertY ? -1 : 1;
-        euler.x -= movementY * 0.002 * sens * ySign;
-
-        const PI_2 = Math.PI / 2;
-        euler.x = Math.max(PI_2 - self.maxPolarAngle, Math.min(PI_2 - self.minPolarAngle, euler.x));
-
-        camera.quaternion.setFromEuler(euler);
-        self.dispatchEvent({ type: 'change' });
-      };
-
-      origConnect.call(this);
-      if (window.__applyGameSettings) window.__applyGameSettings();
-    };
-
-    // Hook PerspectiveCamera
-    const origCamera = THREE.PerspectiveCamera;
-    THREE.PerspectiveCamera = function(...args) {
-      const cam = new origCamera(...args);
-      window.__gameCamera = cam;
-
-      let _currentFovVal = Number(window.__gameSettings?.fov || 75);
-
-      // Define smart fov getter/setter to smoothly support hunter ADS zooming while respecting user's FOV slider
-      Object.defineProperty(cam, 'fov', {
-        get() {
-          return _currentFovVal;
-        },
-        set(val) {
-          const userFov = Number(window.__gameSettings?.fov || 75);
-          if (val === 75 || Math.abs(val - 75) < 0.05) {
-            _currentFovVal = userFov;
-          } else if (val === 40 || Math.abs(val - 40) < 0.05) {
-            _currentFovVal = 40;
-          } else {
-            // Hunter ADS lerp progress between 40 and 75
-            const t = Math.max(0, Math.min(1, (val - 40) / 35));
-            _currentFovVal = 40 + t * (userFov - 40);
-          }
-        },
-        configurable: true,
-        enumerable: true
-      });
-
-      cam.fov = Number(window.__gameSettings?.fov || 75);
-      cam.updateProjectionMatrix();
-      return cam;
-    };
-    THREE.PerspectiveCamera.prototype = origCamera.prototype;
-
-    // Hook WebGLRenderer
-    const origRenderer = THREE.WebGLRenderer;
-    THREE.WebGLRenderer = function(...args) {
-      const rend = new origRenderer(...args);
-      window.__gameRenderer = rend;
-      setTimeout(() => {
-        if (window.__applyGameSettings) window.__applyGameSettings();
-      }, 50);
-      return rend;
-    };
-    THREE.WebGLRenderer.prototype = origRenderer.prototype;
-
-    // Hook AudioListener
-    const origAudioListener = THREE.AudioListener;
-    THREE.AudioListener = function(...args) {
-      const listener = new origAudioListener(...args);
-      window.__gameAudioListener = listener;
-      setTimeout(() => {
-        if (window.__applyGameSettings) window.__applyGameSettings();
-      }, 50);
-      return listener;
-    };
-    THREE.AudioListener.prototype = origAudioListener.prototype;
+    }
 
     // Intercept setVolume on THREE.Audio prototype so user multipliers always scale volumes
-    const origSetVolume = THREE.Audio.prototype.setVolume;
-    THREE.Audio.prototype.setVolume = function(value) {
-      this._baseVolume = value;
-      const isAmb = this.isPositionalAudio || (window.__gameAmbienceSounds && window.__gameAmbienceSounds.includes(this));
-      const mult = isAmb ? (window.__ambienceMultiplier ?? 0.7) : (window.__sfxMultiplier ?? 0.8);
-      return origSetVolume.call(this, value * mult);
-    };
-
-    // Hook Audio (SFX)
-    const origAudio = THREE.Audio;
-    THREE.Audio = function(...args) {
-      const a = new origAudio(...args);
-      a._baseVolume = 1.0;
-      window.__gameSfxSounds.push(a);
-      return a;
-    };
-    THREE.Audio.prototype = origAudio.prototype;
-
-    // Hook PositionalAudio (Ambience)
-    const origPosAudio = THREE.PositionalAudio;
-    THREE.PositionalAudio = function(...args) {
-      const pa = new origPosAudio(...args);
-      pa._baseVolume = 1.0;
-      window.__gameAmbienceSounds.push(pa);
-      return pa;
-    };
-    THREE.PositionalAudio.prototype = origPosAudio.prototype;
+    if (THREE && THREE.Audio && THREE.Audio.prototype) {
+      try {
+        const origSetVolume = THREE.Audio.prototype.setVolume;
+        THREE.Audio.prototype.setVolume = function(value) {
+          this._baseVolume = value;
+          const isAmb = this.isPositionalAudio || (window.__gameAmbienceSounds && window.__gameAmbienceSounds.includes(this));
+          const mult = isAmb ? (window.__ambienceMultiplier ?? 0.7) : (window.__sfxMultiplier ?? 0.8);
+          return origSetVolume.call(this, value * mult);
+        };
+      } catch (e) {}
+    }
 
     // Hook window.Audio for HTML5 Audio instances
-    const origHtmlAudio = window.Audio;
-    window.Audio = function(...args) {
-      const el = new origHtmlAudio(...args);
-      el._baseVolume = 1.0;
-      window.__gameHtmlAudioElements.push(el);
-      return el;
-    };
-    window.Audio.prototype = origHtmlAudio.prototype;
+    try {
+      const origHtmlAudio = window.Audio;
+      window.Audio = function(...args) {
+        const el = new origHtmlAudio(...args);
+        el._baseVolume = 1.0;
+        window.__gameHtmlAudioElements.push(el);
+        return el;
+      };
+      window.Audio.prototype = origHtmlAudio.prototype;
+    } catch (e) {}
 
     // Ensure custom resolution scale is preserved across window resizes
     window.addEventListener('resize', () => {
@@ -4970,6 +4915,13 @@
     try {
       localStorage.setItem(LS_GENDER, choice);
       localStorage.setItem(LS_MODEL, MODELS[choice].file);
+      var skinId = choice === 'female' ? 'Casual_w' : 'Casual_Character';
+      localStorage.setItem('prophunt.starterSkinId', skinId);
+      localStorage.setItem('prophunt.equippedSkin', skinId);
+      window.__myEquippedSkin = skinId;
+      if (window.__gameSocket && window.__gameSocket.connected) {
+        window.__gameSocket.emit('equipSkin', { skinId: skinId, equippedSkin: skinId });
+      }
     } catch (e) {}
     close();
   }

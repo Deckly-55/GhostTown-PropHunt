@@ -32,8 +32,11 @@ const ZONE_DEFINITIONS = {
 let currentZone = ZONE_DEFINITIONS.oldCityCenter;
 let zoneVisualGroup = null;
 const PLAYER_RADIUS_3D = 8;
-const PLAYER_HEIGHT_3D = 22;
 const PLAYER_EYE_HEIGHT = 12;
+const STANDING_EYE_HEIGHT = PLAYER_EYE_HEIGHT; // 12 units
+const CHARACTER_TARGET_HEIGHT = STANDING_EYE_HEIGHT * 1.1; // 13.2 units (standingEyeHeight * 1.1 for direct eye-to-eye alignment)
+const PLAYER_HEIGHT_3D = CHARACTER_TARGET_HEIGHT;
+const BADGE_HEIGHT = CHARACTER_TARGET_HEIGHT * 1.12; // ~14.78 units cleanly above character head
 
 const CROUCH_EYE_HEIGHT = PLAYER_EYE_HEIGHT / 2;
 const CROUCH_LERP_SPEED = 10;
@@ -222,9 +225,43 @@ const SHOP_SKIN_ORDER = [
   'Soldier_w', 'Punk_w', 'Swat', 'King', 'Witch_w', 'Sci_Fi_Character_w', 'Astronaut'
 ];
 
+const LS_EQUIPPED_SKIN = 'prophunt.equippedSkin';
+
+function cleanSkinId(rawId) {
+  if (!rawId || typeof rawId !== 'string') return null;
+  let s = rawId.trim().split('?')[0].split('#')[0];
+  const parts = s.split(/[\/\\]/);
+  s = parts[parts.length - 1];
+  return s.replace(/\.glb$/i, '').trim();
+}
+
+function readSavedEquippedSkin() {
+  try {
+    const saved = localStorage.getItem(LS_EQUIPPED_SKIN);
+    const clean = cleanSkinId(saved);
+    if (clean && STORE_CATALOG[clean] && STORE_CATALOG[clean].type === 'skin') {
+      return clean;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function persistEquippedSkin(skinId) {
+  if (!skinId) return;
+  const clean = cleanSkinId(skinId) || skinId;
+  if (!STORE_CATALOG[clean] || STORE_CATALOG[clean].type !== 'skin') return;
+  myEquippedSkin = clean;
+  myLoadout.equippedSkin = clean;
+  window.__myEquippedSkin = clean;
+  try {
+    localStorage.setItem(LS_EQUIPPED_SKIN, clean);
+    localStorage.setItem('prophunt.starterSkinId', clean);
+  } catch (e) {}
+}
+
 const LOADOUT_SLOTS = ['equippedSkin', 'primaryGun', 'secondaryGun', 'primaryKnife', 'secondaryKnife'];
 const DEFAULT_LOADOUT = {
-  equippedSkin: MALE_STARTER_ID,
+  equippedSkin: readSavedEquippedSkin() || MALE_STARTER_ID,
   primaryGun: 'standardRifle',
   secondaryGun: 'sidearmPistol',
   primaryKnife: 'fieldBlade',
@@ -237,6 +274,8 @@ function guaranteedStarterSkinId() {
   return STARTER_SKIN_IDS.includes(chosenStarterSkinId) ? chosenStarterSkinId : MALE_STARTER_ID;
 }
 function defaultEquippedSkinId() {
+  const saved = readSavedEquippedSkin();
+  if (saved && STORE_CATALOG[saved]) return saved;
   return guaranteedStarterSkinId();
 }
 
@@ -849,6 +888,20 @@ function initThree() {
 
   controls = new PointerLockControls(camera, renderer.domElement);
 
+  // Expose to window for index.html settings / fog controls
+  window.__gameScene = scene;
+  window.__gameCamera = camera;
+  window.__gameRenderer = renderer;
+  window.__gameControls = controls;
+  window.__gameAudioListener = audioListener;
+  window.__playerGroup = playerGroup;
+  window.__players = players;
+  window.__playerMeshes = playerMeshes;
+  window.__gameSfxSounds = [footstepSound, concreteFootstepSound, landingSound, gunshotSound, screechRunSound, screechRestSound];
+  if (window.__applyGameSettings) {
+    try { window.__applyGameSettings(); } catch (e) {}
+  }
+
   controls.addEventListener('lock', () => {
     if (crosshair) crosshair.classList.remove('hidden');
     if (lockHint) lockHint.classList.add('hidden');
@@ -998,74 +1051,777 @@ function loadGhoulModel() {
 // ===========================
 // Character Skin System
 // ===========================
+// CHARACTER SKINS & 3D MODELS
+// ===========================
 const skinGLTFLoader = new GLTFLoader();
 const skinModelCache = {};
 const skinModelPromises = {};
 
-const CHARACTER_TARGET_HEIGHT = PLAYER_HEIGHT_3D;
 const CHARACTER_RUN_SPEED = 55;
 const CHARACTER_WALK_SPEED = 3;
 const CHARACTER_ANIM_FADE = 0.2;
 
 const playerMixers = {};
 
+// Procedural 3D Visual Themes (All 23 Skins)
+const STORE_SKIN_STYLES = {
+  Casual_Character: {
+    name: 'Casual Character',
+    torsoColor: 0x2b3e50,
+    torsoRoughness: 0.75,
+    torsoMetalness: 0.1,
+    vestColor: 0x3d566e,
+    vestRoughness: 0.65,
+    vestMetalness: 0.15,
+    pantsColor: 0x1f2937,
+    armColor: 0x2b3e50,
+    headColor: 0x4a3b32,
+    visorColor: 0x00d4ff
+  },
+  Casual_w: {
+    name: 'Casual Female',
+    torsoColor: 0x2e4a3d,
+    torsoRoughness: 0.7,
+    torsoMetalness: 0.1,
+    vestColor: 0x233a30,
+    vestRoughness: 0.65,
+    vestMetalness: 0.15,
+    pantsColor: 0x1f2421,
+    armColor: 0x2e4a3d,
+    headColor: 0x3d2b1f,
+    visorColor: 0x2ecc71
+  },
+  Beach_Character: {
+    name: 'Beach Character',
+    torsoColor: 0x00a896,
+    torsoRoughness: 0.8,
+    torsoMetalness: 0.05,
+    vestColor: 0xf4a261,
+    vestRoughness: 0.75,
+    vestMetalness: 0.05,
+    pantsColor: 0xe9c46a,
+    armColor: 0x00a896,
+    headColor: 0xe76f51,
+    visorColor: 0xffd166,
+    accent: 'beach'
+  },
+  Casual_w2: {
+    name: 'Casual Female 2',
+    torsoColor: 0x800e34,
+    torsoRoughness: 0.6,
+    torsoMetalness: 0.15,
+    vestColor: 0x4a091d,
+    vestRoughness: 0.7,
+    vestMetalness: 0.1,
+    pantsColor: 0x2b2d42,
+    armColor: 0x800e34,
+    headColor: 0x1f1a24,
+    visorColor: 0xe056fd
+  },
+  Farmer: {
+    name: 'Farmer',
+    torsoColor: 0xb03a2e,
+    torsoRoughness: 0.85,
+    torsoMetalness: 0.05,
+    vestColor: 0x78281f,
+    vestRoughness: 0.8,
+    vestMetalness: 0.1,
+    pantsColor: 0x1b4f72,
+    armColor: 0xb03a2e,
+    headColor: 0x6e2c00,
+    visorColor: 0xf39c12,
+    accent: 'farmer'
+  },
+  Hoodie_Character: {
+    name: 'Hoodie Character',
+    torsoColor: 0x1c2833,
+    torsoRoughness: 0.8,
+    torsoMetalness: 0.1,
+    vestColor: 0x273746,
+    vestRoughness: 0.7,
+    vestMetalness: 0.15,
+    pantsColor: 0x17202a,
+    armColor: 0x1c2833,
+    headColor: 0x212f3d,
+    visorColor: 0x58d68d,
+    accent: 'hoodie'
+  },
+  Worker: {
+    name: 'Worker',
+    torsoColor: 0xd35400,
+    torsoRoughness: 0.65,
+    torsoMetalness: 0.2,
+    vestColor: 0xe67e22,
+    vestRoughness: 0.6,
+    vestMetalness: 0.25,
+    pantsColor: 0x2c3e50,
+    armColor: 0xd35400,
+    headColor: 0xf1c40f,
+    visorColor: 0xf39c12,
+    accent: 'worker'
+  },
+  Worker_w: {
+    name: 'Worker Female',
+    torsoColor: 0xe67e22,
+    torsoRoughness: 0.65,
+    torsoMetalness: 0.2,
+    vestColor: 0xd35400,
+    vestRoughness: 0.6,
+    vestMetalness: 0.25,
+    pantsColor: 0x34495e,
+    armColor: 0xe67e22,
+    headColor: 0xf39c12,
+    visorColor: 0xf1c40f,
+    accent: 'worker'
+  },
+  Adventurer: {
+    name: 'Adventurer',
+    torsoColor: 0x5d6d7e,
+    torsoRoughness: 0.7,
+    torsoMetalness: 0.2,
+    vestColor: 0x34495e,
+    vestRoughness: 0.65,
+    vestMetalness: 0.2,
+    pantsColor: 0x212f3d,
+    armColor: 0x5d6d7e,
+    headColor: 0x6e2c00,
+    visorColor: 0x5dade2,
+    accent: 'adventurer'
+  },
+  Business_Man: {
+    name: 'Business Man',
+    torsoColor: 0x1b2631,
+    torsoRoughness: 0.5,
+    torsoMetalness: 0.3,
+    vestColor: 0x212f3d,
+    vestRoughness: 0.45,
+    vestMetalness: 0.25,
+    pantsColor: 0x17202a,
+    armColor: 0x1b2631,
+    headColor: 0x2c3e50,
+    visorColor: 0xe74c3c,
+    accent: 'businessman'
+  },
+  Adventurer_w: {
+    name: 'Adventurer Female',
+    torsoColor: 0x6c7a89,
+    torsoRoughness: 0.7,
+    torsoMetalness: 0.2,
+    vestColor: 0x4b5320,
+    vestRoughness: 0.65,
+    vestMetalness: 0.2,
+    pantsColor: 0x283020,
+    armColor: 0x6c7a89,
+    headColor: 0x5c3a21,
+    visorColor: 0xa2d240,
+    accent: 'adventurer'
+  },
+  Punk: {
+    name: 'Punk',
+    torsoColor: 0x18181b,
+    torsoRoughness: 0.5,
+    torsoMetalness: 0.6,
+    vestColor: 0x27272a,
+    vestRoughness: 0.6,
+    vestMetalness: 0.55,
+    pantsColor: 0x3f3f46,
+    armColor: 0x18181b,
+    headColor: 0xd946ef,
+    visorColor: 0xec4899,
+    accent: 'punk'
+  },
+  Suit_w: {
+    name: 'Suit Female',
+    torsoColor: 0x0f172a,
+    torsoRoughness: 0.4,
+    torsoMetalness: 0.25,
+    vestColor: 0x1e293b,
+    vestRoughness: 0.45,
+    vestMetalness: 0.15,
+    pantsColor: 0x0b0f19,
+    armColor: 0x0f172a,
+    headColor: 0x1e1e24,
+    visorColor: 0xf43f5e,
+    accent: 'suit_w'
+  },
+  Medieval_w: {
+    name: 'Medieval Female',
+    torsoColor: 0x475569,
+    torsoRoughness: 0.3,
+    torsoMetalness: 0.85,
+    vestColor: 0x991b1b,
+    vestRoughness: 0.5,
+    vestMetalness: 0.4,
+    pantsColor: 0x334155,
+    armColor: 0x475569,
+    headColor: 0x64748b,
+    visorColor: 0xfbbf24,
+    accent: 'medieval'
+  },
+  Soldier_w: {
+    name: 'Soldier Female',
+    torsoColor: 0x334d3a,
+    torsoRoughness: 0.7,
+    torsoMetalness: 0.15,
+    vestColor: 0x1f2e23,
+    vestRoughness: 0.6,
+    vestMetalness: 0.3,
+    pantsColor: 0x2b3e31,
+    armColor: 0x334d3a,
+    headColor: 0x1a261c,
+    visorColor: 0x22c55e,
+    accent: 'soldier'
+  },
+  Punk_w: {
+    name: 'Punk Female',
+    torsoColor: 0x4c1d95,
+    torsoRoughness: 0.55,
+    torsoMetalness: 0.45,
+    vestColor: 0x2e1065,
+    vestRoughness: 0.6,
+    vestMetalness: 0.5,
+    pantsColor: 0x1e1b4b,
+    armColor: 0x4c1d95,
+    headColor: 0x06b6d4,
+    visorColor: 0x06b6d4,
+    accent: 'punk_w'
+  },
+  Swat: {
+    name: 'SWAT',
+    torsoColor: 0x09090b,
+    torsoRoughness: 0.4,
+    torsoMetalness: 0.4,
+    vestColor: 0x18181b,
+    vestRoughness: 0.35,
+    vestMetalness: 0.5,
+    pantsColor: 0x0c0c0e,
+    armColor: 0x09090b,
+    headColor: 0x18181b,
+    visorColor: 0x38bdf8,
+    accent: 'swat'
+  },
+  King: {
+    name: 'King',
+    torsoColor: 0x581c87,
+    torsoRoughness: 0.4,
+    torsoMetalness: 0.3,
+    vestColor: 0x7e22ce,
+    vestRoughness: 0.4,
+    vestMetalness: 0.6,
+    pantsColor: 0x3b0764,
+    armColor: 0x581c87,
+    headColor: 0xfbbf24,
+    visorColor: 0xf59e0b,
+    accent: 'king'
+  },
+  Witch_w: {
+    name: 'Witch Female',
+    torsoColor: 0x1e1b4b,
+    torsoRoughness: 0.8,
+    torsoMetalness: 0.15,
+    vestColor: 0x311042,
+    vestRoughness: 0.7,
+    vestMetalness: 0.2,
+    pantsColor: 0x0f0d23,
+    armColor: 0x1e1b4b,
+    headColor: 0x181028,
+    visorColor: 0x10b981,
+    accent: 'witch'
+  },
+  Sci_Fi_Character_w: {
+    name: 'Sci-Fi Character Female',
+    torsoColor: 0xe2e8f0,
+    torsoRoughness: 0.25,
+    torsoMetalness: 0.85,
+    vestColor: 0x0f172a,
+    vestRoughness: 0.3,
+    vestMetalness: 0.75,
+    pantsColor: 0xcbd5e1,
+    armColor: 0xe2e8f0,
+    headColor: 0xf8fafc,
+    visorColor: 0x00f0ff,
+    accent: 'scifi'
+  },
+  Astronaut: {
+    name: 'Astronaut',
+    torsoColor: 0xf1f5f9,
+    torsoRoughness: 0.5,
+    torsoMetalness: 0.2,
+    vestColor: 0xe2e8f0,
+    vestRoughness: 0.4,
+    vestMetalness: 0.35,
+    pantsColor: 0xf1f5f9,
+    armColor: 0xf1f5f9,
+    headColor: 0xffffff,
+    visorColor: 0xf59e0b,
+    accent: 'astronaut'
+  },
+  shadowHunter: {
+    name: 'Shadow Hunter',
+    torsoColor: 0x070709,
+    torsoRoughness: 0.9,
+    torsoMetalness: 0.15,
+    vestColor: 0x12080a,
+    vestRoughness: 0.8,
+    vestMetalness: 0.3,
+    pantsColor: 0x040405,
+    armColor: 0x070709,
+    headColor: 0x0a0a0d,
+    visorColor: 0xff1744,
+    accent: 'shadow'
+  },
+  steelProp: {
+    name: 'Steel Prop',
+    torsoColor: 0x334155,
+    torsoRoughness: 0.3,
+    torsoMetalness: 0.85,
+    vestColor: 0x475569,
+    vestRoughness: 0.35,
+    vestMetalness: 0.8,
+    pantsColor: 0x1e293b,
+    armColor: 0x334155,
+    headColor: 0x334155,
+    visorColor: 0xf97316,
+    accent: 'steel'
+  }
+};
+STORE_SKIN_STYLES.default = STORE_SKIN_STYLES.Casual_Character;
+
+function disposeMeshHierarchy(obj) {
+  if (!obj) return;
+  obj.traverse((node) => {
+    if (node.isMesh || node.isSkinnedMesh) {
+      if (node.geometry) node.geometry.dispose();
+      if (node.material) {
+        if (Array.isArray(node.material)) node.material.forEach((m) => m.dispose());
+        else node.material.dispose();
+      }
+    }
+  });
+}
+
+function createPlayerBadge(username, role) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(4.5, 1.125, 1);
+    sprite.position.set(0, BADGE_HEIGHT, 0); // Positioned cleanly above character head at targetHeight * 1.12
+    sprite.renderOrder = 999;
+    sprite.frustumCulled = false;
+    sprite.userData.isBadge = true;
+
+    const badgeObj = { canvas, ctx, texture, sprite, lastName: null, lastRole: null };
+    updatePlayerBadge(badgeObj, username, role);
+    return badgeObj;
+  } catch (e) {
+    return null;
+  }
+}
+
+function updatePlayerBadge(badgeObj, username, role) {
+  if (!badgeObj || !badgeObj.ctx) return;
+  if (badgeObj.sprite) {
+    badgeObj.sprite.position.set(0, BADGE_HEIGHT, 0);
+  }
+  const cleanName = (username || 'Player').substring(0, 15);
+  const cleanRole = (role || 'survivor').toLowerCase();
+  if (badgeObj.lastName === cleanName && badgeObj.lastRole === cleanRole) return;
+  badgeObj.lastName = cleanName;
+  badgeObj.lastRole = cleanRole;
+
+  const ctx = badgeObj.ctx;
+  ctx.clearRect(0, 0, 256, 64);
+
+  // Background pill
+  ctx.fillStyle = 'rgba(10, 15, 24, 0.78)';
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(8, 6, 240, 52, 10);
+  } else {
+    ctx.rect(8, 6, 240, 52);
+  }
+  ctx.fill();
+
+  const isHunter = cleanRole === 'hunter';
+  const isProp = cleanRole === 'prop';
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = isHunter ? '#ff4d4d' : (isProp ? '#ffa64d' : '#4de2ff');
+  ctx.stroke();
+
+  // Username
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 20px monospace, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(cleanName, 128, 23);
+
+  // Role tag
+  ctx.fillStyle = isHunter ? '#ff4d4d' : (isProp ? '#ffa64d' : '#4de2ff');
+  ctx.font = 'bold 13px monospace, sans-serif';
+  const roleText = (cleanRole || 'SURVIVOR').toUpperCase();
+  ctx.fillText(`[${roleText}]`, 128, 43);
+
+  badgeObj.texture.needsUpdate = true;
+}
+
+function buildProceduralCharacter(player, skinId, isHunter) {
+  const cleanId = (typeof skinId === 'string' ? skinId.replace(/\.glb$/i, '').trim() : skinId) || MALE_STARTER_ID;
+  const skinStyle = STORE_SKIN_STYLES[cleanId] || STORE_SKIN_STYLES.Casual_Character;
+
+  const characterGroup = new THREE.Group();
+  characterGroup.name = 'proceduralCharacterGroup';
+  characterGroup.frustumCulled = false;
+
+  const baseHeight = 14.1;
+  const scaleFactor = PLAYER_HEIGHT_3D / baseHeight;
+  characterGroup.scale.setScalar(scaleFactor);
+
+  const bodyBobGroup = new THREE.Group();
+  bodyBobGroup.frustumCulled = false;
+
+  const torsoGeo = new THREE.BoxGeometry(3.6, 5.2, 2.2);
+  const torsoMat = new THREE.MeshStandardMaterial({
+    color: skinStyle.torsoColor,
+    roughness: skinStyle.torsoRoughness,
+    metalness: skinStyle.torsoMetalness
+  });
+  const torso = new THREE.Mesh(torsoGeo, torsoMat);
+  torso.position.y = 8.5;
+  torso.castShadow = true;
+  torso.receiveShadow = true;
+  torso.frustumCulled = false;
+  bodyBobGroup.add(torso);
+
+  const vestGeo = new THREE.BoxGeometry(3.9, 4.4, 2.5);
+  const vestMat = new THREE.MeshStandardMaterial({
+    color: skinStyle.vestColor,
+    roughness: skinStyle.vestRoughness,
+    metalness: skinStyle.vestMetalness
+  });
+  const vest = new THREE.Mesh(vestGeo, vestMat);
+  vest.position.y = 8.7;
+  vest.castShadow = true;
+  vest.receiveShadow = true;
+  vest.frustumCulled = false;
+  bodyBobGroup.add(vest);
+
+  const beltGeo = new THREE.BoxGeometry(3.8, 0.7, 2.4);
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.9 });
+  const belt = new THREE.Mesh(beltGeo, beltMat);
+  belt.position.y = 6.2;
+  belt.castShadow = true;
+  belt.receiveShadow = true;
+  belt.frustumCulled = false;
+  bodyBobGroup.add(belt);
+
+  const headGeo = new THREE.BoxGeometry(2.4, 2.6, 2.4);
+  const headMat = new THREE.MeshStandardMaterial({
+    color: skinStyle.headColor,
+    roughness: 0.65
+  });
+  const headMesh = new THREE.Mesh(headGeo, headMat);
+  headMesh.position.y = 12.8;
+  headMesh.castShadow = true;
+  headMesh.receiveShadow = true;
+  headMesh.frustumCulled = false;
+  bodyBobGroup.add(headMesh);
+
+  const visorGeo = new THREE.BoxGeometry(2.1, 0.85, 0.5);
+  const visorMat = new THREE.MeshBasicMaterial({
+    color: isHunter ? 0xff2222 : skinStyle.visorColor
+  });
+  const visor = new THREE.Mesh(visorGeo, visorMat);
+  visor.position.set(0, 12.8, 1.25);
+  visor.frustumCulled = false;
+  bodyBobGroup.add(visor);
+
+  // Accent props
+  const accent = skinStyle.accent;
+  if (accent === 'astronaut') {
+    const domeGeo = new THREE.SphereGeometry(1.4, 16, 12);
+    const domeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.05, metalness: 0.95 });
+    const dome = new THREE.Mesh(domeGeo, domeMat);
+    dome.position.set(0, 12.6, 0.4);
+    dome.scale.set(1, 1, 0.9);
+    dome.frustumCulled = false;
+    bodyBobGroup.add(dome);
+  } else if (accent === 'king') {
+    const crownGeo = new THREE.CylinderGeometry(1.5, 1.3, 1.0, 8);
+    const crownMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.15, metalness: 0.95 });
+    const crown = new THREE.Mesh(crownGeo, crownMat);
+    crown.position.set(0, 14.2, 0);
+    crown.frustumCulled = false;
+    bodyBobGroup.add(crown);
+  } else if (accent === 'swat') {
+    const padGeo = new THREE.BoxGeometry(1.6, 0.9, 1.8);
+    const padMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.4, metalness: 0.6 });
+    const p1 = new THREE.Mesh(padGeo, padMat); p1.position.set(-2.2, 10.8, 0); p1.frustumCulled = false; bodyBobGroup.add(p1);
+    const p2 = new THREE.Mesh(padGeo, padMat); p2.position.set(2.2, 10.8, 0); p2.frustumCulled = false; bodyBobGroup.add(p2);
+  } else if (accent === 'worker') {
+    const brimGeo = new THREE.CylinderGeometry(1.6, 1.7, 0.3, 12);
+    const brimMat = new THREE.MeshStandardMaterial({ color: skinStyle.headColor, roughness: 0.4 });
+    const brim = new THREE.Mesh(brimGeo, brimMat);
+    brim.position.set(0, 13.7, 0);
+    brim.frustumCulled = false;
+    bodyBobGroup.add(brim);
+  } else if (accent === 'punk' || accent === 'punk_w') {
+    const hawkGeo = new THREE.BoxGeometry(0.5, 1.8, 2.6);
+    const hawkMat = new THREE.MeshStandardMaterial({ color: skinStyle.headColor, roughness: 0.5 });
+    const hawk = new THREE.Mesh(hawkGeo, hawkMat);
+    hawk.position.set(0, 14.5, 0);
+    hawk.frustumCulled = false;
+    bodyBobGroup.add(hawk);
+  } else if (accent === 'witch') {
+    const brimGeo = new THREE.CylinderGeometry(2.6, 2.6, 0.15, 16);
+    const hatMat = new THREE.MeshStandardMaterial({ color: 0x140c20, roughness: 0.85 });
+    const brim = new THREE.Mesh(brimGeo, hatMat);
+    brim.position.set(0, 13.9, 0);
+    brim.frustumCulled = false;
+    bodyBobGroup.add(brim);
+
+    const coneGeo = new THREE.ConeGeometry(1.6, 3.2, 10);
+    const cone = new THREE.Mesh(coneGeo, hatMat);
+    cone.position.set(0, 15.5, -0.2);
+    cone.rotation.x = -0.15;
+    cone.frustumCulled = false;
+    bodyBobGroup.add(cone);
+  } else if (accent === 'businessman') {
+    const tieGeo = new THREE.BoxGeometry(0.65, 3.2, 0.15);
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
+    const tie = new THREE.Mesh(tieGeo, tieMat);
+    tie.position.set(0, 8.6, 1.3);
+    tie.frustumCulled = false;
+    bodyBobGroup.add(tie);
+  } else if (accent === 'farmer' || accent === 'adventurer') {
+    const brimGeo = new THREE.CylinderGeometry(2.4, 2.4, 0.2, 16);
+    const brimMat = new THREE.MeshStandardMaterial({ color: skinStyle.headColor, roughness: 0.85 });
+    const brim = new THREE.Mesh(brimGeo, brimMat);
+    brim.position.set(0, 13.9, 0);
+    brim.frustumCulled = false;
+    bodyBobGroup.add(brim);
+  }
+
+  // Arms and Legs
+  const armGeo = new THREE.BoxGeometry(1.1, 4.4, 1.2);
+  const armMat = new THREE.MeshStandardMaterial({
+    color: skinStyle.armColor,
+    roughness: 0.7
+  });
+
+  const leftArmPivot = new THREE.Group();
+  leftArmPivot.position.set(-2.4, 10.6, 0);
+  const leftArm = new THREE.Mesh(armGeo, armMat);
+  leftArm.position.y = -2.0;
+  leftArm.castShadow = true;
+  leftArm.receiveShadow = true;
+  leftArm.frustumCulled = false;
+  leftArmPivot.add(leftArm);
+  bodyBobGroup.add(leftArmPivot);
+
+  const rightArmPivot = new THREE.Group();
+  rightArmPivot.position.set(2.4, 10.6, 0);
+  const rightArm = new THREE.Mesh(armGeo, armMat);
+  rightArm.position.y = -2.0;
+  rightArm.castShadow = true;
+  rightArm.receiveShadow = true;
+  rightArm.frustumCulled = false;
+  rightArmPivot.add(rightArm);
+  bodyBobGroup.add(rightArmPivot);
+
+  characterGroup.add(bodyBobGroup);
+
+  const legGeo = new THREE.BoxGeometry(1.35, 5.8, 1.4);
+  const legMat = new THREE.MeshStandardMaterial({
+    color: skinStyle.pantsColor,
+    roughness: 0.8
+  });
+
+  const leftLegPivot = new THREE.Group();
+  leftLegPivot.position.set(-1.0, 5.8, 0);
+  const leftLeg = new THREE.Mesh(legGeo, legMat);
+  leftLeg.position.y = -2.9;
+  leftLeg.castShadow = true;
+  leftLeg.receiveShadow = true;
+  leftLeg.frustumCulled = false;
+  leftLegPivot.add(leftLeg);
+  characterGroup.add(leftLegPivot);
+
+  const rightLegPivot = new THREE.Group();
+  rightLegPivot.position.set(1.0, 5.8, 0);
+  const rightLeg = new THREE.Mesh(legGeo, legMat);
+  rightLeg.position.y = -2.9;
+  rightLeg.castShadow = true;
+  rightLeg.receiveShadow = true;
+  rightLeg.frustumCulled = false;
+  rightLegPivot.add(rightLeg);
+  characterGroup.add(rightLegPivot);
+
+  characterGroup.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      child.frustumCulled = false;
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach((m) => { m.fog = true; });
+        } else {
+          child.material.fog = true;
+        }
+      }
+    }
+  });
+
+  characterGroup.userData.animateWalk = (time, isWalking) => {
+    if (isWalking) {
+      const armSwing = Math.sin(time * 6) * 0.45;
+      const legSwing = Math.sin(time * 6) * 0.55;
+      leftArmPivot.rotation.x = armSwing;
+      rightArmPivot.rotation.x = -armSwing;
+      leftLegPivot.rotation.x = -legSwing;
+      rightLegPivot.rotation.x = legSwing;
+      bodyBobGroup.position.y = Math.abs(Math.sin(time * 6)) * 0.2;
+    } else {
+      leftArmPivot.rotation.x = THREE.MathUtils.lerp(leftArmPivot.rotation.x, 0, 0.2);
+      rightArmPivot.rotation.x = THREE.MathUtils.lerp(rightArmPivot.rotation.x, 0, 0.2);
+      leftLegPivot.rotation.x = THREE.MathUtils.lerp(leftLegPivot.rotation.x, 0, 0.2);
+      rightLegPivot.rotation.x = THREE.MathUtils.lerp(rightLegPivot.rotation.x, 0, 0.2);
+      bodyBobGroup.position.y = THREE.MathUtils.lerp(bodyBobGroup.position.y, 0, 0.2);
+    }
+  };
+
+  return characterGroup;
+}
+
 function skinFileForId(skinId) {
-  if (typeof skinId === 'string' && /\.glb$/i.test(skinId)) return skinId;
-  const item = STORE_CATALOG[skinId];
-  if (item && item.file) return item.file;
+  const clean = cleanSkinId(skinId) || MALE_STARTER_ID;
+  if (STORE_CATALOG[clean] && STORE_CATALOG[clean].file) {
+    return STORE_CATALOG[clean].file;
+  }
+  const simplified = clean.toLowerCase().replace(/[\s\-_]/g, '');
+  for (const [key, item] of Object.entries(STORE_CATALOG)) {
+    if (key.toLowerCase().replace(/[\s\-_]/g, '') === simplified && item.file) {
+      return item.file;
+    }
+    if (item.file && cleanSkinId(item.file).toLowerCase().replace(/[\s\-_]/g, '') === simplified) {
+      return item.file;
+    }
+  }
+  if (typeof skinId === 'string' && /\.glb$/i.test(skinId)) {
+    const parts = skinId.trim().split(/[\/\\]/);
+    return parts[parts.length - 1];
+  }
   return STORE_CATALOG[MALE_STARTER_ID].file;
 }
 
+function getCandidateSkinUrls(fileOrPath) {
+  if (!fileOrPath) return ['/Skins/Players/Casual_Character.glb', '/Casual_Character.glb'];
+  if (fileOrPath.startsWith('http://') || fileOrPath.startsWith('https://')) {
+    return [fileOrPath];
+  }
+  const cleanParts = fileOrPath.trim().split(/[\/\\]/);
+  let baseName = cleanParts[cleanParts.length - 1];
+  if (!/\.glb$/i.test(baseName)) {
+    const file = skinFileForId(baseName);
+    if (file) baseName = file;
+    else baseName += '.glb';
+  }
+  const urls = [];
+
+  // If a specific absolute path was requested and ends with .glb, try that first
+  if (fileOrPath.startsWith('/') && /\.glb$/i.test(fileOrPath)) {
+    urls.push(fileOrPath);
+  }
+
+  // Priority 1: /Skins/Players/<file>.glb
+  const standard = `/Skins/Players/${baseName}`;
+  if (!urls.includes(standard)) urls.push(standard);
+
+  // Priority 2: /<file>.glb (directly in public/)
+  const root = `/${baseName}`;
+  if (!urls.includes(root)) urls.push(root);
+
+  // Priority 3: /public/Skins/Players/<file>.glb
+  const pub = `/public/Skins/Players/${baseName}`;
+  if (!urls.includes(pub)) urls.push(pub);
+
+  return urls;
+}
+
+function skinUrlForFile(skinFile) {
+  const candidates = getCandidateSkinUrls(skinFile);
+  return candidates[0];
+}
+
 function loadSkinModel(skinFile) {
-  const file = skinFile || STORE_CATALOG[MALE_STARTER_ID].file;
-  if (skinModelCache[file]) return Promise.resolve(skinModelCache[file]);
-  if (skinModelPromises[file]) return skinModelPromises[file];
+  const fileName = skinFileForId(skinFile);
+  if (skinModelCache[fileName]) return Promise.resolve(skinModelCache[fileName]);
+  if (skinModelPromises[fileName]) return skinModelPromises[fileName];
 
-  skinModelPromises[file] = new Promise((resolve, reject) => {
-    skinGLTFLoader.load(file, (gltf) => {
-        const modelScene = gltf.scene;
-        const box = new THREE.Box3().setFromObject(modelScene);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        
-        // BULLETPROOF SCALING: Ignore broken skeleton bounds.
-        // If the model is > 50 units, it was exported in cm. If < 5, it's in meters.
-        let scale = 12; // Default for 1.8m models
-        if (size.y > 50 && size.y < 500) {
-            scale = CHARACTER_TARGET_HEIGHT / size.y;
-        } else if (size.y > 0.5 && size.y < 5) {
-            scale = CHARACTER_TARGET_HEIGHT / size.y;
+  const candidateUrls = getCandidateSkinUrls(skinFile || fileName);
+
+  skinModelPromises[fileName] = new Promise((resolve, reject) => {
+    let index = 0;
+    function tryNext() {
+      if (index >= candidateUrls.length) {
+        delete skinModelPromises[fileName];
+        reject(new Error(`[skin] Could not load model from candidate paths: ${candidateUrls.join(', ')}`));
+        return;
+      }
+      const currentUrl = candidateUrls[index++];
+      skinGLTFLoader.load(
+        currentUrl,
+        (gltf) => {
+          gltf.__resolvedUrl = currentUrl;
+          skinModelCache[fileName] = gltf;
+          delete skinModelPromises[fileName];
+          resolve(gltf);
+        },
+        undefined,
+        () => {
+          tryNext();
         }
-
-        modelScene.traverse((node) => {
-          if (node.isMesh || node.isSkinnedMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-            node.frustumCulled = false; // Prevent disappearing when looking away
-            if (node.material) {
-              node.material.transparent = false; // Fix invisible glass-bugged materials
-              node.material.depthWrite = true;
-            }
-          }
-        });
-
-        const template = {
-          file,
-          scene: modelScene,
-          animations: gltf.animations || [],
-          scale,
-          footOffset: 0 // Force feet to strictly stay at floor origin
-        };
-        skinModelCache[file] = template;
-        delete skinModelPromises[file];
-        resolve(template);
-      }, undefined, (error) => {
-        delete skinModelPromises[file];
-        reject(error);
-      });
+      );
+    }
+    tryNext();
   });
 
-  return skinModelPromises[file];
+  return skinModelPromises[fileName];
+}
+
+function instantiateSkinModel(gltf, url) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (SkeletonUtils && typeof SkeletonUtils.clone === 'function' && gltf && gltf.scene) {
+        const clonedScene = SkeletonUtils.clone(gltf.scene);
+        resolve({ scene: clonedScene, animations: gltf.animations || [] });
+        return;
+      }
+    } catch (cloneErr) {
+      console.warn(`[skin] SkeletonUtils.clone failed for ${url}, falling back to fresh GLTFLoader:`, cloneErr);
+    }
+
+    try {
+      const activeUrl = (gltf && gltf.__resolvedUrl) || url;
+      const loader = new GLTFLoader();
+      loader.load(
+        activeUrl,
+        (freshGltf) => {
+          resolve({ scene: freshGltf.scene, animations: freshGltf.animations || [] });
+        },
+        undefined,
+        (err) => reject(err)
+      );
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
 
 function findClip(animations, keywords) {
@@ -1079,12 +1835,13 @@ function findClip(animations, keywords) {
   return null;
 }
 
-function setupCharacterAnimations(id, group, template) {
-  const animations = template.animations;
+function setupCharacterAnimations(id, model, animations) {
   if (!animations || animations.length === 0) return;
+  const playerRoot = playerMeshes[id];
+  if (!playerRoot) return;
 
-  const mixer = new THREE.AnimationMixer(group);
-  const ud = group.userData;
+  const mixer = new THREE.AnimationMixer(model);
+  const ud = playerRoot.userData;
 
   const idleClip = findClip(animations, ['idle', 'stand', 'breath']) || animations[0];
   const walkClip = findClip(animations, ['walk']) || idleClip;
@@ -1114,8 +1871,10 @@ function setupCharacterAnimations(id, group, template) {
 function disposePlayerMixer(id) {
   const mixer = playerMixers[id];
   if (!mixer) return;
-  mixer.stopAllAction();
-  if (mixer.getRoot()) mixer.uncacheRoot(mixer.getRoot());
+  try {
+    mixer.stopAllAction();
+    if (mixer.getRoot()) mixer.uncacheRoot(mixer.getRoot());
+  } catch (e) {}
   delete playerMixers[id];
 }
 
@@ -1139,48 +1898,96 @@ function updateCharacterAnimationState(group, speed) {
   ud.currentAction = target;
 }
 
-function attachSkinToPlayer(id, holder, skinId) {
+function attachSkinToPlayer(id, playerRoot, skinId) {
+  if (!playerRoot || !playerRoot.userData) return;
   const file = skinFileForId(skinId);
-  if (holder.userData.skinFile === file || holder.userData.pendingSkinFile === file) return;
-  holder.userData.pendingSkinFile = file;
+  const ud = playerRoot.userData;
+  const bodyContainer = ud.bodyContainer || playerRoot;
+
+  if (ud.model && ud.skinFile === file) return;
+  if (ud.pendingSkinFile === file) return;
+  ud.pendingSkinFile = file;
 
   loadSkinModel(file)
-    .then((template) => {
-      if (playerMeshes[id] !== holder || holder.userData.pendingSkinFile !== file) return;
-      holder.userData.pendingSkinFile = null;
+    .then((gltf) => {
+      if (playerMeshes[id] !== playerRoot || ud.pendingSkinFile !== file || ud.isDisguised) return;
 
-      if (holder.userData.model) {
-        holder.remove(holder.userData.model);
-        holder.userData.model = null;
-      }
+      const activeUrl = (gltf && gltf.__resolvedUrl) || skinUrlForFile(file);
+      return instantiateSkinModel(gltf, activeUrl).then((instantiated) => {
+        if (playerMeshes[id] !== playerRoot || ud.pendingSkinFile !== file || ud.isDisguised) return;
+        ud.pendingSkinFile = null;
 
-      const model = SkeletonUtils.clone(template.scene);
-      model.scale.setScalar(template.scale);
-      model.position.y = template.footOffset || 0; // Fixes clipping through floor
-      model.traverse((node) => {
-        if (node.isMesh || node.isSkinnedMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-          node.frustumCulled = false;
+        const model = instantiated.scene;
+        model.updateMatrixWorld(true);
+
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        let rawHeight = size.y;
+        if (!rawHeight || isNaN(rawHeight) || rawHeight < 0.001) {
+          rawHeight = 1.8;
         }
+
+        const targetHeight = CHARACTER_TARGET_HEIGHT;
+        const scale = targetHeight / rawHeight;
+        model.scale.setScalar(scale);
+        model.updateMatrixWorld(true);
+
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        const scaledCenter = new THREE.Vector3();
+        scaledBox.getCenter(scaledCenter);
+
+        model.position.set(-scaledCenter.x, -scaledBox.min.y, -scaledCenter.z);
+        model.updateMatrixWorld(true);
+
+        model.traverse((child) => {
+          if (child.isMesh || child.isSkinnedMesh) {
+            child.visible = true;
+            child.frustumCulled = false;
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat) => {
+                  mat.fog = true;
+                  mat.depthWrite = true;
+                });
+              } else {
+                child.material.fog = true;
+                child.material.depthWrite = true;
+              }
+            }
+          }
+        });
+
+        // Remove old model if present
+        if (ud.model) {
+          bodyContainer.remove(ud.model);
+          disposeMeshHierarchy(ud.model);
+          ud.model = null;
+        }
+
+        bodyContainer.add(model);
+        ud.model = model;
+        ud.skinFile = file;
+
+        // Diagnostic log on success: print targetHeight and scale for verification
+        console.log('[skin] loaded:', activeUrl, 'targetHeight:', targetHeight, 'scale:', scale);
+
+        // ONLY remove or hide fallback body after .glb is attached
+        if (ud.fallbackMesh) {
+          bodyContainer.remove(ud.fallbackMesh);
+          disposeMeshHierarchy(ud.fallbackMesh);
+          ud.fallbackMesh = null;
+        }
+
+        setupCharacterAnimations(id, model, instantiated.animations);
       });
-
-      holder.add(model);
-      holder.userData.model = model;
-      holder.userData.skinFile = file;
-      holder.userData.placeholder = false;
-
-      if (holder.userData.fallbackMesh) {
-        holder.remove(holder.userData.fallbackMesh);
-        if (holder.userData.fallbackMesh.geometry) holder.userData.fallbackMesh.geometry.dispose();
-        if (holder.userData.fallbackMesh.material) holder.userData.fallbackMesh.material.dispose();
-        holder.userData.fallbackMesh = null;
-      }
-
-      setupCharacterAnimations(id, holder, template);
     })
-    .catch(() => {
-      if (holder.userData.pendingSkinFile === file) holder.userData.pendingSkinFile = null;
+    .catch((err) => {
+      if (ud.pendingSkinFile === file) ud.pendingSkinFile = null;
+      console.warn('[skin] failed:', file, err);
     });
 }
 
@@ -1384,11 +2191,23 @@ function rebuildPropMeshes() {
 }
 
 function resolvePlayerSkinId(player) {
-  if (!player) return DEFAULT_LOADOUT.equippedSkin;
-  let id = (player.loadout && player.loadout.equippedSkin) || player.equippedSkin;
-  if (typeof id !== 'string' || !id) id = DEFAULT_LOADOUT.equippedSkin;
-  if (id === 'default') id = MALE_STARTER_ID;
-  return STORE_CATALOG[id] ? id : DEFAULT_LOADOUT.equippedSkin;
+  if (!player) return (myEquippedSkin || defaultEquippedSkinId());
+  if (player.id === myId && myEquippedSkin && STORE_CATALOG[myEquippedSkin]) {
+    return myEquippedSkin;
+  }
+  let raw = (player.loadout && player.loadout.equippedSkin) || player.equippedSkin || player.skinId;
+  const id = cleanSkinId(raw);
+  if (!id) {
+    return player.id === myId ? (myEquippedSkin || defaultEquippedSkinId()) : MALE_STARTER_ID;
+  }
+  if (id === 'default') return MALE_STARTER_ID;
+  if (STORE_CATALOG[id]) return id;
+  const simplified = id.toLowerCase().replace(/[\s\-_]/g, '');
+  for (const [key, item] of Object.entries(STORE_CATALOG)) {
+    if (key.toLowerCase().replace(/[\s\-_]/g, '') === simplified) return key;
+    if (item.file && cleanSkinId(item.file).toLowerCase().replace(/[\s\-_]/g, '') === simplified) return key;
+  }
+  return player.id === myId ? (myEquippedSkin || defaultEquippedSkinId()) : MALE_STARTER_ID;
 }
 
 function resolveMeshColor(player) {
@@ -1404,89 +2223,177 @@ function resolveDisguiseColor(player) {
   return 0x8b5a2b;
 }
 
-function getOrCreatePlayerMesh(id, player) {
-  let mesh = playerMeshes[id];
-  const isMe = id === myId;
-
-  const disguised = player.isProp && player.propId;
+function createPropBoxMesh(player, skinId) {
+  const prop = props.find((pp) => pp.id === player.propId);
+  const w = prop ? prop.width : 40;
+  const d = prop ? prop.height : 40;
   const boxColor = resolveDisguiseColor(player);
-  const skinId = resolvePlayerSkinId(player);
-
-  const wantsCharacter = !disguised;
-  const isCharacter = !!(mesh && mesh.userData && mesh.userData.isCharacter);
-
-  if (mesh && isCharacter !== wantsCharacter) {
-    removePlayerMesh(id);
-    mesh = null;
-  }
-
-  if (!mesh) {
-    if (disguised) {
-      const prop = props.find((pp) => pp.id === player.propId);
-      const w = prop ? prop.width : 40;
-      const d = prop ? prop.height : 40;
-      const geo = new THREE.BoxGeometry(w, PROP_HEIGHT, d);
-      const mat = new THREE.MeshStandardMaterial({
-        color: boxColor,
-        metalness: skinId === 'steelProp' ? 0.75 : 0.05,
-        roughness: skinId === 'steelProp' ? 0.28 : 0.8
-      });
-      mesh = new THREE.Mesh(geo, mat);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.userData.isCharacter = false;
-    } else {
-      mesh = new THREE.Group();
-      mesh.userData.isCharacter = true;
-      mesh.userData.skinFile = null;
-      mesh.userData.pendingSkinFile = null;
-      mesh.userData.model = null;
-
-      const geo = new THREE.CylinderGeometry(PLAYER_RADIUS_3D, PLAYER_RADIUS_3D, PLAYER_HEIGHT_3D, 16);
-      const mat = new THREE.MeshStandardMaterial({ color: resolveMeshColor(player), roughness: 0.6 });
-      const fallback = new THREE.Mesh(geo, mat);
-      fallback.position.y = PLAYER_HEIGHT_3D / 2;
-      fallback.castShadow = true;
-      fallback.receiveShadow = true;
-      mesh.add(fallback);
-      mesh.userData.fallbackMesh = fallback;
-
-      if (isMe) {
-        const outlineGeo = new THREE.TorusGeometry(PLAYER_RADIUS_3D + 1, 1, 8, 24);
-        const outlineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const ring = new THREE.Mesh(outlineGeo, outlineMat);
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = PLAYER_HEIGHT_3D + 1;
-        mesh.add(ring);
-        mesh.userData.ring = ring;
-      }
-    }
-    mesh.userData.id = id;
-    playerMeshes[id] = mesh;
-    playerGroup.add(mesh);
-  } else if (!wantsCharacter) {
-    if (mesh.material && mesh.material.color) mesh.material.color.setHex(boxColor);
-  }
-
-  if (wantsCharacter) {
-    attachSkinToPlayer(id, mesh, skinId);
-    if (mesh.userData.fallbackMesh && mesh.userData.fallbackMesh.material) {
-      mesh.userData.fallbackMesh.material.color.setHex(resolveMeshColor(player));
-    }
-  }
-
-  if (isMe) mesh.visible = false;
-  else mesh.visible = !!player.alive;
-
+  const geo = new THREE.BoxGeometry(w, PROP_HEIGHT, d);
+  const mat = new THREE.MeshStandardMaterial({
+    color: boxColor,
+    metalness: skinId === 'steelProp' ? 0.75 : 0.05,
+    roughness: skinId === 'steelProp' ? 0.28 : 0.8
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = PROP_HEIGHT / 2;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.frustumCulled = false;
+  mesh.userData.disposableMaterial = true;
   return mesh;
 }
 
+function getOrCreatePlayerMesh(id, player) {
+  let playerRoot = playerMeshes[id];
+  const isMe = id === myId;
+
+  const disguised = Boolean(player.isProp && player.propId);
+  const skinId = resolvePlayerSkinId(player);
+  const wantsCharacter = !disguised;
+
+  if (!playerRoot) {
+    playerRoot = new THREE.Group();
+    playerRoot.name = `playerRoot_${id}`;
+    playerRoot.scale.set(1, 1, 1);
+    playerRoot.frustumCulled = false;
+    playerRoot.userData.id = id;
+    playerRoot.userData.isCharacter = wantsCharacter;
+    playerRoot.userData.isDisguised = disguised;
+    playerRoot.userData.skinFile = null;
+    playerRoot.userData.pendingSkinFile = null;
+    playerRoot.userData.model = null;
+    playerRoot.userData.fallbackMesh = null;
+    playerRoot.userData.speed = 0;
+    playerRoot.userData.lastPos = null;
+    playerRoot.userData.lastPosTime = performance.now();
+    playerRoot.userData.initializedPos = false;
+
+    // bodyContainer holds ONLY the active skin .glb, procedural fallback body, or prop box
+    const bodyContainer = new THREE.Group();
+    bodyContainer.name = `bodyContainer_${id}`;
+    bodyContainer.scale.set(1, 1, 1);
+    bodyContainer.frustumCulled = false;
+    playerRoot.add(bodyContainer);
+    playerRoot.userData.bodyContainer = bodyContainer;
+
+    // Overhead name badge for remote players (child Sprite of playerRoot)
+    if (!isMe) {
+      const badge = createPlayerBadge(player.username || player.displayName || 'Survivor', player.role);
+      if (badge) {
+        playerRoot.add(badge.sprite);
+        playerRoot.userData.badge = badge;
+      }
+    }
+
+    if (disguised) {
+      const propBox = createPropBoxMesh(player, skinId);
+      bodyContainer.add(propBox);
+      bodyContainer.userData.propMesh = propBox;
+    } else {
+      const fallback = buildProceduralCharacter(player, skinId, player.role === 'hunter');
+      bodyContainer.add(fallback);
+      playerRoot.userData.fallbackMesh = fallback;
+    }
+
+    playerMeshes[id] = playerRoot;
+    if (scene) {
+      scene.add(playerRoot);
+    } else if (playerGroup) {
+      playerGroup.add(playerRoot);
+    }
+  } else {
+    // Ensure playerRoot is attached directly to scene
+    if (scene && playerRoot.parent !== scene) {
+      if (playerRoot.parent) playerRoot.parent.remove(playerRoot);
+      scene.add(playerRoot);
+    }
+
+    const ud = playerRoot.userData;
+    const bodyContainer = ud.bodyContainer || playerRoot;
+    playerRoot.scale.set(1, 1, 1);
+    if (bodyContainer) bodyContainer.scale.set(1, 1, 1);
+
+    if (ud.isDisguised !== disguised) {
+      ud.isDisguised = disguised;
+      ud.isCharacter = wantsCharacter;
+
+      disposePlayerMixer(id);
+      if (ud.model) {
+        bodyContainer.remove(ud.model);
+        disposeMeshHierarchy(ud.model);
+        ud.model = null;
+      }
+      if (ud.fallbackMesh) {
+        bodyContainer.remove(ud.fallbackMesh);
+        disposeMeshHierarchy(ud.fallbackMesh);
+        ud.fallbackMesh = null;
+      }
+      if (bodyContainer.userData.propMesh) {
+        bodyContainer.remove(bodyContainer.userData.propMesh);
+        disposeMeshHierarchy(bodyContainer.userData.propMesh);
+        bodyContainer.userData.propMesh = null;
+      }
+      ud.skinFile = null;
+      ud.pendingSkinFile = null;
+
+      if (disguised) {
+        const propBox = createPropBoxMesh(player, skinId);
+        bodyContainer.add(propBox);
+        bodyContainer.userData.propMesh = propBox;
+      } else {
+        const fallback = buildProceduralCharacter(player, skinId, player.role === 'hunter');
+        bodyContainer.add(fallback);
+        ud.fallbackMesh = fallback;
+      }
+    } else if (disguised && bodyContainer.userData.propMesh) {
+      const boxColor = resolveDisguiseColor(player);
+      if (bodyContainer.userData.propMesh.material && bodyContainer.userData.propMesh.material.color) {
+        bodyContainer.userData.propMesh.material.color.setHex(boxColor);
+      }
+    }
+  }
+
+  // Update badge content & visibility
+  if (!isMe) {
+    if (!playerRoot.userData.badge) {
+      const badge = createPlayerBadge(player.username || player.displayName || 'Survivor', player.role);
+      if (badge) {
+        playerRoot.add(badge.sprite);
+        playerRoot.userData.badge = badge;
+      }
+    } else {
+      updatePlayerBadge(playerRoot.userData.badge, player.username || player.displayName || 'Survivor', player.role);
+    }
+
+    if (playerRoot.userData.badge && playerRoot.userData.badge.sprite) {
+      playerRoot.userData.badge.sprite.visible = !disguised && Boolean(player.alive);
+    }
+  }
+
+  if (wantsCharacter) {
+    attachSkinToPlayer(id, playerRoot, skinId);
+  }
+
+  if (isMe) {
+    playerRoot.visible = false;
+  } else {
+    playerRoot.visible = Boolean(player.alive);
+    playerRoot.frustumCulled = false;
+  }
+
+  return playerRoot;
+}
+
 function removePlayerMesh(id) {
-  const mesh = playerMeshes[id];
-  if (!mesh) return;
+  const playerRoot = playerMeshes[id];
+  if (!playerRoot) return;
   disposePlayerMixer(id);
-  playerGroup.remove(mesh);
-  mesh.traverse((node) => {
+  if (playerRoot.parent) {
+    playerRoot.parent.remove(playerRoot);
+  } else if (scene) {
+    scene.remove(playerRoot);
+  }
+  playerRoot.traverse((node) => {
     if (node.isMesh || node.isSkinnedMesh) {
       if (node.geometry) node.geometry.dispose();
       if (node.userData && node.userData.disposableMaterial && node.material) {
@@ -1494,6 +2401,9 @@ function removePlayerMesh(id) {
       }
     }
   });
+  if (playerRoot.userData && playerRoot.userData.badge && playerRoot.userData.badge.texture) {
+    playerRoot.userData.badge.texture.dispose();
+  }
   delete playerMeshes[id];
 }
 
@@ -1516,17 +2426,29 @@ function updatePlayerMeshes() {
       pz = player.z;
     }
 
-    const mesh = getOrCreatePlayerMesh(id, player);
-    if (!player.alive) {
-      mesh.visible = false;
+    const playerRoot = getOrCreatePlayerMesh(id, player);
+    if (!player.alive || isMe) {
+      playerRoot.visible = false;
       continue;
     }
 
-    const remoteEyeHeight = isMe ? (camera ? camera.position.y : PLAYER_EYE_HEIGHT) : (typeof player.y === 'number' ? player.y : PLAYER_EYE_HEIGHT);
-    const verticalOffset = remoteEyeHeight - PLAYER_EYE_HEIGHT;
+    playerRoot.visible = true;
+    playerRoot.frustumCulled = false;
 
-    if (mesh.userData.isCharacter) {
-      const ud = mesh.userData;
+    // Ground height: player.y is eye level (~12), ground height is Math.max(0, player.y - 12)
+    const rawY = typeof player.y === 'number' ? player.y : PLAYER_EYE_HEIGHT;
+    const targetGroundY = Math.max(0, rawY - PLAYER_EYE_HEIGHT);
+    const targetYaw = (typeof player.yaw === 'number') ? player.yaw : ((typeof player.rotation === 'number') ? player.rotation : (playerRoot.rotation.y || 0));
+
+    const ud = playerRoot.userData;
+
+    if (!ud.initializedPos) {
+      playerRoot.position.set(px, targetGroundY, pz);
+      playerRoot.rotation.y = targetYaw;
+      ud.initializedPos = true;
+    }
+
+    if (ud.isCharacter) {
       if (ud.lastPos) {
         const dtSec = Math.max(0.001, (nowMs - ud.lastPosTime) / 1000);
         const inst = Math.hypot(px - ud.lastPos.x, pz - ud.lastPos.z) / dtSec;
@@ -1537,17 +2459,32 @@ function updatePlayerMeshes() {
       ud.lastPos = { x: px, z: pz };
       ud.lastPosTime = nowMs;
 
-      mesh.position.set(px, verticalOffset, pz);
-      if (isMe && camera) {
-        mesh.rotation.y = camera.rotation.y + Math.PI;
-      } else if (ud.speed > CHARACTER_WALK_SPEED && ud.prevFacing) {
-        const dx = px - ud.prevFacing.x;
-        const dz = pz - ud.prevFacing.z;
-        if (dx * dx + dz * dz > 0.0001) mesh.rotation.y = Math.atan2(dx, dz);
+      playerRoot.position.x = THREE.MathUtils.lerp(playerRoot.position.x, px, 0.35);
+      playerRoot.position.y = THREE.MathUtils.lerp(playerRoot.position.y, targetGroundY, 0.35);
+      playerRoot.position.z = THREE.MathUtils.lerp(playerRoot.position.z, pz, 0.35);
+
+      let rotDiff = targetYaw - playerRoot.rotation.y;
+      while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+      while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+      playerRoot.rotation.y += rotDiff * 0.35;
+
+      // Animate procedural limb swinging if fallback is active
+      if (ud.fallbackMesh && ud.fallbackMesh.userData && ud.fallbackMesh.userData.animateWalk) {
+        ud.fallbackMesh.userData.animateWalk(nowMs * 0.008, ud.speed > CHARACTER_WALK_SPEED);
       }
-      ud.prevFacing = { x: px, z: pz };
     } else {
-      mesh.position.set(px, PROP_HEIGHT / 2 + verticalOffset, pz);
+      playerRoot.position.x = THREE.MathUtils.lerp(playerRoot.position.x, px, 0.35);
+      playerRoot.position.y = THREE.MathUtils.lerp(playerRoot.position.y, targetGroundY, 0.35);
+      playerRoot.position.z = THREE.MathUtils.lerp(playerRoot.position.z, pz, 0.35);
+      playerRoot.rotation.y = targetYaw;
+    }
+
+    // Overhead badge update
+    if (ud.badge) {
+      updatePlayerBadge(ud.badge, player.username || player.displayName || 'Survivor', player.role);
+      if (ud.badge.sprite) {
+        ud.badge.sprite.visible = !player.isProp && Boolean(player.alive);
+      }
     }
   }
 }
@@ -2194,6 +3131,10 @@ function joinGame(options) {
   opts.playerId = persistentPlayerId;
   const starterId = chosenStarterSkinId || defaultEquippedSkinId();
   opts.starterSkin = starterId;
+  const savedSkin = readSavedEquippedSkin();
+  const activeSkin = myLoadout.equippedSkin || savedSkin || starterId;
+  opts.equippedSkin = activeSkin;
+  opts.skinId = activeSkin;
   opts.gender = starterGender || (starterId === FEMALE_STARTER_ID ? 'female' : 'male');
   socket.emit('joinGame', opts);
   hideMainMenu();
@@ -2397,7 +3338,19 @@ function applyLoadoutState(inventory, loadout) {
   }
   ensureExclusiveStarterInventory();
   myLoadout = normalizeMyLoadout(loadout, myInventory);
+
+  const savedSkin = readSavedEquippedSkin();
+  if (savedSkin && myInventory.includes(savedSkin)) {
+    if (!loadout || !loadout.equippedSkin || STARTER_SKIN_IDS.includes(loadout.equippedSkin)) {
+      if (!STARTER_SKIN_IDS.includes(savedSkin)) {
+        myLoadout.equippedSkin = savedSkin;
+      }
+    }
+  }
   myEquippedSkin = myLoadout.equippedSkin;
+  if (myEquippedSkin) {
+    persistEquippedSkin(myEquippedSkin);
+  }
 }
 
 function applyWalletPayload(data) {
@@ -2523,9 +3476,28 @@ function setStoreStatus(message, color = '#8ee8ff') {
 function requestEquipItem(itemId) {
   if (!socket) return;
   setStoreStatus('');
-  const item = STORE_CATALOG[itemId];
-  if (item && item.type === 'skin') socket.emit('equipSkin', itemId);
-  else socket.emit('equipItem', itemId);
+  const clean = cleanSkinId(itemId) || itemId;
+  const item = STORE_CATALOG[clean] || STORE_CATALOG[itemId];
+  if (!item) return;
+
+  if (item.type === 'skin') {
+    persistEquippedSkin(item.id);
+    socket.emit('equipSkin', { skinId: item.id, playerId: persistentPlayerId });
+    if (players[myId]) {
+      players[myId].equippedSkin = item.id;
+      players[myId].skinId = item.id;
+      if (players[myId].loadout) players[myId].loadout.equippedSkin = item.id;
+    }
+    const myMesh = playerMeshes[myId];
+    if (myMesh && !players[myId]?.isProp) {
+      attachSkinToPlayer(myId, myMesh, item.id);
+    }
+    updatePlayerMeshes();
+    refreshStoreUi();
+    refreshCharacterPreview();
+  } else {
+    socket.emit('equipItem', { itemId: item.id, playerId: persistentPlayerId });
+  }
 }
 
 function requestBuyItem(itemId) {
@@ -2958,21 +3930,32 @@ function confirmStarterSelection() {
 
   if (!myInventory.includes(starter.id)) myInventory.push(starter.id);
   ensureExclusiveStarterInventory();
-  myLoadout.equippedSkin = starter.id;
-  myEquippedSkin = starter.id;
+
+  // If the player already has a bought non-starter skin equipped, preserve it!
+  const savedSkin = readSavedEquippedSkin();
+  const hasCustomSkin = savedSkin && !STARTER_SKIN_IDS.includes(savedSkin) && myInventory.includes(savedSkin);
+  const activeSkin = hasCustomSkin ? savedSkin : starter.id;
+  persistEquippedSkin(activeSkin);
 
   if (socket) {
-    socket.emit('equipSkin', { skinId: starter.id, gender, starterSkin: starter.id, model: starter.file, playerId: persistentPlayerId });
+    socket.emit('equipSkin', {
+      skinId: activeSkin,
+      gender,
+      starterSkin: starter.id,
+      model: starter.file,
+      playerId: persistentPlayerId
+    });
     socket.emit('requestWallet', persistentPlayerId);
   }
 
   if (players[myId]) {
-    players[myId].equippedSkin = starter.id;
-    if (players[myId].loadout) players[myId].loadout.equippedSkin = starter.id;
+    players[myId].equippedSkin = activeSkin;
+    if (players[myId].loadout) players[myId].loadout.equippedSkin = activeSkin;
     updatePlayerMeshes();
   }
 
   refreshStoreUi();
+  refreshCharacterPreview();
   closeStarterSelection();
 }
 
@@ -2990,7 +3973,12 @@ function initStarterSelection() {
   if (chosenStarterSkinId) {
     if (!myInventory.includes(chosenStarterSkinId)) myInventory.push(chosenStarterSkinId);
     ensureExclusiveStarterInventory();
-    if (!myLoadout.equippedSkin || STARTER_SKIN_IDS.includes(myLoadout.equippedSkin)) {
+
+    const savedSkin = readSavedEquippedSkin();
+    if (savedSkin && !STARTER_SKIN_IDS.includes(savedSkin)) {
+      myLoadout.equippedSkin = savedSkin;
+      myEquippedSkin = savedSkin;
+    } else if (!myLoadout.equippedSkin || STARTER_SKIN_IDS.includes(myLoadout.equippedSkin)) {
       myLoadout.equippedSkin = chosenStarterSkinId;
       myEquippedSkin = chosenStarterSkinId;
     }
@@ -3087,6 +4075,7 @@ function leaveMatchToMainMenu() {
   currentRoomCode = null; isPrivateRoom = false; isRoomHost = false; myIsHost = false;
   setRoomCodeHudText(null);
   if (roomCodeDisplay) roomCodeDisplay.textContent = '—';
+  socket.emit('requestWallet', persistentPlayerId);
   showMainMenuRoot();
 }
 
@@ -3127,14 +4116,25 @@ function attachSocketListeners() {
       storeStatus.style.color = data && data.ok ? '#8ee8ff' : '#ff8a7a';
     }
     if (data && data.ok) {
-      const newSkin = (data.loadout && data.loadout.equippedSkin) || data.equippedSkin;
-      if (newSkin) loadSkinModel(skinFileForId(newSkin)).catch(() => {});
-      if (players[myId]) {
-        players[myId].equippedSkin = newSkin || players[myId].equippedSkin;
-        if (data.loadout) players[myId].loadout = normalizeMyLoadout(data.loadout, players[myId].inventory);
-        updatePlayerMeshes();
-        updateWeaponHud();
+      const rawSkin = (data.loadout && data.loadout.equippedSkin) || data.equippedSkin || data.itemId;
+      const cleanSkin = cleanSkinId(rawSkin) || rawSkin;
+      if (cleanSkin && STORE_CATALOG[cleanSkin] && STORE_CATALOG[cleanSkin].type === 'skin') {
+        persistEquippedSkin(cleanSkin);
+        loadSkinModel(skinFileForId(cleanSkin)).catch(() => {});
       }
+      if (players[myId]) {
+        players[myId].equippedSkin = cleanSkin || players[myId].equippedSkin;
+        players[myId].skinId = cleanSkin || players[myId].skinId;
+        if (data.loadout) players[myId].loadout = normalizeMyLoadout(data.loadout, players[myId].inventory);
+      }
+      const myMesh = playerMeshes[myId];
+      if (myMesh && !players[myId]?.isProp && cleanSkin) {
+        attachSkinToPlayer(myId, myMesh, cleanSkin);
+      }
+      updatePlayerMeshes();
+      updateWeaponHud();
+      refreshStoreUi();
+      refreshCharacterPreview();
     }
   });
 
@@ -3198,6 +4198,9 @@ function attachSocketListeners() {
       resetFloorTracking();
     }
 
+    for (const [pId, pData] of Object.entries(players)) {
+      if (pId !== myId) getOrCreatePlayerMesh(pId, pData);
+    }
     rebuildMapMeshes(); rebuildPropMeshes(); updatePlayerMeshes(); updateNPCMeshes(); clearTracers();
     resetCombatState(); updateRoleDisplay(); updateHealthDisplay(); updateLobbyStats(); updateLobbyUi();
   });
@@ -3219,7 +4222,11 @@ function attachSocketListeners() {
   });
 
   socket.on('playerJoined', (data) => {
+    if (!data || !data.id) return;
     players[data.id] = data.player;
+    if (data.id !== myId) {
+      getOrCreatePlayerMesh(data.id, data.player);
+    }
     updatePlayerMeshes(); updateLobbyStats();
   });
 
@@ -3320,6 +4327,65 @@ function attachSocketListeners() {
     delete players[id]; delete radarContacts[id]; removePlayerMesh(id); updateLobbyStats();
   });
 
+  socket.on('playerMoved', (data) => {
+    if (!data || !data.id || data.id === myId) return;
+    if (!players[data.id]) {
+      players[data.id] = data;
+    } else {
+      Object.assign(players[data.id], data);
+    }
+    const mesh = getOrCreatePlayerMesh(data.id, players[data.id]);
+    if (mesh) {
+      mesh.visible = data.alive !== false;
+      mesh.frustumCulled = false;
+    }
+  });
+
+  socket.on('playerSkinUpdated', (data) => {
+    if (!data || !data.id) return;
+    const rawSkin = data.equippedSkin || data.skinId || (data.player && (data.player.equippedSkin || data.player.skinId));
+    if (!rawSkin) return;
+    const skin = cleanSkinId(rawSkin) || rawSkin;
+    if (players[data.id]) {
+      players[data.id].equippedSkin = skin;
+      players[data.id].skinId = skin;
+      if (players[data.id].loadout) players[data.id].loadout.equippedSkin = skin;
+    }
+    if (data.id === myId) {
+      myEquippedSkin = skin;
+      myLoadout.equippedSkin = skin;
+      persistEquippedSkin(skin);
+      refreshCharacterPreview();
+      const myMesh = playerMeshes[myId];
+      if (myMesh && !players[myId]?.isProp) {
+        attachSkinToPlayer(myId, myMesh, skin);
+      }
+    } else {
+      let mesh = playerMeshes[data.id];
+      if (!mesh && players[data.id]) {
+        mesh = getOrCreatePlayerMesh(data.id, players[data.id]);
+      }
+      if (mesh && !players[data.id]?.isProp) {
+        attachSkinToPlayer(data.id, mesh, skin);
+      }
+    }
+    updatePlayerMeshes();
+  });
+
+  socket.on('playerDisguised', (data) => {
+    if (!data || !data.id) return;
+    if (players[data.id]) {
+      players[data.id].isProp = !!data.isProp;
+      players[data.id].propId = data.propType || data.propId;
+    }
+    if (data.id !== myId) {
+      removePlayerMesh(data.id);
+      if (players[data.id]) {
+        getOrCreatePlayerMesh(data.id, players[data.id]);
+      }
+    }
+  });
+
   socket.on('fireTracer', (tracer) => { spawnTracer(tracer); });
   socket.on('leaderboardUpdate', (entries) => { renderLeaderboard(entries); });
   socket.on('radarData', (data) => {
@@ -3403,6 +4469,9 @@ function attachSocketListeners() {
       camera.position.set(localX, PLAYER_EYE_HEIGHT, localZ); resetFloorTracking();
     }
 
+    for (const [pId, pData] of Object.entries(players)) {
+      if (pId !== myId) getOrCreatePlayerMesh(pId, pData);
+    }
     resetCombatState(); updatePlayerMeshes(); updateRoleDisplay(); updateHealthDisplay(); updateLobbyStats(); showHud(); updateTimerDisplay(); updateLobbyUi();
   });
 }
@@ -3728,7 +4797,8 @@ function getCurrentEyeHeight() { return PLAYER_EYE_HEIGHT - (PLAYER_EYE_HEIGHT -
 function updateAimDownSights(dt) {
   if (!camera) return;
   const canAds = myRole === 'hunter' && hasJoined && amAlive && controls && controls.isLocked;
-  const targetFov = (isAiming && canAds) ? ADS_FOV : DEFAULT_FOV;
+  const baseFov = Number(window.__gameSettings?.fov || DEFAULT_FOV || 75);
+  const targetFov = (isAiming && canAds) ? ADS_FOV : baseFov;
   if (Math.abs(camera.fov - targetFov) < 0.01) {
     if (camera.fov !== targetFov) { camera.fov = targetFov; camera.updateProjectionMatrix(); }
     return;
@@ -3737,12 +4807,20 @@ function updateAimDownSights(dt) {
   camera.updateProjectionMatrix();
 }
 
+let lastSentYaw = null;
 function emitMoveIfChanged() {
   if (!socket || !hasJoined || !amAlive || isDisguised || !players[myId]) return;
   const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
-  if (lastSentX === null || Math.abs(px - lastSentX) > 0.001 || Math.abs(py - lastSentY) > 0.001 || Math.abs(pz - lastSentZ) > 0.001) {
-    socket.emit('playerMove', { x: px, y: py, z: pz });
-    lastSentX = px; lastSentY = py; lastSentZ = pz;
+  const euler = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
+  const yaw = euler.y;
+  const isMoving = keys.w || keys.a || keys.s || keys.d;
+  if (lastSentX === null ||
+      Math.abs(px - lastSentX) > 0.001 ||
+      Math.abs(py - lastSentY) > 0.001 ||
+      Math.abs(pz - lastSentZ) > 0.001 ||
+      Math.abs(yaw - (lastSentYaw || 0)) > 0.01) {
+    socket.emit('playerMove', { x: px, y: py, z: pz, rotation: yaw, yaw: yaw, isMoving: isMoving });
+    lastSentX = px; lastSentY = py; lastSentZ = pz; lastSentYaw = yaw;
   }
 }
 
