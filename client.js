@@ -193,20 +193,89 @@ const STORE_CATALOG = {
   shadowHunter:  { id: 'shadowHunter',  name: 'Shadow Hunter Skin', file: 'Casual_Character.glb', cost: 500,  type: 'skin',            slot: 'equippedSkin',    color: 0x111111, tracer: null,      legacy: true, stats: 'Pitch-black silhouette for Hunters.' },
   steelProp:     { id: 'steelProp',     name: 'Steel Prop Crate',   file: 'Casual_w.glb',         cost: 500,  type: 'skin',            slot: 'equippedSkin',    color: 0x7f8c8d, tracer: null,      legacy: true, stats: 'Brushed-metal finish for disguised Props.' },
 
-  standardRifle: { id: 'standardRifle', name: 'Assault Rifle',      cost: 0,    type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffe27a, stats: 'Dmg 25 · 5 rds · dependable all-rounder.' },
-  shotgun:       { id: 'shotgun',       name: 'Combat Shotgun',     cost: 700,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffd08a, stats: 'Dmg 25 · 5 rds · heavy close-range profile.' },
-  vulcanRifle:   { id: 'vulcanRifle',   name: 'VK-47 Vulcan',       cost: 800,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xff8c42, stats: 'Dmg 25 · 5 rds · molten-ember tracer.' },
-  longshotMk2:   { id: 'longshotMk2',   name: 'Longshot Mk II',     cost: 1200, type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0x9fd8ff, stats: 'Dmg 25 · 5 rds · cold-blue tracer.' },
+  standardRifle: { id: 'standardRifle', name: 'Assault Rifle',      file: 'militiaCarbine.glb', thumb: '/store/weapons/militiaCarbine.png', cost: 0,    type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 25 · 5 rds · dependable all-rounder.' },
+  shotgun:       { id: 'shotgun',       name: 'Combat Shotgun',     file: 'graveyardPump.glb',  thumb: '/store/weapons/graveyardPump.png',  cost: 700,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffd08a, legacy: true, stats: 'Dmg 25 · 5 rds · heavy close-range profile.' },
+  vulcanRifle:   { id: 'vulcanRifle',   name: 'VK-47 Vulcan',       file: 'hellhoundMK3.glb',   thumb: '/store/weapons/hellhoundMK3.png',   cost: 800,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xff8c42, legacy: true, stats: 'Dmg 25 · 5 rds · molten-ember tracer.' },
+  longshotMk2:   { id: 'longshotMk2',   name: 'Longshot Mk II',     file: 'nightwatchDMR.glb',  thumb: '/store/weapons/nightwatchDMR.png',  cost: 1200, type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Dmg 25 · 5 rds · cold-blue tracer.' },
 
-  sidearmPistol: { id: 'sidearmPistol', name: 'Pistol',             cost: 0,    type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffe27a, stats: 'Dmg 12.5 · 12 rds · fast and reliable.' },
-  revolver:      { id: 'revolver',      name: 'Revolver',            cost: 700,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffc27a, stats: 'Dmg 12.5 · 12 rds · hard-hitting hand cannon.' },
-  viperSMG:      { id: 'viperSMG',      name: 'Viper SMG',          cost: 600,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xa2ff9f, stats: 'Dmg 12.5 · 12 rds · toxic-green tracer.' },
+  sidearmPistol: { id: 'sidearmPistol', name: 'Pistol',             file: 'watchman9mm.glb',    thumb: '/store/weapons/watchman9mm.png',    cost: 0,    type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · fast and reliable.' },
+  revolver:      { id: 'revolver',      name: 'Revolver',            file: 'outlawRevolver.glb', thumb: '/store/weapons/outlawRevolver.png', cost: 700,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffc27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · hard-hitting hand cannon.' },
+  viperSMG:      { id: 'viperSMG',      name: 'Viper SMG',          file: 'cryptkeeperAuto.glb', thumb: '/store/weapons/cryptkeeperAuto.png', cost: 600,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xa2ff9f, legacy: true, stats: 'Dmg 12.5 · 12 rds · toxic-green tracer.' },
 
-  fieldBlade:    { id: 'fieldBlade',    name: 'Field Blade',        cost: 0,    type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      stats: 'Trusted close-range melee blade.' },
-  carbonCleaver: { id: 'carbonCleaver', name: 'Carbon Cleaver',     cost: 400,  type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      stats: 'Featherweight carbon melee cleaver.' },
-  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife',     cost: 0,    type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0x9fd8ff, stats: 'Balanced Prop throwing knife.' },
-  phantomDagger: { id: 'phantomDagger', name: 'Phantom Dagger',     cost: 650,  type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0xd8a2ff, stats: 'Haunting violet throw trail.' }
+  fieldBlade:    { id: 'fieldBlade',    name: 'Field Blade',        file: 'fieldBlade.glb',     thumb: '/store/weapons/fieldBlade.png',     cost: 0,    type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      stats: 'Trusted close-range melee blade.' },
+  carbonCleaver: { id: 'carbonCleaver', name: 'Carbon Cleaver',     file: 'cursedCleaver.glb',  thumb: '/store/weapons/cursedCleaver.png',  cost: 400,  type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      legacy: true, stats: 'Featherweight carbon melee cleaver.' },
+  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife',     file: 'Arrow.glb',          thumb: '/store/weapons/Arrow.png',          cost: 0,    type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Balanced Prop throwing knife.' },
+  phantomDagger: { id: 'phantomDagger', name: 'Phantom Dagger',     file: 'bloodfangDagger.glb', thumb: '/store/weapons/bloodfangDagger.png', cost: 650,  type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0xd8a2ff, legacy: true, stats: 'Haunting violet throw trail.' }
 };
+
+// Weapons Store Catalog: 53 weapons scanned from public/Skins/Weapons/ and public/store/weapons/
+// 11 Legendary weapons prefixed with 'l.' have stripped display names, higher coin prices, and gold status.
+const WEAPON_REGISTRY = [
+  // — Legendary Weapons (Gold/Legendary section, stripped display names, higher pricing) —
+  { id: 'l.arcSidearm', name: 'Arc Sidearm', file: 'l.arcSidearm.glb', cost: 2200, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary plasma sidearm emitting high-voltage arcs.' },
+  { id: 'l.eclipseRifle', name: 'Eclipse Rifle', file: 'l.eclipseRifle.glb', cost: 2500, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary precision assault rifle forged in darkness.' },
+  { id: 'l.hyperionMK2', name: 'Hyperion MK2', file: 'l.hyperionMK2.glb', cost: 2800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary heavy combat platform with hyper-accelerated fire.' },
+  { id: 'l.ionStriker', name: 'Ion Striker', file: 'l.ionStriker.glb', cost: 2600, type: 'primaryGun', slot: 'primaryGun', tracer: 0x66ccff, isLegendary: true, stats: 'Legendary ionized beam weapon with lethal stopping power.' },
+  { id: 'l.nova7Blaster', name: 'Nova 7 Blaster', file: 'l.nova7Blaster.glb', cost: 2700, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff6600, isLegendary: true, stats: 'Legendary solar-energy blaster with devastating burst output.' },
+  { id: 'l.photonRipper', name: 'Photon Ripper', file: 'l.photonRipper.glb', cost: 2500, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, isLegendary: true, stats: 'Legendary high-frequency photon blade that cleaves cleanly.' },
+  { id: 'l.railghostX1', name: 'Railghost X1', file: 'l.railghostX1.glb', cost: 3000, type: 'primaryGun', slot: 'primaryGun', tracer: 0x00ffff, isLegendary: true, stats: 'Legendary flagship railgun designed for ethereal target elimination.' },
+  { id: 'l.spectreXCarbine', name: 'Spectre X Carbine', file: 'l.spectreXCarbine.glb', cost: 2500, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary lightweight carbine optimized for ghost hunters.' },
+  { id: 'l.vanguardPulseAR', name: 'Vanguard Pulse AR', file: 'l.vanguardPulseAR.glb', cost: 2750, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary pulse assault rifle with automated cadence control.' },
+  { id: 'l.voidLance', name: 'Void Lance', file: 'l.voidLance.glb', cost: 2600, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0xcc66ff, isLegendary: true, stats: 'Legendary spectral projectile infused with dark void energy.' },
+  { id: 'l.volt9Auto', name: 'Volt 9 Auto', file: 'l.volt9Auto.glb', cost: 2400, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary full-auto machine pistol delivering rapid electrostatic rounds.' },
+
+  // — Standard Weapons —
+  { id: 'alleySweeper', name: 'Alley Sweeper', file: 'alleySweeper.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Close-quarters street sweeper with formidable spread.' },
+  { id: 'ammopistol', name: 'Ammo Pistol', file: 'ammopistol.glb', cost: 500, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Reliable service pistol with high-capacity magazines.' },
+  { id: 'ammoshotgun', name: 'Ammo Shotgun', file: 'ammoshotgun.glb', cost: 700, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Heavy tactical pump-action shotgun for breach operations.' },
+  { id: 'ammosniper', name: 'Ammo Sniper', file: 'ammosniper.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Bolt-action precision sniper rifle with long-range scope.' },
+  { id: 'Arrow', name: 'Arrow', file: 'Arrow.glb', cost: 500, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Steel-tipped silent hunting arrow.' },
+  { id: 'blackoutAR', name: 'Blackout AR', file: 'blackoutAR.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Suppressed black-ops assault rifle for covert missions.' },
+  { id: 'bloodfangDagger', name: 'Bloodfang Dagger', file: 'bloodfangDagger.glb', cost: 600, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Curved serrated blade designed for swift silent takedowns.' },
+  { id: 'bonecrusher', name: 'Bonecrusher', file: 'bonecrusher.glb', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Brutal bludgeoning weapon with devastating impact.' },
+  { id: 'breacher12G', name: 'Breacher 12G', file: 'breacher12G.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: '12-gauge close-quarters combat shotgun.' },
+  { id: 'cryptkeeperAuto', name: 'Cryptkeeper Auto', file: 'cryptkeeperAuto.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Fully automatic carbine from the forgotten catacombs.' },
+  { id: 'cursedCleaver', name: 'Cursed Cleaver', file: 'cursedCleaver.glb', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy butcher cleaver whispering with ancient curses.' },
+  { id: 'duskbreakerAR', name: 'Duskbreaker AR', file: 'duskbreakerAR.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Thermal-treated assault rifle that pierces through gloom.' },
+  { id: 'fieldBlade', name: 'Field Blade', file: 'fieldBlade.glb', cost: 0, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Trusted close-range melee blade.' },
+  { id: 'ghostblade', name: 'Ghostblade', file: 'ghostblade.glb', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Semi-translucent blade that cuts without sound.' },
+  { id: 'graveyardPump', name: 'Graveyard Pump', file: 'graveyardPump.glb', cost: 750, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Weathered shotgun salvaged from the churchyard.' },
+  { id: 'grimHarvester', name: 'Grim Harvester', file: 'grimHarvester.glb', cost: 950, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Razor-sharp scythe blade reminiscent of death himself.' },
+  { id: 'hellhoundMK3', name: 'Hellhound MK3', file: 'hellhoundMK3.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Aggressive rapid-fire assault rifle with fiery muzzle brake.' },
+  { id: 'hollowPointMK4', name: 'Hollow Point MK4', file: 'hollowPointMK4.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Chambered for expanding rounds with severe impact shock.' },
+  { id: 'ironJudge44', name: 'Iron Judge .44', file: 'ironJudge44.glb', cost: 750, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Heavy .44 magnum revolver dispensing absolute justice.' },
+  { id: 'ironPry', name: 'Iron Pry', file: 'ironPry.glb', cost: 450, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Hardened iron prybar for cracking doors and skulls.' },
+  { id: 'marshCarver', name: 'Marsh Carver', file: 'marshCarver.glb', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Rust-resistant survival knife from the stagnant swamplands.' },
+  { id: 'militiaCarbine', name: 'Militia Carbine', file: 'militiaCarbine.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Rugged semi-auto carbine favored by resistance fighters.' },
+  { id: 'nightshadePistol', name: 'Nightshade Pistol', file: 'nightshadePistol.glb', cost: 650, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Sleek tactical pistol with toxic nightshade aesthetics.' },
+  { id: 'nightwatchDMR', name: 'Nightwatch DMR', file: 'nightwatchDMR.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Designated marksman rifle with rapid follow-up shot capability.' },
+  { id: 'outlawRevolver', name: 'Outlaw Revolver', file: 'outlawRevolver.glb', cost: 700, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Classic 6-shooter with hair-trigger hammer cocking.' },
+  { id: 'paleRider', name: 'Pale Rider', file: 'paleRider.glb', cost: 800, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Silver-plated hand cannon with ivory grips.' },
+  { id: 'Quiver', name: 'Quiver', file: 'Quiver.glb', cost: 600, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Reinforced leather quiver holding specialized projectile darts.' },
+  { id: 'reapersEye', name: 'Reapers Eye', file: 'reapersEye.glb', cost: 1000, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Long-range marksman rifle with eerie infrared scope.' },
+  { id: 'rustbolt308', name: 'Rustbolt .308', file: 'rustbolt308.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Heavy .308 calibre hunting rifle with oxidized patina.' },
+  { id: 'rustyJaw', name: 'Rusty Jaw', file: 'rustyJaw.glb', cost: 500, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Serrated iron jaws re-forged into a savage melee blade.' },
+  { id: 'rustyShiv', name: 'Rusty Shiv', file: 'rustyShiv.glb', cost: 400, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Crude improvised blade with tetanus-inducing tip.' },
+  { id: 'shadow45', name: 'Shadow .45', file: 'shadow45.glb', cost: 600, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Matte-black .45 caliber semi-automatic sidearm.' },
+  { id: 'shadowFang', name: 'Shadow Fang', file: 'shadowFang.glb', cost: 800, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Obsidian dagger shaped like a predatory serpent tooth.' },
+  { id: 'silentStalker', name: 'Silent Stalker', file: 'silentStalker.glb', cost: 750, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Aerodynamic throwing blade tuned for complete silence.' },
+  { id: 'skullcracker', name: 'Skullcracker', file: 'skullcracker.glb', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy spiked trench club delivering skull-shattering blows.' },
+  { id: 'slaughterhouseCleaver', name: 'Slaughterhouse Cleaver', file: 'slaughterhouseCleaver.glb', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Massive iron cleaver with broad cutting surface.' },
+  { id: 'timberRipper', name: 'Timber Ripper', file: 'timberRipper.glb', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy woodsman axe with aggressive ripping teeth.' },
+  { id: 'trackersEdge', name: 'Trackers Edge', file: 'trackersEdge.glb', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Finely honed Bowie knife for tracking prey across ruins.' },
+  { id: 'watchman9mm', name: 'Watchman 9mm', file: 'watchman9mm.glb', cost: 550, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Standard security issue 9mm sidearm with crisp trigger pull.' },
+  { id: 'whisperingRecurve', name: 'Whispering Recurve', file: 'whisperingRecurve.glb', cost: 800, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Composite recurve bow delivering silent lethal shafts.' },
+  { id: 'widowmaker', name: 'Widowmaker', file: 'widowmaker.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'High-caliber sniper rifle that leaves mourning in its wake.' },
+  { id: 'wraithLongshot', name: 'Wraith Longshot', file: 'wraithLongshot.glb', cost: 1100, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Mastercrafted anti-materiel rifle with bone-chilling muzzle velocity.' }
+];
+
+WEAPON_REGISTRY.forEach((weapon) => {
+  STORE_CATALOG[weapon.id] = Object.assign({
+    color: null,
+    tracer: 0xffe27a,
+    isLegendary: weapon.id.startsWith('l.')
+  }, weapon);
+});
 
 const MALE_STARTER_ID = 'Casual_Character';
 const FEMALE_STARTER_ID = 'Casual_w';
@@ -287,7 +356,10 @@ const STORE_CATEGORIES = [
   { type: 'secondaryKnife', slot: 'secondaryKnife', label: 'Secondary Knives' }
 ];
 
-const STORE_ITEM_IDS = Object.keys(STORE_CATALOG);
+let STORE_ITEM_IDS = Object.keys(STORE_CATALOG);
+function getStoreItemIds() {
+  return Object.keys(STORE_CATALOG);
+}
 
 const LOADOUT_SLOT_UI = [
   { slot: 'primaryGun',     type: 'primaryGun',     keyLabel: 'KEY 1', label: 'Primary Weapon' },
@@ -326,6 +398,9 @@ const STORE_RARITY_TIERS = [
 ];
 
 function storeItemRarity(item) {
+  if (item && (item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.')))) {
+    return { maxCost: Infinity, key: 'legendary', label: 'LEGENDARY', theme: 'Legendary flagship weapon — pinnacle of cursed craftsmanship.' };
+  }
   const cost = item && typeof item.cost === 'number' ? item.cost : 0;
   for (const tier of STORE_RARITY_TIERS) {
     if (cost <= tier.maxCost) return tier;
@@ -414,6 +489,36 @@ const chpTheme = document.getElementById('chpTheme');
 const chpCost = document.getElementById('chpCost');
 const storePanelEl = storeOverlay ? storeOverlay.querySelector('.store-panel') : null;
 let activeStoreTab = 'shop';
+
+// 360-Degree Interactive 3D Preview Modal & Two-Step Buy Confirmation Modal elements
+const storePreviewModal = document.getElementById('storePreviewModal');
+const preview3dBox = document.getElementById('preview3dBox');
+const preview3dTitle = document.getElementById('preview3dTitle');
+const preview3dBadge = document.getElementById('preview3dBadge');
+const preview3dCloseBtn = document.getElementById('preview3dCloseBtn');
+const preview3dCanvasContainer = document.getElementById('preview3dCanvasContainer');
+const preview3dLoading = document.getElementById('preview3dLoading');
+const preview3dCost = document.getElementById('preview3dCost');
+const preview3dStatus = document.getElementById('preview3dStatus');
+const preview3dActionBtn = document.getElementById('preview3dActionBtn');
+
+const storeBuyConfirmModal = document.getElementById('storeBuyConfirmModal');
+const confirmBuyPrompt = document.getElementById('confirmBuyPrompt');
+const confirmItemName = document.getElementById('confirmItemName');
+const confirmItemPrice = document.getElementById('confirmItemPrice');
+const confirmBuyYesBtn = document.getElementById('confirmBuyYesBtn');
+const confirmBuyNoBtn = document.getElementById('confirmBuyNoBtn');
+
+let preview3dRenderer = null;
+let preview3dScene = null;
+let preview3dCamera = null;
+let preview3dPivot = null;
+let preview3dAnimId = null;
+let active3dPreviewItem = null;
+let isPreview3dDragging = false;
+let preview3dPointerStart = { x: 0, y: 0 };
+let preview3dActive = false;
+const previewGltfLoader = new GLTFLoader();
 const authOverlay = document.getElementById('authOverlay');
 const authUsername = document.getElementById('authUsername');
 const authPassword = document.getElementById('authPassword');
@@ -3418,11 +3523,38 @@ function applyLoadoutState(inventory, loadout) {
   }
 }
 
+function updateAllCoinCounters() {
+  const coinStr = `${Number(myCoins || 0).toLocaleString()} Coins`;
+  if (storeCoinBalance) {
+    storeCoinBalance.textContent = coinStr;
+  }
+  document.querySelectorAll('#storeCoinBalance, .store-coin-balance, #menuCoins, #menuCoinBalance, #profileCoins, #inventoryCoins, [data-coin-balance]').forEach(el => {
+    el.textContent = coinStr;
+  });
+  updateAccountLabel();
+}
+
+function updateAccountLabel() {
+  if (menuAccountLabel) {
+    const namePart = isRegistered ? ('Signed in as ' + (myUsername || myDisplayName)) : ('Playing as ' + myDisplayName);
+    menuAccountLabel.textContent = `${namePart} · 🪙 ${Number(myCoins || 0).toLocaleString()} Coins`;
+  }
+  if (btnAuth) btnAuth.textContent = isRegistered ? 'Account' : 'Register / Login';
+}
+
 function applyWalletPayload(data) {
   if (!data) return;
   if (typeof data.coins === 'number') myCoins = data.coins;
   if (data.loadout || data.inventory !== undefined || typeof data.equippedSkin === 'string') {
     applyLoadoutState(data.inventory, data.loadout || { equippedSkin: data.equippedSkin });
+  }
+  if (Array.isArray(data.ownedWeapons)) {
+    for (const wId of data.ownedWeapons) {
+      if (!myInventory.includes(wId)) myInventory.push(wId);
+    }
+  }
+  if (data.ok && data.itemId) {
+    if (!myInventory.includes(data.itemId)) myInventory.push(data.itemId);
   }
   if (typeof data.isRegistered === 'boolean') isRegistered = data.isRegistered;
   if (data.username !== undefined) myUsername = data.username || null;
@@ -3433,16 +3565,9 @@ function applyWalletPayload(data) {
   } else {
     myDisplayName = 'Guest_' + String(persistentPlayerId).slice(-4);
   }
+  updateAllCoinCounters();
   refreshStoreUi();
-  updateAccountLabel();
   updateWeaponHud();
-}
-
-function updateAccountLabel() {
-  if (menuAccountLabel) {
-    menuAccountLabel.textContent = isRegistered ? ('Signed in as ' + (myUsername || myDisplayName)) : ('Playing as ' + myDisplayName);
-  }
-  if (btnAuth) btnAuth.textContent = isRegistered ? 'Account' : 'Register / Login';
 }
 
 function openAuthMenu() {
@@ -3465,12 +3590,37 @@ function showAuthError(message) {
 }
 
 function isOwnedItem(itemId) {
-  return myInventory.includes(itemId);
+  if (!itemId) return false;
+  if (myInventory.includes(itemId)) return true;
+  const item = STORE_CATALOG[itemId];
+  if (item && item.type === 'skin') {
+    const clean = cleanSkinId(itemId);
+    return myInventory.some((invId) => cleanSkinId(invId) === clean);
+  }
+  // Weapons and store equipment
+  const clean = (item && item.file ? item.file.replace(/\.glb$/i, '') : String(itemId).replace(/\.glb$/i, ''));
+  if (myInventory.includes(clean)) return true;
+  if (!clean.startsWith('l.') && myInventory.includes('l.' + clean)) return true;
+  if (clean.startsWith('l.') && myInventory.includes(clean.slice(2))) return true;
+
+  const normTarget = clean.toLowerCase().replace(/^l\./, '').replace(/[\s\-_.]/g, '');
+  return myInventory.some((invId) => {
+    if (!invId) return false;
+    if (invId === itemId || invId === clean) return true;
+    const normInv = String(invId).toLowerCase().replace(/\.(glb|png)$/i, '').replace(/^l\./, '').replace(/[\s\-_.]/g, '');
+    return normInv === normTarget;
+  });
 }
 
 function isEquippedItem(itemId) {
   const item = STORE_CATALOG[itemId];
-  return !!(item && myLoadout[item.slot] === itemId);
+  if (!item) return false;
+  if (item.type === 'skin') {
+    const equipped = cleanSkinId(myLoadout.equippedSkin);
+    const target = cleanSkinId(itemId);
+    return !!(equipped && target && equipped === target);
+  }
+  return !!(myLoadout[item.slot] === itemId);
 }
 
 function switchStoreTab(tab) {
@@ -3545,6 +3695,21 @@ function requestEquipItem(itemId) {
   const item = STORE_CATALOG[clean] || STORE_CATALOG[itemId];
   if (!item) return;
 
+  // Strict ownership gate: item can ONLY be equipped if already owned or a free default item
+  const isFree = (item.cost !== undefined ? item.cost : item.price) <= 0 ||
+    item.id === 'Casual_Character' || item.id === 'Casual_w' ||
+    item.id === 'standardRifle' || item.id === 'sidearmPistol' ||
+    item.id === 'fieldBlade' || item.id === 'throwingKnife';
+  const owned = isOwnedItem(item.id) || isFree;
+  if (!owned) {
+    console.warn('[store] Cannot equip unowned item:', item.id);
+    if (storeStatus) {
+      storeStatus.textContent = 'You do not own this item.';
+      storeStatus.style.color = '#ff8a7a';
+    }
+    return;
+  }
+
   if (item.type === 'skin') {
     persistEquippedSkin(item.id);
     socket.emit('equipSkin', { skinId: item.id, playerId: persistentPlayerId });
@@ -3568,15 +3733,35 @@ function requestEquipItem(itemId) {
 function requestBuyItem(itemId) {
   if (!socket) return;
   const item = STORE_CATALOG[itemId];
-  if (item && item.type === 'skin') socket.emit('buySkin', itemId);
-  else socket.emit('buyItem', itemId);
+  const targetId = (item && item.id) || itemId;
+  const itemCost = (item && (item.cost !== undefined ? item.cost : item.price)) || 0;
+  const buyPayload = {
+    id: targetId,
+    itemId: targetId,
+    weaponId: targetId,
+    skinId: targetId,
+    category: (item && (item.slot || item.type)) || 'weapon',
+    type: (item && item.type) || 'weapon',
+    cost: itemCost,
+    price: itemCost,
+    playerId: persistentPlayerId
+  };
+  console.log('[buy-client] sending:', JSON.stringify(buyPayload));
+  if (item && item.type === 'skin') socket.emit('buySkin', buyPayload);
+  else socket.emit('buyItem', buyPayload);
 }
 
 function itemPreviewSrc(itemOrId) {
-  const item = STORE_CATALOG[itemOrId];
+  const item = typeof itemOrId === 'string' ? STORE_CATALOG[itemOrId] : itemOrId;
   if (!item) return '';
-  const dir = item.type === 'skin' ? 'skins' : 'weapons';
-  return `/images/${dir}/${item.id}.png`;
+  // Keep existing Store Player Skin card image paths completely unchanged
+  if (item.type === 'skin') {
+    return `/images/skins/${item.id}.png`;
+  }
+  // For Weapons cards, use matched thumb if available, or load thumbnail from /store/weapons/<filename>.png (matching each weapon's .glb base filename)
+  if (item.thumb) return item.thumb;
+  const filename = item.file ? item.file.replace(/\.glb$/i, '') : item.id;
+  return `/store/weapons/${filename}.png`;
 }
 
 function createStoreSwatch(item) {
@@ -3588,6 +3773,15 @@ function createStoreSwatch(item) {
   img.src = itemPreviewSrc(item.id);
   img.alt = item.name;
   img.loading = 'lazy';
+  if (item.type !== 'skin') {
+    img.onerror = () => {
+      if (!img.dataset.failedOnce) {
+        img.dataset.failedOnce = '1';
+        const base = (item.file ? item.file.replace(/\.glb$/i, '') : item.id);
+        img.src = `/store/weapons/${base}.png`;
+      }
+    };
+  }
   swatch.appendChild(img);
   return swatch;
 }
@@ -3596,6 +3790,16 @@ function createStoreCard(item, mode = 'shop') {
   const card = document.createElement('div');
   card.className = 'store-card';
   card.dataset.item = item.id;
+
+  const isLeg = item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.'));
+  if (isLeg) {
+    card.classList.add('legendary-card');
+    const legBadge = document.createElement('span');
+    legBadge.className = 'card-tier-badge badge-legendary';
+    legBadge.textContent = 'LEGENDARY';
+    card.appendChild(legBadge);
+  }
+
   card.appendChild(createStoreSwatch(item));
 
   const heading = document.createElement('h3');
@@ -3611,35 +3815,104 @@ function createStoreCard(item, mode = 'shop') {
   button.type = 'button';
   button.dataset.item = item.id;
 
+  const owned = isOwnedItem(item.id);
+  const equipped = isEquippedItem(item.id);
+
   if (mode === 'inventory') {
-    const equipped = isEquippedItem(item.id);
     const badge = document.createElement('span');
     badge.className = 'equipped-badge' + (equipped ? ' visible' : ' hidden');
     badge.textContent = 'Equipped';
     card.appendChild(badge);
     button.className = 'store-action ' + (equipped ? 'equipped' : 'owned');
-    button.disabled = equipped;
+    button.disabled = false;
     button.textContent = equipped ? 'Equipped' : 'Equip';
-    button.addEventListener('click', () => {
-      if (!equipped) requestEquipItem(item.id);
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!equipped && (owned || item.cost <= 0)) {
+        requestEquipItem(item.id);
+      } else {
+        open3dPreviewModal(item);
+      }
     });
   } else {
-    const owned = isOwnedItem(item.id);
-    button.id = `storeBuy-${item.id}`;
-    if (item.cost <= 0) {
-      button.className = 'store-action ' + (owned ? 'equipped' : 'owned');
-      button.disabled = owned;
-      button.textContent = owned ? 'Owned · Inventory' : 'Included';
+    // mode === 'shop'
+    if (owned || item.cost <= 0) {
+      button.id = `storeAction-${item.id}`;
+      card.classList.add('is-owned');
+      if (equipped) {
+        card.classList.add('is-equipped');
+        const eqBadge = document.createElement('span');
+        eqBadge.className = 'equipped-badge visible';
+        eqBadge.textContent = 'Equipped';
+        card.appendChild(eqBadge);
+      }
+      button.className = 'store-action ' + (equipped ? 'equipped' : 'owned');
+      button.disabled = false;
+      button.textContent = equipped ? 'Equipped' : (item.cost <= 0 ? 'Included · Equip' : 'Equip');
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!equipped) {
+          requestEquipItem(item.id);
+        } else {
+          open3dPreviewModal(item);
+        }
+      });
     } else {
-      button.className = 'store-action' + (owned ? ' equipped' : '');
-      button.disabled = owned;
-      button.textContent = owned ? 'Owned' : `Buy — ${item.cost}`;
+      // Unowned item: Clicking card OR button ALWAYS opens 360° Preview Popup
+      button.id = `storePreviewBtn-${item.id}`;
+      button.className = 'store-action store-buy-action';
+      button.disabled = false;
+      button.textContent = `Buy — ${item.cost}`;
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideCharacterHoverPreview();
+        open3dPreviewModal(item);
+      });
     }
-    button.addEventListener('click', () => handleStoreAction(item.id));
   }
 
   card.appendChild(button);
+
+  // Clear badge/note right underneath the card stating that the player already owns it
+  if (mode === 'shop' && (owned || item.cost <= 0)) {
+    const ownedNote = document.createElement('div');
+    ownedNote.className = 'store-owned-note';
+    ownedNote.textContent = item.type === 'skin' ? '✓ You already own this skin' : '✓ You already own this weapon';
+    card.appendChild(ownedNote);
+  }
+
+  // Clicking anywhere on the card opens 360-degree interactive 3D preview
+  card.addEventListener('click', () => {
+    hideCharacterHoverPreview();
+    open3dPreviewModal(item);
+  });
+
   return card;
+}
+
+function appendLegendarySection(container, items, mode = 'shop') {
+  if (!container || items.length === 0) return;
+
+  const section = document.createElement('section');
+  section.className = 'store-section store-section-legendary';
+
+  const title = document.createElement('div');
+  title.className = 'store-section-title legendary-title';
+  const label = document.createElement('span');
+  label.textContent = '✦ LEGENDARY WEAPONS ✦';
+  title.appendChild(label);
+
+  const sub = document.createElement('span');
+  sub.className = 'legendary-subtitle';
+  sub.textContent = 'ELITE ARSENAL · GOLD STATUS';
+  title.appendChild(sub);
+  section.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'store-grid';
+  for (const item of items) grid.appendChild(createStoreCard(item, mode));
+  section.appendChild(grid);
+  container.appendChild(section);
 }
 
 function appendCategorySection(container, category, items, mode = 'inventory') {
@@ -3672,20 +3945,29 @@ function itemsForCategory(type) {
   if (type === 'skin') {
     return SHOP_SKIN_ORDER.map((id) => STORE_CATALOG[id]).filter(Boolean);
   }
-  return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id]).filter((item) => item && item.type === type && !item.legacy);
+  return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id]).filter((item) => item && item.type === type && !item.legacy && !item.isLegendary && !item.id.startsWith('l.'));
 }
 
 function renderShopCatalog() {
   if (!shopItemsEl) return;
   shopItemsEl.innerHTML = '';
+
+  // 1. Separate "LEGENDARY WEAPONS" section at top of Store (keep all visible, including owned)
+  const legendaryItems = STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
+    .filter((item) => item && (item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.'))));
+  if (legendaryItems.length > 0) {
+    appendLegendarySection(shopItemsEl, legendaryItems, 'shop');
+  }
+
+  // 2. Standard categories: Regular Skins, Primary Weapons, Secondary Weapons, Primary Knives, Secondary Knives (keep all visible, including owned)
   for (const category of STORE_CATEGORIES) {
-    const items = itemsForCategory(category.type).filter((item) => !isOwnedItem(item.id));
+    const items = itemsForCategory(category.type);
     appendCategorySection(shopItemsEl, category, items, 'shop');
   }
   if (!shopItemsEl.children.length) {
     const empty = document.createElement('p');
     empty.className = 'store-empty';
-    empty.textContent = 'You own everything in the store. Check the Inventory tab to equip it.';
+    empty.textContent = 'Store catalog currently unavailable.';
     shopItemsEl.appendChild(empty);
   }
 }
@@ -3719,16 +4001,17 @@ function renderDedicatedLoadoutSlots() {
 
     const options = document.createElement('div');
     options.className = 'loadout-options';
-    const ownedItems = itemsForCategory(slotInfo.type).filter((item) => isOwnedItem(item.id));
+    const ownedItems = STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
+      .filter((item) => item && item.slot === slotInfo.slot && isOwnedItem(item.id));
 
     for (const item of ownedItems) {
       const equipped = isEquippedItem(item.id);
       const option = document.createElement('button');
       option.type = 'button';
-      option.className = 'loadout-equip-button' + (equipped ? ' active' : '');
+      option.className = 'loadout-equip-button' + (equipped ? ' active' : '') + (item.isLegendary ? ' loadout-legendary' : '');
       option.dataset.item = item.id;
       option.disabled = equipped;
-      option.textContent = equipped ? `✓ ${item.name}` : item.name;
+      option.textContent = equipped ? `✓ ${item.name}` : (item.isLegendary ? `★ ${item.name}` : item.name);
       option.title = equipped ? `${item.name} is equipped` : `Equip ${item.name} in ${slotInfo.label}`;
       option.addEventListener('click', () => { if (!equipped) requestEquipItem(item.id); });
       options.appendChild(option);
@@ -3749,6 +4032,14 @@ function refreshInventoryUi() {
   renderDedicatedLoadoutSlots();
   if (!inventoryItemsEl) return;
   inventoryItemsEl.innerHTML = '';
+
+  // Owned Legendary Weapons
+  const ownedLegendary = STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
+    .filter((item) => item && (item.isLegendary || item.id.startsWith('l.')) && isOwnedItem(item.id));
+  if (ownedLegendary.length > 0) {
+    appendLegendarySection(inventoryItemsEl, ownedLegendary, 'inventory');
+  }
+
   for (const category of STORE_CATEGORIES) {
     const pool = category.type === 'skin' ? STARTER_SKIN_IDS.map((id) => STORE_CATALOG[id]).concat(itemsForCategory('skin')) : itemsForCategory(category.type);
     const ownedItems = pool.filter((item) => item && isOwnedItem(item.id));
@@ -3762,6 +4053,258 @@ function refreshStoreUi() {
   refreshInventoryUi();
   refreshCharacterPreview();
   reanchorCharacterHoverPreview();
+  if (preview3dActive && active3dPreviewItem) {
+    updatePreviewActionButton();
+  }
+}
+
+function close3dPreviewModal() {
+  preview3dActive = false;
+  if (preview3dAnimId) {
+    cancelAnimationFrame(preview3dAnimId);
+    preview3dAnimId = null;
+  }
+  closeBuyConfirmModal();
+  if (storePreviewModal) storePreviewModal.classList.add('hidden');
+
+  if (preview3dScene) {
+    preview3dScene.traverse((obj) => {
+      if (obj.geometry) {
+        try { obj.geometry.dispose(); } catch (e) {}
+      }
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach((m) => {
+            if (m.map) { try { m.map.dispose(); } catch (e) {} }
+            try { m.dispose(); } catch (e) {}
+          });
+        } else {
+          if (obj.material.map) { try { obj.material.map.dispose(); } catch (e) {} }
+          try { obj.material.dispose(); } catch (e) {}
+        }
+      }
+    });
+    while (preview3dScene.children.length > 0) {
+      preview3dScene.remove(preview3dScene.children[0]);
+    }
+  }
+
+  if (preview3dRenderer) {
+    try { preview3dRenderer.dispose(); } catch (e) {}
+    if (preview3dRenderer.domElement && preview3dRenderer.domElement.parentNode) {
+      preview3dRenderer.domElement.parentNode.removeChild(preview3dRenderer.domElement);
+    }
+    preview3dRenderer = null;
+  }
+
+  preview3dPivot = null;
+  preview3dScene = null;
+  preview3dCamera = null;
+  active3dPreviewItem = null;
+}
+window.__close3dPreviewModal = close3dPreviewModal;
+
+function closeBuyConfirmModal() {
+  if (storeBuyConfirmModal) storeBuyConfirmModal.classList.add('hidden');
+}
+window.__closeBuyConfirmModal = closeBuyConfirmModal;
+
+function openBuyConfirmModal(item) {
+  if (!storeBuyConfirmModal || !item) return;
+  if (confirmBuyPrompt) confirmBuyPrompt.textContent = `Buy ${item.name} for ${item.cost} coins?`;
+  if (confirmItemName) confirmItemName.textContent = item.name;
+  if (confirmItemPrice) confirmItemPrice.textContent = `${item.cost} Coins`;
+  storeBuyConfirmModal.classList.remove('hidden');
+}
+
+function updatePreviewActionButton() {
+  if (!preview3dActionBtn || !active3dPreviewItem) return;
+  const item = active3dPreviewItem;
+  const equipped = isEquippedItem(item.id);
+  const owned = isOwnedItem(item.id);
+
+  if (equipped) {
+    preview3dActionBtn.textContent = 'Equipped';
+    preview3dActionBtn.disabled = true;
+    preview3dActionBtn.className = 'preview-3d-action-btn equipped';
+  } else if (owned) {
+    preview3dActionBtn.textContent = 'Equip';
+    preview3dActionBtn.disabled = false;
+    preview3dActionBtn.className = 'preview-3d-action-btn owned';
+  } else if (item.cost <= 0) {
+    preview3dActionBtn.textContent = 'Included · Equip';
+    preview3dActionBtn.disabled = false;
+    preview3dActionBtn.className = 'preview-3d-action-btn owned';
+  } else {
+    preview3dActionBtn.textContent = `Buy — ${item.cost}`;
+    preview3dActionBtn.disabled = false;
+    preview3dActionBtn.className = 'preview-3d-action-btn';
+  }
+}
+
+function open3dPreviewModal(item) {
+  if (!item || !storePreviewModal) return;
+  close3dPreviewModal();
+
+  active3dPreviewItem = item;
+  preview3dActive = true;
+  hideCharacterHoverPreview();
+
+  const isLeg = item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.'));
+  if (preview3dBox) preview3dBox.classList.toggle('preview-legendary', isLeg);
+  if (preview3dTitle) preview3dTitle.textContent = item.name;
+
+  if (preview3dBadge) {
+    if (isLeg) {
+      preview3dBadge.textContent = 'LEGENDARY';
+      preview3dBadge.className = 'preview-3d-badge badge-legendary';
+    } else if (item.type === 'skin') {
+      preview3dBadge.textContent = 'PLAYER SKIN';
+      preview3dBadge.className = 'preview-3d-badge badge-standard';
+    } else {
+      const slotLabel = item.slot === 'primaryGun' ? 'PRIMARY WEAPON'
+        : item.slot === 'secondaryGun' ? 'SECONDARY WEAPON'
+        : item.slot === 'primaryKnife' ? 'PRIMARY MELEE'
+        : item.slot === 'secondaryKnife' ? 'SECONDARY THROWN'
+        : 'WEAPON';
+      preview3dBadge.textContent = slotLabel;
+      preview3dBadge.className = 'preview-3d-badge badge-standard';
+    }
+  }
+
+  if (preview3dCost) {
+    preview3dCost.textContent = item.cost <= 0 ? 'FREE' : `🪙 ${item.cost.toLocaleString()} Coins`;
+  }
+  if (preview3dStatus) {
+    preview3dStatus.textContent = '';
+  }
+  updatePreviewActionButton();
+
+  storePreviewModal.classList.remove('hidden');
+  if (preview3dLoading) {
+    preview3dLoading.classList.remove('hidden');
+    preview3dLoading.innerHTML = '<div class="preview-spinner"></div><span>Loading 3D Model...</span>';
+  }
+
+  const container = preview3dCanvasContainer;
+  if (!container) return;
+  container.innerHTML = '';
+
+  const rect = container.getBoundingClientRect();
+  const width = rect.width || 640;
+  const height = rect.height || 380;
+
+  preview3dScene = new THREE.Scene();
+  preview3dCamera = new THREE.PerspectiveCamera(45, width / height, 0.05, 1000);
+
+  preview3dRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  preview3dRenderer.setSize(width, height);
+  preview3dRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  if (THREE.SRGBColorSpace) preview3dRenderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(preview3dRenderer.domElement);
+
+  // Bright AmbientLight + HemisphereLight + DirectionalLight so models are never pitch black or clipped
+  const ambient = new THREE.AmbientLight(0xffffff, 1.4);
+  preview3dScene.add(ambient);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x555566, 1.2);
+  hemiLight.position.set(0, 50, 0);
+  preview3dScene.add(hemiLight);
+  const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.8);
+  keyLight.position.set(6, 12, 10);
+  preview3dScene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0x88bbff, 1.1);
+  fillLight.position.set(-6, -6, -8);
+  preview3dScene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  rimLight.position.set(0, 10, -6);
+  preview3dScene.add(rimLight);
+
+  preview3dPivot = new THREE.Group();
+  preview3dScene.add(preview3dPivot);
+
+  let modelUrl = '';
+  if (item.type === 'skin') {
+    // Player Skins MUST load from /Skins/Players/<exactFilename>.glb using skinFileForId
+    const skinFileName = skinFileForId(item.id) || (item.file ? (item.file.endsWith('.glb') ? item.file : item.file + '.glb') : (item.id + '.glb'));
+    modelUrl = `/Skins/Players/${skinFileName}`;
+  } else {
+    // Weapons MUST load from /Skins/Weapons/<exactFilename>.glb (matching exact filename scanned by server.js, including l. legendary weapons)
+    let weaponFileName = item.file || (item.id + '.glb');
+    if (!weaponFileName.toLowerCase().endsWith('.glb')) weaponFileName += '.glb';
+    modelUrl = `/Skins/Weapons/${weaponFileName}`;
+  }
+
+  previewGltfLoader.load(
+    modelUrl,
+    (gltf) => {
+      if (!preview3dActive || active3dPreviewItem !== item) return;
+      if (preview3dLoading) preview3dLoading.classList.add('hidden');
+
+      const model = gltf.scene;
+
+      // Critical for rigged SkinnedMesh player skins so Three.js does not cull them out of the preview box
+      model.traverse((child) => {
+        child.visible = true;
+        child.frustumCulled = false;
+        if (child.isMesh || child.isSkinnedMesh) {
+          if (child.material) {
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((mat) => {
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            });
+          }
+        }
+      });
+
+      // Call model.updateMatrixWorld(true), compute box, get size and center
+      model.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(model);
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+
+      // Center model at (0, 0, 0) and scale uniformly so largest dimension fits cleanly inside preview camera view
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const targetDim = 2.1;
+      const scale = maxDim > 0.0001 ? targetDim / maxDim : 1;
+      model.scale.setScalar(scale);
+
+      model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+      model.updateMatrixWorld(true);
+
+      preview3dPivot.add(model);
+
+      // Point preview camera at (0, 0, 0) with safe near = 0.05 and far = 1000
+      preview3dCamera.near = 0.05;
+      preview3dCamera.far = 1000;
+      preview3dCamera.position.set(0, 0, 3.2);
+      preview3dCamera.lookAt(0, 0, 0);
+      preview3dCamera.updateProjectionMatrix();
+    },
+    undefined,
+    (err) => {
+      console.warn('[store-360] failed to load:', modelUrl, err);
+      if (preview3dLoading) {
+        preview3dLoading.innerHTML = '<span style="color: #ff8a7a;">3D Model Preview Unavailable</span>';
+      }
+    }
+  );
+
+  function renderPreview() {
+    if (!preview3dActive) return;
+    preview3dAnimId = requestAnimationFrame(renderPreview);
+
+    if (preview3dPivot && !isPreview3dDragging) {
+      preview3dPivot.rotation.y += 0.012; // Continuous smooth 360-degree rotation
+    }
+
+    if (preview3dRenderer && preview3dScene && preview3dCamera) {
+      preview3dRenderer.render(preview3dScene, preview3dCamera);
+    }
+  }
+  renderPreview();
 }
 
 function openStore() {
@@ -3772,6 +4315,7 @@ function openStore() {
 }
 
 function closeStore() {
+  close3dPreviewModal();
   hideCharacterHoverPreview();
   if (storeOverlay) storeOverlay.classList.add('hidden');
 }
@@ -3779,15 +4323,10 @@ function closeStore() {
 function handleStoreAction(itemId) {
   if (!socket) return;
   if (storeStatus) storeStatus.textContent = '';
-  if (isOwnedItem(itemId)) {
-    if (storeStatus) { storeStatus.textContent = 'Already owned — equip it from Inventory.'; storeStatus.style.color = '#8ee8ff'; }
-    return;
+  const item = STORE_CATALOG[itemId];
+  if (item) {
+    open3dPreviewModal(item);
   }
-  if (myCoins < (STORE_CATALOG[itemId] ? STORE_CATALOG[itemId].cost : 0)) {
-    setStoreStatus('Not enough coins.', '#ff8a7a');
-    return;
-  }
-  requestBuyItem(itemId);
 }
 
 let hoverPreviewCard = null;   
@@ -3861,6 +4400,7 @@ function positionCharacterHoverPreview() {
 }
 
 function showCharacterHoverPreview(card) {
+  if (preview3dActive) return;
   if (!characterHoverPreview || !card) return;
   const item = STORE_CATALOG[card.dataset.item];
   if (!item) return;
@@ -4084,6 +4624,135 @@ if (storeCloseBtn) storeCloseBtn.addEventListener('click', closeStore);
 if (storeTabShop) storeTabShop.addEventListener('click', () => switchStoreTab('shop'));
 if (storeTabInventory) storeTabInventory.addEventListener('click', () => switchStoreTab('inventory'));
 bindCharacterHoverPreview();
+
+// 360-Degree Interactive 3D Preview Modal & Buy Confirmation Listeners
+if (preview3dCloseBtn) preview3dCloseBtn.addEventListener('click', close3dPreviewModal);
+if (storePreviewModal) {
+  storePreviewModal.addEventListener('click', (e) => {
+    if (e.target === storePreviewModal) close3dPreviewModal();
+  });
+}
+
+if (preview3dActionBtn) {
+  preview3dActionBtn.addEventListener('click', () => {
+    if (!active3dPreviewItem) return;
+    const item = active3dPreviewItem;
+    const equipped = isEquippedItem(item.id);
+    const owned = isOwnedItem(item.id);
+
+    if (equipped) return;
+    if (owned) {
+      requestEquipItem(item.id);
+      if (preview3dStatus) {
+        preview3dStatus.textContent = `${item.name} equipped!`;
+        preview3dStatus.style.color = '#8ee8ff';
+      }
+      updatePreviewActionButton();
+      return;
+    }
+
+    // Unowned: open two-step buy confirmation dialog on top of 360 preview
+    openBuyConfirmModal(item);
+  });
+}
+
+if (confirmBuyNoBtn) confirmBuyNoBtn.addEventListener('click', closeBuyConfirmModal);
+if (storeBuyConfirmModal) {
+  storeBuyConfirmModal.addEventListener('click', (e) => {
+    if (e.target === storeBuyConfirmModal) closeBuyConfirmModal();
+  });
+}
+
+if (confirmBuyYesBtn) {
+  confirmBuyYesBtn.addEventListener('click', () => {
+    if (!active3dPreviewItem) return;
+    const item = active3dPreviewItem;
+    closeBuyConfirmModal();
+
+    if (myCoins < item.cost) {
+      if (preview3dStatus) {
+        preview3dStatus.textContent = `Not enough coins! You need ${item.cost} coins (you have ${myCoins}).`;
+        preview3dStatus.style.color = '#ff8a7a';
+      }
+      return;
+    }
+
+    if (preview3dStatus) {
+      preview3dStatus.textContent = 'Purchasing...';
+      preview3dStatus.style.color = '#ffd700';
+    }
+
+    const itemCost = (item.cost !== undefined ? item.cost : item.price) || 0;
+    const buyPayload = {
+      id: item.id,
+      itemId: item.id,
+      weaponId: item.id,
+      skinId: item.id,
+      category: item.slot || item.type,
+      type: item.type,
+      cost: itemCost,
+      price: itemCost,
+      playerId: persistentPlayerId
+    };
+    console.log('[buy-client] sending:', JSON.stringify(buyPayload));
+    if (item.type === 'skin') socket.emit('buySkin', buyPayload);
+    else socket.emit('buyItem', buyPayload);
+  });
+}
+
+// 360-degree interactive mouse/pointer drag rotation
+if (preview3dCanvasContainer) {
+  preview3dCanvasContainer.addEventListener('pointerdown', (e) => {
+    isPreview3dDragging = true;
+    preview3dPointerStart = { x: e.clientX, y: e.clientY };
+    try { preview3dCanvasContainer.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  preview3dCanvasContainer.addEventListener('pointermove', (e) => {
+    if (!isPreview3dDragging || !preview3dPivot) return;
+    const dx = e.clientX - preview3dPointerStart.x;
+    const dy = e.clientY - preview3dPointerStart.y;
+    preview3dPivot.rotation.y += dx * 0.009;
+    preview3dPivot.rotation.x = Math.max(-0.6, Math.min(0.6, preview3dPivot.rotation.x + dy * 0.009));
+    preview3dPointerStart = { x: e.clientX, y: e.clientY };
+  });
+
+  const stopPreviewDrag = (e) => {
+    isPreview3dDragging = false;
+    try { preview3dCanvasContainer.releasePointerCapture(e.pointerId); } catch (err) {}
+  };
+  preview3dCanvasContainer.addEventListener('pointerup', stopPreviewDrag);
+  preview3dCanvasContainer.addEventListener('pointercancel', stopPreviewDrag);
+}
+
+async function syncStoreCatalogFromServer() {
+  try {
+    const res = await fetch('/api/store-weapons');
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list)) {
+        for (const w of list) {
+          if (!STORE_CATALOG[w.id]) {
+            STORE_CATALOG[w.id] = Object.assign({
+              file: w.file || (w.id + '.glb'),
+              color: null,
+              stats: w.stats || (w.isLegendary ? 'Legendary weaponry.' : 'Standard ordnance.')
+            }, w);
+          } else {
+            if (w.thumb) STORE_CATALOG[w.id].thumb = w.thumb;
+            if (w.file) STORE_CATALOG[w.id].file = w.file;
+            if (w.name) STORE_CATALOG[w.id].name = w.name;
+            if (w.cost !== undefined) STORE_CATALOG[w.id].cost = w.cost;
+            if (w.isLegendary !== undefined) STORE_CATALOG[w.id].isLegendary = w.isLegendary;
+          }
+        }
+        STORE_ITEM_IDS = Object.keys(STORE_CATALOG);
+        refreshStoreUi();
+      }
+    }
+  } catch (e) {}
+}
+syncStoreCatalogFromServer();
 STORE_ITEM_IDS.forEach((itemId) => {
   const btn = document.getElementById(`storeBuy-${itemId}`);
   if (btn) btn.addEventListener('click', () => handleStoreAction(itemId));
@@ -4172,6 +4841,20 @@ function attachSocketListeners() {
       storeStatus.textContent = data && data.ok ? 'Purchase complete. Equip it from the Inventory tab.' : ((data && data.message) || 'Purchase failed.');
       storeStatus.style.color = data && data.ok ? '#8ee8ff' : '#ff8a7a';
     }
+    if (active3dPreviewItem) {
+      if (data && data.ok) {
+        if (preview3dStatus) {
+          preview3dStatus.textContent = 'Purchase successful! Click Equip to equip it.';
+          preview3dStatus.style.color = '#8ee8ff';
+        }
+        updatePreviewActionButton();
+      } else {
+        if (preview3dStatus) {
+          preview3dStatus.textContent = (data && data.message) || 'Purchase failed.';
+          preview3dStatus.style.color = '#ff8a7a';
+        }
+      }
+    }
   });
 
   socket.on('equipResult', (data) => {
@@ -4179,6 +4862,9 @@ function attachSocketListeners() {
     if (storeStatus) {
       storeStatus.textContent = data && data.ok ? (data.itemId ? `${(STORE_CATALOG[data.itemId] && STORE_CATALOG[data.itemId].name) || 'Item'} equipped.` : 'Item equipped.') : ((data && data.message) || 'Could not equip.');
       storeStatus.style.color = data && data.ok ? '#8ee8ff' : '#ff8a7a';
+    }
+    if (active3dPreviewItem) {
+      updatePreviewActionButton();
     }
     if (data && data.ok) {
       const rawSkin = (data.loadout && data.loadout.equippedSkin) || data.equippedSkin || data.itemId;
@@ -5174,8 +5860,12 @@ async function start() {
     hideLoadingOverlay();
     showMainMenuRoot();
 
+    // Connect to current origin if served via HTTP/HTTPS, or fallback to cloud server
+    const socketUrl = (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+      ? window.location.origin
+      : 'https://ghosttown-prophunt.onrender.com';
     // eslint-disable-next-line no-undef
-    socket = io('https://ghosttown-prophunt.onrender.com');
+    socket = io(socketUrl);
     attachSocketListeners();
     initStarterSelection();
 

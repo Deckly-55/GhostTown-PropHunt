@@ -1,10 +1,11 @@
 // Exercises the EXACT shipped tracer block from game/client.js with THREE stubbed.
 const fs = require('fs');
-const src = fs.readFileSync('/home/user/game/client.js', 'utf8');
-const start = src.indexOf('// Phase 1 — Hitscan tracers (replaces');
+const path = require('path');
+const src = fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8');
+const start = src.indexOf('function spawnTracer(');
 const end = src.indexOf('function showMainMenuRoot() {');
 if (start < 0 || end < 0) throw new Error('anchors not found');
-const block = src.slice(src.lastIndexOf('// ==========', start), end);
+const block = src.slice(start, end);
 
 let fakeNow = 1000;
 global.performance = { now: () => fakeNow };

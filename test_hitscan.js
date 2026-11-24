@@ -1,6 +1,7 @@
 // Extracts the EXACT shipped engine block from game/server.js and exercises it.
 const fs = require('fs');
-const src = fs.readFileSync('/home/user/game/server.js', 'utf8');
+const path = require('path');
+const src = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
 const start = src.indexOf('// Phase 1 — Hitscan "Teleport" Shooting Engine (replaces tickBullets())');
 const end = src.indexOf('function tickNPCs() {');
 if (start < 0 || end < 0 || end <= start) throw new Error('anchors not found');

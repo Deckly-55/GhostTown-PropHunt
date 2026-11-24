@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -18,9 +19,18 @@ const PORT = process.env.PORT || 3000;
 
 app.use('/public/Skins/Players', express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
 app.use('/Skins/Players', express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
+app.use('/Skins/Weapons', express.static(path.join(__dirname, 'public', 'Skins', 'Weapons')));
+app.use('/public/Skins/Weapons', express.static(path.join(__dirname, 'public', 'Skins', 'Weapons')));
+app.use('/store/weapons', express.static(path.join(__dirname, 'public', 'store', 'weapons')));
+app.use('/public/store/weapons', express.static(path.join(__dirname, 'public', 'store', 'weapons')));
 app.use(express.static(path.join(__dirname, 'public', 'Skins', 'Players')));
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/api/store-weapons', (req, res) => {
+  const list = Object.values(STORE_ITEMS).filter(it => it && it.type !== 'skin' && !it.legacy);
+  res.json(list);
+});
 
 const WORLD_WIDTH = 9000;
 const WORLD_HEIGHT = 9000;
@@ -28,7 +38,7 @@ const MAP_SCALE = 2.25;
 
 const DISGUISE_RADIUS = 50;
 const PLAYER_RADIUS = 15;
-const PLAYER_EYE_LEVEL = 12;  
+const PLAYER_EYE_LEVEL = 12;
 const MAX_PLAYER_HEIGHT = 400;
 
 // Phase 1 — Hitscan "Teleport" Shooting System.
@@ -77,51 +87,272 @@ const FREE_WEAPON_IDS = ['standardRifle', 'sidearmPistol', 'fieldBlade', 'throwi
 const STORE_ITEMS = {
   // — Default Starter Skins (free) —
   Casual_Character: { id: 'Casual_Character', name: 'Casual Character', file: 'Casual_Character.glb', cost: 0, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Casual_w:         { id: 'Casual_w',         name: 'Casual Female',    file: 'Casual_w.glb',         cost: 0, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Casual_w: { id: 'Casual_w', name: 'Casual Female', file: 'Casual_w.glb', cost: 0, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
 
   // — Store Catalog: 19 skins ordered by price (ascending) —
-  Beach_Character:    { id: 'Beach_Character',    name: 'Beach Character',       file: 'Beach_Character.glb',    cost: 500,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Casual_w2:          { id: 'Casual_w2',          name: 'Casual Female 2',       file: 'Casual_w2.glb',          cost: 500,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Farmer:             { id: 'Farmer',             name: 'Farmer',                file: 'Farmer.glb',             cost: 600,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Hoodie_Character:   { id: 'Hoodie_Character',   name: 'Hoodie Character',      file: 'Hoodie_Character.glb',   cost: 600,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Worker:             { id: 'Worker',             name: 'Worker',                file: 'Worker.glb',             cost: 600,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Worker_w:           { id: 'Worker_w',           name: 'Worker Female',         file: 'Worker_w.glb',           cost: 600,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Adventurer:         { id: 'Adventurer',         name: 'Adventurer',            file: 'Adventurer.glb',         cost: 650,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Business_Man:       { id: 'Business_Man',       name: 'Business Man',          file: 'Business_Man.glb',       cost: 700,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Adventurer_w:       { id: 'Adventurer_w',       name: 'Adventurer Female',     file: 'Adventurer_w.glb',       cost: 750,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Punk:               { id: 'Punk',               name: 'Punk',                  file: 'Punk.glb',               cost: 800,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Suit_w:             { id: 'Suit_w',             name: 'Suit Female',           file: 'Suit_w.glb',             cost: 800,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Medieval_w:         { id: 'Medieval_w',         name: 'Medieval Female',       file: 'Medieval_w.glb',         cost: 850,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Soldier_w:          { id: 'Soldier_w',          name: 'Soldier Female',        file: 'Soldier_w.glb',          cost: 850,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Punk_w:             { id: 'Punk_w',             name: 'Punk Female',           file: 'Punk_w.glb',             cost: 900,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Swat:               { id: 'Swat',               name: 'SWAT',                  file: 'Swat.glb',               cost: 950,  type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  King:               { id: 'King',               name: 'King',                  file: 'King.glb',               cost: 1500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Witch_w:            { id: 'Witch_w',            name: 'Witch Female',          file: 'Witch_w.glb',            cost: 1500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Beach_Character: { id: 'Beach_Character', name: 'Beach Character', file: 'Beach_Character.glb', cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Casual_w2: { id: 'Casual_w2', name: 'Casual Female 2', file: 'Casual_w2.glb', cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Farmer: { id: 'Farmer', name: 'Farmer', file: 'Farmer.glb', cost: 600, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Hoodie_Character: { id: 'Hoodie_Character', name: 'Hoodie Character', file: 'Hoodie_Character.glb', cost: 600, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Worker: { id: 'Worker', name: 'Worker', file: 'Worker.glb', cost: 600, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Worker_w: { id: 'Worker_w', name: 'Worker Female', file: 'Worker_w.glb', cost: 600, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Adventurer: { id: 'Adventurer', name: 'Adventurer', file: 'Adventurer.glb', cost: 650, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Business_Man: { id: 'Business_Man', name: 'Business Man', file: 'Business_Man.glb', cost: 700, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Adventurer_w: { id: 'Adventurer_w', name: 'Adventurer Female', file: 'Adventurer_w.glb', cost: 750, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Punk: { id: 'Punk', name: 'Punk', file: 'Punk.glb', cost: 800, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Suit_w: { id: 'Suit_w', name: 'Suit Female', file: 'Suit_w.glb', cost: 800, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Medieval_w: { id: 'Medieval_w', name: 'Medieval Female', file: 'Medieval_w.glb', cost: 850, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Soldier_w: { id: 'Soldier_w', name: 'Soldier Female', file: 'Soldier_w.glb', cost: 850, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Punk_w: { id: 'Punk_w', name: 'Punk Female', file: 'Punk_w.glb', cost: 900, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Swat: { id: 'Swat', name: 'SWAT', file: 'Swat.glb', cost: 950, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  King: { id: 'King', name: 'King', file: 'King.glb', cost: 1500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Witch_w: { id: 'Witch_w', name: 'Witch Female', file: 'Witch_w.glb', cost: 1500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
   Sci_Fi_Character_w: { id: 'Sci_Fi_Character_w', name: 'Sci-Fi Character Female', file: 'Sci_Fi_Character_w.glb', cost: 2500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  Astronaut:          { id: 'Astronaut',          name: 'Astronaut',             file: 'Astronaut.glb',          cost: 3000, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  Astronaut: { id: 'Astronaut', name: 'Astronaut', file: 'Astronaut.glb', cost: 3000, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
 
   // — Legacy compatibility (old accounts) —
-  default:       { id: 'default',       name: 'Standard Uniform',   file: 'Casual_Character.glb', cost: 0,   type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  shadowHunter:  { id: 'shadowHunter',  name: 'Shadow Hunter Skin', file: 'Casual_Character.glb', cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
-  steelProp:     { id: 'steelProp',     name: 'Steel Prop Crate',   file: 'Casual_w.glb',         cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null },
+  default: { id: 'default', name: 'Standard Uniform', file: 'Casual_Character.glb', cost: 0, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null, legacy: true },
+  shadowHunter: { id: 'shadowHunter', name: 'Shadow Hunter Skin', file: 'Casual_Character.glb', cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null, legacy: true },
+  steelProp: { id: 'steelProp', name: 'Steel Prop Crate', file: 'Casual_w.glb', cost: 500, type: 'skin', slot: 'equippedSkin', profile: null, tracer: null, legacy: true },
 
-  // — Hunter primary weapons (Key 1) —
-  standardRifle: { id: 'standardRifle', name: 'Assault Rifle',     cost: 0,    type: 'primaryGun',     slot: 'primaryGun',      profile: 'primary',   tracer: 0xffe27a },
-  shotgun:       { id: 'shotgun',       name: 'Combat Shotgun',     cost: 700,  type: 'primaryGun',     slot: 'primaryGun',      profile: 'primary',   tracer: 0xffd08a },
-  vulcanRifle:   { id: 'vulcanRifle',   name: 'VK-47 Vulcan',       cost: 800,  type: 'primaryGun',     slot: 'primaryGun',      profile: 'primary',   tracer: 0xff8c42 },
-  longshotMk2:   { id: 'longshotMk2',   name: 'Longshot Mk II',     cost: 1200, type: 'primaryGun',     slot: 'primaryGun',      profile: 'primary',   tracer: 0x9fd8ff },
+  // — 11 Legendary Weapons (Gold/Legendary tier) —
+  'l.arcSidearm': { id: 'l.arcSidearm', name: 'Arc Sidearm', file: 'l.arcSidearm.glb', thumb: '/store/weapons/l.arcsidearm.png', cost: 2200, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffd700, isLegendary: true },
+  'l.eclipseRifle': { id: 'l.eclipseRifle', name: 'Eclipse Rifle', file: 'l.eclipseRifle.glb', thumb: '/store/weapons/l.eclipserifle.png', cost: 2500, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd700, isLegendary: true },
+  'l.hyperionMK2': { id: 'l.hyperionMK2', name: 'Hyperion MK2', file: 'l.hyperionMK2.glb', thumb: '/store/weapons/l.hyperionmk2.png', cost: 2800, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd700, isLegendary: true },
+  'l.ionStriker': { id: 'l.ionStriker', name: 'Ion Striker', file: 'l.ionStriker.glb', thumb: '/store/weapons/l.ionstriker.png', cost: 2600, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x66ccff, isLegendary: true },
+  'l.nova7Blaster': { id: 'l.nova7Blaster', name: 'Nova 7 Blaster', file: 'l.nova7Blaster.glb', thumb: '/store/weapons/l.nova7blaster.png', cost: 2700, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xff6600, isLegendary: true },
+  'l.photonRipper': { id: 'l.photonRipper', name: 'Photon Ripper', file: 'l.photonRipper.glb', thumb: '/store/weapons/l.photonripper.png', cost: 2500, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null, isLegendary: true },
+  'l.railghostX1': { id: 'l.railghostX1', name: 'Railghost X1', file: 'l.railghostX1.glb', thumb: '/store/weapons/l.railghostx1.png', cost: 3000, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x00ffff, isLegendary: true },
+  'l.spectreXCarbine': { id: 'l.spectreXCarbine', name: 'Spectre X Carbine', file: 'l.spectreXCarbine.glb', thumb: '/store/weapons/l.spectrexcarbine.png', cost: 2500, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd700, isLegendary: true },
+  'l.vanguardPulseAR': { id: 'l.vanguardPulseAR', name: 'Vanguard Pulse AR', file: 'l.vanguardPulseAR.glb', thumb: '/store/weapons/l.vanguardpulsear.png', cost: 2750, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd700, isLegendary: true },
+  'l.voidLance': { id: 'l.voidLance', name: 'Void Lance', file: 'l.voidLance.glb', thumb: '/store/weapons/l.voidlance.png', cost: 2600, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0xcc66ff, isLegendary: true },
+  'l.volt9Auto': { id: 'l.volt9Auto', name: 'Volt 9 Auto', file: 'l.volt9Auto.glb', thumb: '/store/weapons/l.volt9auto.png', cost: 2400, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffd700, isLegendary: true },
 
-  // — Hunter secondary weapons (Key 2) —
-  sidearmPistol: { id: 'sidearmPistol', name: 'Pistol',             cost: 0,    type: 'secondaryGun',   slot: 'secondaryGun',    profile: 'secondary', tracer: 0xffe27a },
-  revolver:      { id: 'revolver',      name: 'Revolver',            cost: 700,  type: 'secondaryGun',   slot: 'secondaryGun',    profile: 'secondary', tracer: 0xffc27a },
-  viperSMG:      { id: 'viperSMG',      name: 'Viper SMG',          cost: 600,  type: 'secondaryGun',   slot: 'secondaryGun',    profile: 'secondary', tracer: 0xa2ff9f },
+  // — 42 Standard Weapons —
+  alleySweeper: { id: 'alleySweeper', name: 'Alley Sweeper', file: 'alleySweeper.glb', thumb: '/store/weapons/alleySweeper.png', cost: 800, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  ammopistol: { id: 'ammopistol', name: 'Ammo Pistol', file: 'ammopistol.glb', thumb: '/store/weapons/ammopistol.png', cost: 500, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  ammoshotgun: { id: 'ammoshotgun', name: 'Ammo Shotgun', file: 'ammoshotgun.glb', thumb: '/store/weapons/ammoshotgun.png', cost: 700, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd08a },
+  ammosniper: { id: 'ammosniper', name: 'Ammo Sniper', file: 'ammosniper.glb', thumb: '/store/weapons/ammosniper.png', cost: 950, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x9fd8ff },
+  Arrow: { id: 'Arrow', name: 'Arrow', file: 'Arrow.glb', thumb: '/store/weapons/Arrow.png', cost: 500, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff },
+  blackoutAR: { id: 'blackoutAR', name: 'Blackout AR', file: 'blackoutAR.glb', thumb: '/store/weapons/blackoutAR.png', cost: 850, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  bloodfangDagger: { id: 'bloodfangDagger', name: 'Bloodfang Dagger', file: 'bloodfangDagger.glb', thumb: '/store/weapons/bloodfangDagger.png', cost: 600, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  bonecrusher: { id: 'bonecrusher', name: 'Bonecrusher', file: 'bonecrusher.glb', thumb: '/store/weapons/bonecrusher.png', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  breacher12G: { id: 'breacher12G', name: 'Breacher 12G', file: 'breacher12G.glb', thumb: '/store/weapons/breacher12G.png', cost: 800, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd08a },
+  cryptkeeperAuto: { id: 'cryptkeeperAuto', name: 'Cryptkeeper Auto', file: 'cryptkeeperAuto.glb', thumb: '/store/weapons/cryptkeeperAuto.png', cost: 900, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  cursedCleaver: { id: 'cursedCleaver', name: 'Cursed Cleaver', file: 'cursedCleaver.glb', thumb: '/store/weapons/cursedCleaver.png', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  duskbreakerAR: { id: 'duskbreakerAR', name: 'Duskbreaker AR', file: 'duskbreakerAR.glb', thumb: '/store/weapons/duskbreakerAR.png', cost: 850, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xff8c42 },
+  fieldBlade: { id: 'fieldBlade', name: 'Field Blade', file: 'fieldBlade.glb', thumb: '/store/weapons/fieldBlade.png', cost: 0, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  ghostblade: { id: 'ghostblade', name: 'Ghostblade', file: 'ghostblade.glb', thumb: '/store/weapons/ghostblade.png', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  graveyardPump: { id: 'graveyardPump', name: 'Graveyard Pump', file: 'graveyardPump.glb', thumb: '/store/weapons/graveyardPump.png', cost: 750, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd08a },
+  grimHarvester: { id: 'grimHarvester', name: 'Grim Harvester', file: 'grimHarvester.glb', thumb: '/store/weapons/grimHarvester.png', cost: 950, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  hellhoundMK3: { id: 'hellhoundMK3', name: 'Hellhound MK3', file: 'hellhoundMK3.glb', thumb: '/store/weapons/hellhoundMK3.png', cost: 950, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xff8c42 },
+  hollowPointMK4: { id: 'hollowPointMK4', name: 'Hollow Point MK4', file: 'hollowPointMK4.glb', thumb: '/store/weapons/hollowPointMK4.png', cost: 900, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  ironJudge44: { id: 'ironJudge44', name: 'Iron Judge .44', file: 'ironJudge44.glb', thumb: '/store/weapons/ironJudge44.png', cost: 750, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  ironPry: { id: 'ironPry', name: 'Iron Pry', file: 'ironPry.glb', thumb: '/store/weapons/ironPry.png', cost: 450, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  marshCarver: { id: 'marshCarver', name: 'Marsh Carver', file: 'marshCarver.glb', thumb: '/store/weapons/marshCarver.png', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  militiaCarbine: { id: 'militiaCarbine', name: 'Militia Carbine', file: 'militiaCarbine.glb', thumb: '/store/weapons/militiaCarbine.png', cost: 800, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  nightshadePistol: { id: 'nightshadePistol', name: 'Nightshade Pistol', file: 'nightshadePistol.glb', thumb: '/store/weapons/nightshadePistol.png', cost: 650, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  nightwatchDMR: { id: 'nightwatchDMR', name: 'Nightwatch DMR', file: 'nightwatchDMR.glb', thumb: '/store/weapons/nightwatchDMR.png', cost: 900, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x9fd8ff },
+  outlawRevolver: { id: 'outlawRevolver', name: 'Outlaw Revolver', file: 'outlawRevolver.glb', thumb: '/store/weapons/outlawRevolver.png', cost: 700, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  paleRider: { id: 'paleRider', name: 'Pale Rider', file: 'paleRider.glb', thumb: '/store/weapons/paleRider.png', cost: 800, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  Quiver: { id: 'Quiver', name: 'Quiver', file: 'Quiver.glb', thumb: '/store/weapons/Quiver.png', cost: 600, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff },
+  reapersEye: { id: 'reapersEye', name: 'Reapers Eye', file: 'reapersEye.glb', thumb: '/store/weapons/reapersEye.png', cost: 1000, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xff8c42 },
+  rustbolt308: { id: 'rustbolt308', name: 'Rustbolt .308', file: 'rustbolt308.glb', thumb: '/store/weapons/rustbolt308.png', cost: 850, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a },
+  rustyJaw: { id: 'rustyJaw', name: 'Rusty Jaw', file: 'rustyJaw.glb', thumb: '/store/weapons/rustyJaw.png', cost: 500, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  rustyShiv: { id: 'rustyShiv', name: 'Rusty Shiv', file: 'rustyShiv.glb', thumb: '/store/weapons/rustyShiv.png', cost: 400, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  shadow45: { id: 'shadow45', name: 'Shadow .45', file: 'shadow45.glb', thumb: '/store/weapons/shadow45.png', cost: 600, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  shadowFang: { id: 'shadowFang', name: 'Shadow Fang', file: 'shadowFang.glb', thumb: '/store/weapons/shadowFang.png', cost: 800, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  silentStalker: { id: 'silentStalker', name: 'Silent Stalker', file: 'silentStalker.glb', thumb: '/store/weapons/silentStalker.png', cost: 750, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff },
+  skullcracker: { id: 'skullcracker', name: 'Skullcracker', file: 'skullcracker.glb', thumb: '/store/weapons/skullcracker.png', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  slaughterhouseCleaver: { id: 'slaughterhouseCleaver', name: 'Slaughterhouse Cleaver', file: 'slaughterhouseCleaver.glb', thumb: '/store/weapons/slaughterhouseCleaver.png', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  timberRipper: { id: 'timberRipper', name: 'Timber Ripper', file: 'timberRipper.glb', thumb: '/store/weapons/timberRipper.png', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  trackersEdge: { id: 'trackersEdge', name: 'Trackers Edge', file: 'trackersEdge.glb', thumb: '/store/weapons/trackersEdge.png', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null },
+  watchman9mm: { id: 'watchman9mm', name: 'Watchman 9mm', file: 'watchman9mm.glb', thumb: '/store/weapons/watchman9mm.png', cost: 550, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a },
+  whisperingRecurve: { id: 'whisperingRecurve', name: 'Whispering Recurve', file: 'whisperingRecurve.glb', thumb: '/store/weapons/whisperingRecurve.png', cost: 800, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff },
+  widowmaker: { id: 'widowmaker', name: 'Widowmaker', file: 'widowmaker.glb', thumb: '/store/weapons/widowmaker.png', cost: 950, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x9fd8ff },
+  wraithLongshot: { id: 'wraithLongshot', name: 'Wraith Longshot', file: 'wraithLongshot.glb', thumb: '/store/weapons/wraithLongshot.png', cost: 1100, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x9fd8ff },
 
-  // — Prop knife variants —
-  fieldBlade:    { id: 'fieldBlade',    name: 'Field Blade',        cost: 0,    type: 'primaryKnife',   slot: 'primaryKnife',    profile: 'melee',     tracer: null },
-  carbonCleaver: { id: 'carbonCleaver', name: 'Carbon Cleaver',     cost: 400,  type: 'primaryKnife',   slot: 'primaryKnife',    profile: 'melee',     tracer: null },
-  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife',     cost: 0,    type: 'secondaryKnife', slot: 'secondaryKnife',  profile: 'thrown',    tracer: 0x9fd8ff },
-  phantomDagger: { id: 'phantomDagger', name: 'Phantom Dagger',     cost: 650,  type: 'secondaryKnife', slot: 'secondaryKnife',  profile: 'thrown',    tracer: 0xd8a2ff }
+  // — Legacy weapon aliases (for legacy account loadouts) —
+  standardRifle: { id: 'standardRifle', name: 'Assault Rifle', file: 'militiaCarbine.glb', thumb: '/store/weapons/militiaCarbine.png', cost: 0, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffe27a, legacy: true },
+  shotgun: { id: 'shotgun', name: 'Combat Shotgun', file: 'graveyardPump.glb', thumb: '/store/weapons/graveyardPump.png', cost: 700, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xffd08a, legacy: true },
+  vulcanRifle: { id: 'vulcanRifle', name: 'VK-47 Vulcan', file: 'hellhoundMK3.glb', thumb: '/store/weapons/hellhoundMK3.png', cost: 800, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0xff8c42, legacy: true },
+  longshotMk2: { id: 'longshotMk2', name: 'Longshot Mk II', file: 'nightwatchDMR.glb', thumb: '/store/weapons/nightwatchDMR.png', cost: 1200, type: 'primaryGun', slot: 'primaryGun', profile: 'primary', tracer: 0x9fd8ff, legacy: true },
+  sidearmPistol: { id: 'sidearmPistol', name: 'Pistol', file: 'watchman9mm.glb', thumb: '/store/weapons/watchman9mm.png', cost: 0, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffe27a, legacy: true },
+  revolver: { id: 'revolver', name: 'Revolver', file: 'outlawRevolver.glb', thumb: '/store/weapons/outlawRevolver.png', cost: 700, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a, legacy: true },
+  viperSMG: { id: 'viperSMG', name: 'Viper SMG', file: 'cryptkeeperAuto.glb', thumb: '/store/weapons/cryptkeeperAuto.png', cost: 600, type: 'secondaryGun', slot: 'secondaryGun', profile: 'secondary', tracer: 0xa2ff9f, legacy: true },
+  carbonCleaver: { id: 'carbonCleaver', name: 'Carbon Cleaver', file: 'cursedCleaver.glb', thumb: '/store/weapons/cursedCleaver.png', cost: 400, type: 'primaryKnife', slot: 'primaryKnife', profile: 'melee', tracer: null, legacy: true },
+  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife', file: 'Arrow.glb', thumb: '/store/weapons/Arrow.png', cost: 0, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff, legacy: true },
+  phantomDagger: { id: 'phantomDagger', name: 'Phantom Dagger', file: 'bloodfangDagger.glb', thumb: '/store/weapons/bloodfangDagger.png', cost: 650, type: 'secondaryKnife', slot: 'secondaryKnife', profile: 'thrown', tracer: 0xd8a2ff, legacy: true }
 };
+
+// Scan public/Skins/Weapons/ (for .glb models) and public/store/weapons/ (for .png thumbnails)
+// and register every standard and legendary weapon in STORE_ITEMS so purchases and equips validate and save properly.
+const WEAPONS_MODELS_DIR = path.join(__dirname, 'public', 'Skins', 'Weapons');
+const WEAPONS_THUMBS_DIR = path.join(__dirname, 'public', 'store', 'weapons');
+
+function formatWeaponDisplayName(id) {
+  let s = id.startsWith('l.') ? id.slice(2) : id;
+  const map = {
+    'ammopistol': 'Ammo Pistol',
+    'ammoshotgun': 'Ammo Shotgun',
+    'ammosniper': 'Ammo Sniper',
+    'bonecrusher': 'Bonecrusher',
+    'ghostblade': 'Ghostblade',
+    'skullcracker': 'Skullcracker',
+    'widowmaker': 'Widowmaker',
+    'breacher12G': 'Breacher 12G',
+    'hellhoundMK3': 'Hellhound MK3',
+    'hollowPointMK4': 'Hollow Point MK4',
+    'ironJudge44': 'Iron Judge .44',
+    'rustbolt308': 'Rustbolt .308',
+    'shadow45': 'Shadow .45',
+    'watchman9mm': 'Watchman 9mm',
+    'l.hyperionMK2': 'Hyperion MK2',
+    'l.nova7Blaster': 'Nova 7 Blaster',
+    'l.railghostX1': 'Railghost X1',
+    'l.spectreXCarbine': 'Spectre X Carbine',
+    'l.vanguardPulseAR': 'Vanguard Pulse AR',
+    'l.volt9Auto': 'Volt 9 Auto'
+  };
+  if (map[id] || map[s]) return map[id] || map[s];
+  s = s.replace(/([a-z])([A-Z0-9])/g, (m, a, b) => a + ' ' + b)
+    .replace(/([0-9])([a-zA-Z])/g, (m, a, b) => a + ' ' + b)
+    .replace(/([A-Z]+)([A-Z][a-z])/g, (m, a, b) => a + ' ' + b);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function getWeaponSpecs(id) {
+  const isLegendary = id.startsWith('l.');
+  const s = isLegendary ? id.slice(2) : id;
+  const lower = s.toLowerCase();
+
+  // Legendary weapons (high-tier pricing)
+  if (id === 'l.arcSidearm') return { slot: 'secondaryGun', type: 'secondaryGun', profile: 'secondary', tracer: 0xffd700, cost: 2200 };
+  if (id === 'l.volt9Auto') return { slot: 'secondaryGun', type: 'secondaryGun', profile: 'secondary', tracer: 0xffd700, cost: 2400 };
+  if (id === 'l.photonRipper') return { slot: 'primaryKnife', type: 'primaryKnife', profile: 'melee', tracer: null, cost: 2500 };
+  if (id === 'l.voidLance') return { slot: 'secondaryKnife', type: 'secondaryKnife', profile: 'thrown', tracer: 0xcc66ff, cost: 2600 };
+  if (id === 'l.eclipseRifle') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffd700, cost: 2500 };
+  if (id === 'l.spectreXCarbine') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffd700, cost: 2500 };
+  if (id === 'l.ionStriker') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0x66ccff, cost: 2600 };
+  if (id === 'l.nova7Blaster') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xff6600, cost: 2700 };
+  if (id === 'l.vanguardPulseAR') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffd700, cost: 2750 };
+  if (id === 'l.hyperionMK2') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffd700, cost: 2800 };
+  if (id === 'l.railghostX1') return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0x00ffff, cost: 3000 };
+  if (isLegendary) return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffd700, cost: 2500 };
+
+  // Standard knives & melee
+  if (lower.includes('dagger') || lower.includes('blade') || lower.includes('cleaver') ||
+    lower.includes('shiv') || lower.includes('jaw') || lower.includes('crusher') ||
+    lower.includes('pry') || lower.includes('harvester') || lower.includes('cracker') ||
+    lower.includes('ripper') || lower.includes('edge') || lower.includes('fang') || lower.includes('carver')) {
+    const costMap = {
+      bloodfangDagger: 600, bonecrusher: 750, cursedCleaver: 700, fieldBlade: 0,
+      ghostblade: 850, grimHarvester: 950, ironPry: 450, marshCarver: 650,
+      rustyJaw: 500, rustyShiv: 400, shadowFang: 800, skullcracker: 750,
+      slaughterhouseCleaver: 850, timberRipper: 700, trackersEdge: 650
+    };
+    return { slot: 'primaryKnife', type: 'primaryKnife', profile: 'melee', tracer: null, cost: costMap[id] !== undefined ? costMap[id] : 600 };
+  }
+
+  // Standard secondary knives & thrown
+  if (lower.includes('arrow') || lower.includes('quiver') || lower.includes('recurve') || lower.includes('stalker')) {
+    const costMap = { Arrow: 500, Quiver: 600, whisperingRecurve: 800, silentStalker: 750 };
+    return { slot: 'secondaryKnife', type: 'secondaryKnife', profile: 'thrown', tracer: 0x9fd8ff, cost: costMap[id] !== undefined ? costMap[id] : 600 };
+  }
+
+  // Standard secondary guns (pistols / revolvers)
+  if (lower.includes('pistol') || lower.includes('revolver') || lower.includes('judge') ||
+    lower.includes('rider') || lower.includes('45') || lower.includes('9mm')) {
+    const costMap = {
+      ammopistol: 500, ironJudge44: 750, nightshadePistol: 650, outlawRevolver: 700,
+      paleRider: 800, shadow45: 600, watchman9mm: 550
+    };
+    return { slot: 'secondaryGun', type: 'secondaryGun', profile: 'secondary', tracer: 0xffc27a, cost: costMap[id] !== undefined ? costMap[id] : 600 };
+  }
+
+  // Standard primary guns (rifles / shotguns / snipers)
+  const costMap = {
+    alleySweeper: 800, ammoshotgun: 700, ammosniper: 950, blackoutAR: 850,
+    breacher12G: 800, cryptkeeperAuto: 900, duskbreakerAR: 850, graveyardPump: 750,
+    hellhoundMK3: 950, hollowPointMK4: 900, militiaCarbine: 800, nightwatchDMR: 900,
+    reapersEye: 1000, rustbolt308: 850, widowmaker: 950, wraithLongshot: 1100
+  };
+  return { slot: 'primaryGun', type: 'primaryGun', profile: 'primary', tracer: 0xffe27a, cost: costMap[id] !== undefined ? costMap[id] : 800 };
+}
+
+function scanAndRegisterWeapons() {
+  try {
+    if (fs.existsSync(WEAPONS_MODELS_DIR)) {
+      const glbFiles = fs.readdirSync(WEAPONS_MODELS_DIR).filter(f => f.toLowerCase().endsWith('.glb'));
+      const thumbFiles = fs.existsSync(WEAPONS_THUMBS_DIR) ? fs.readdirSync(WEAPONS_THUMBS_DIR) : [];
+      const thumbMap = new Map();
+      for (const tf of thumbFiles) {
+        thumbMap.set(tf.toLowerCase(), tf);
+      }
+
+      let standardCount = 0;
+      let legendaryCount = 0;
+
+      for (const file of glbFiles) {
+        const id = file.replace(/\.glb$/i, '');
+        const isLegendary = id.startsWith('l.');
+        const specs = getWeaponSpecs(id);
+        const name = formatWeaponDisplayName(id);
+
+        const expectedThumb = `${id.toLowerCase()}.png`;
+        const matchedThumb = thumbMap.get(expectedThumb) || `${id}.png`;
+        const thumbUrl = `/store/weapons/${matchedThumb}`;
+
+        const cost = (specs && specs.cost !== undefined) ? specs.cost : 800;
+
+        if (!STORE_ITEMS[id]) {
+          STORE_ITEMS[id] = {
+            id,
+            name,
+            file,
+            thumb: thumbUrl,
+            cost,
+            price: cost,
+            type: specs.type,
+            slot: specs.slot,
+            profile: specs.profile,
+            tracer: specs.tracer,
+            isLegendary
+          };
+        } else {
+          STORE_ITEMS[id].file = file;
+          STORE_ITEMS[id].thumb = thumbUrl;
+          if (isLegendary) STORE_ITEMS[id].isLegendary = true;
+          if (STORE_ITEMS[id].cost === undefined) STORE_ITEMS[id].cost = cost;
+          STORE_ITEMS[id].price = (STORE_ITEMS[id].price !== undefined) ? STORE_ITEMS[id].price : STORE_ITEMS[id].cost;
+          if (specs.type) STORE_ITEMS[id].type = specs.type;
+          if (specs.slot) STORE_ITEMS[id].slot = specs.slot;
+          if (specs.profile) STORE_ITEMS[id].profile = specs.profile;
+          if (specs.tracer !== undefined) STORE_ITEMS[id].tracer = specs.tracer;
+        }
+
+        if (isLegendary) {
+          legendaryCount++;
+        } else {
+          standardCount++;
+        }
+      }
+
+      console.log(`[server] Registered ${standardCount} standard and ${legendaryCount} legendary weapons (${glbFiles.length} total) from public/Skins/Weapons/ with zero errors`);
+    }
+  } catch (err) {
+    console.error('[server] Error scanning weapons:', err);
+  }
+}
+scanAndRegisterWeapons();
+
+// Guarantee every item in STORE_ITEMS defines both cost and price
+for (const item of Object.values(STORE_ITEMS)) {
+  if (item && typeof item === 'object') {
+    if (item.price === undefined && item.cost !== undefined) item.price = item.cost;
+    if (item.cost === undefined && item.price !== undefined) item.cost = item.price;
+  }
+}
 
 // The five persistent loadout slots stored on every player document.
 const LOADOUT_SLOTS = ['equippedSkin', 'primaryGun', 'secondaryGun', 'primaryKnife', 'secondaryKnife'];
@@ -201,24 +432,72 @@ function getChosenStarterFromData(data) {
 }
 
 function cleanItemId(rawId) {
+  if (!rawId) return null;
+  if (typeof rawId === 'object') {
+    rawId = rawId.itemId || rawId.id || rawId.weaponId || rawId.skinId || rawId.item || rawId.file || rawId.name || rawId.model || null;
+  }
   if (!rawId || typeof rawId !== 'string') return null;
   let s = rawId.trim().split('?')[0].split('#')[0];
   const parts = s.split(/[\/\\]/);
   s = parts[parts.length - 1];
-  return s.replace(/\.glb$/i, '').trim();
+  return s.replace(/\.(glb|png|jpg|jpeg|webp)$/i, '').trim();
+}
+
+function normalizeLookupKey(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.toLowerCase()
+    .split('?')[0].split('#')[0]
+    .split(/[\/\\]/).pop()
+    .replace(/\.(glb|png|jpg|jpeg|webp)$/i, '')
+    .replace(/^l\./, '')
+    .replace(/[\s\-_.]/g, '');
+}
+
+function findStoreItem(rawId) {
+  if (!rawId) return null;
+  if (typeof rawId === 'object') {
+    rawId = rawId.itemId || rawId.id || rawId.weaponId || rawId.skinId || rawId.item || rawId.file || rawId.name || rawId.model || null;
+  }
+  if (!rawId || typeof rawId !== 'string') return null;
+  rawId = rawId.trim();
+
+  // 1. Direct key match
+  if (STORE_ITEMS[rawId]) return STORE_ITEMS[rawId];
+
+  // 2. Cleaned id match
+  const clean = cleanItemId(rawId) || rawId;
+  if (STORE_ITEMS[clean]) return STORE_ITEMS[clean];
+  if (!clean.startsWith('l.') && STORE_ITEMS['l.' + clean]) return STORE_ITEMS['l.' + clean];
+  if (clean.startsWith('l.') && STORE_ITEMS[clean.slice(2)]) return STORE_ITEMS[clean.slice(2)];
+
+  // 3. Normalized / case-insensitive search
+  const norm = normalizeLookupKey(rawId);
+  if (!norm) return null;
+
+  const isLegInput = clean.toLowerCase().startsWith('l.') || rawId.toLowerCase().startsWith('l.');
+
+  for (const [key, item] of Object.entries(STORE_ITEMS)) {
+    const isLegItem = key.startsWith('l.') || (item && item.isLegendary);
+    if (isLegInput && !isLegItem) continue; // if caller explicitly requested legendary, prefer legendary
+    if (normalizeLookupKey(key) === norm) return item;
+    if (item.file && normalizeLookupKey(item.file) === norm) return item;
+    if (item.name && normalizeLookupKey(item.name) === norm) return item;
+    if (item.id && normalizeLookupKey(item.id) === norm) return item;
+  }
+
+  // Fallback: match without requiring legendary filter
+  for (const [key, item] of Object.entries(STORE_ITEMS)) {
+    if (normalizeLookupKey(key) === norm) return item;
+    if (item.file && normalizeLookupKey(item.file) === norm) return item;
+    if (item.name && normalizeLookupKey(item.name) === norm) return item;
+    if (item.id && normalizeLookupKey(item.id) === norm) return item;
+  }
+
+  return null;
 }
 
 function itemForId(itemId) {
-  if (!itemId || typeof itemId !== 'string') return null;
-  if (STORE_ITEMS[itemId]) return STORE_ITEMS[itemId];
-  const clean = cleanItemId(itemId);
-  if (clean && STORE_ITEMS[clean]) return STORE_ITEMS[clean];
-  const lower = (clean || itemId).toLowerCase().replace(/[\s\-_]/g, '');
-  for (const [key, item] of Object.entries(STORE_ITEMS)) {
-    if (key.toLowerCase().replace(/[\s\-_]/g, '') === lower) return item;
-    if (item.file && cleanItemId(item.file).toLowerCase().replace(/[\s\-_]/g, '') === lower) return item;
-  }
-  return null;
+  return findStoreItem(itemId);
 }
 
 // Normalizes an inventory: keeps known item ids, drops junk/dupes and
@@ -399,12 +678,19 @@ function emitWallet(socket, player) {
   if (!socket || !player) return;
   const inventory = normalizeInventory(player); // player object → keeps a single starter
   const loadout = normalizeLoadout(player.loadout, inventory, player.equippedSkin);
+  const coins = player.coins || 0;
+  const ownedSkins = inventory.filter(id => STORE_ITEMS[id] && STORE_ITEMS[id].type === 'skin');
+  const ownedWeapons = inventory.filter(id => STORE_ITEMS[id] && STORE_ITEMS[id].type !== 'skin');
   socket.emit('walletUpdate', {
-    coins: player.coins || 0,
+    coins,
     inventory,
+    ownedSkins,
+    ownedWeapons,
+    ownedItems: inventory,
     loadout,
     // Mirror of loadout.equippedSkin for legacy client logic:
     equippedSkin: loadout.equippedSkin,
+    equippedItems: loadout,
     isRegistered: !!player.isRegistered,
     username: player.username || null,
     displayName: player.displayName || accountDisplayName(player, player.playerId)
@@ -424,14 +710,14 @@ const ZONE_DEFINITIONS = {
 const ZONES = Object.values(ZONE_DEFINITIONS);
 function zoneForPoint(x, z) { return ZONES.find(zone => x >= zone.minX && x <= zone.maxX && z >= zone.minZ && z <= zone.maxZ) || ZONE_DEFINITIONS.oldCityCenter; }
 
-const privateRooms = new Map(); 
-const roomStates = new Map(); 
+const privateRooms = new Map();
+const roomStates = new Map();
 
 const LOBBY_AREA = { id: 'stagingLobby', name: 'Staging Ground', minX: 49800, maxX: 50200, minZ: 49800, maxZ: 50200 };
 const GLOBAL_LOBBY_SECONDS = 15;
 const INTERMISSION_SECONDS = 10;
-const PRIVATE_TIME_LIMIT_OPTIONS = [180, 300, 600, 1200]; 
-const GLOBAL_TIME_LIMIT_OPTIONS = [300, 600, 1200];       
+const PRIVATE_TIME_LIMIT_OPTIONS = [180, 300, 600, 1200];
+const GLOBAL_TIME_LIMIT_OPTIONS = [300, 600, 1200];
 const DEFAULT_PRIVATE_TIME_LIMIT = 300;
 
 const DEFAULT_HUNTER_FOG_DISTANCE = 550;
@@ -572,7 +858,7 @@ function handleMatchEnd(roomName, winningTeam) {
   const rs = roomStates.get(roomName);
   if (!rs || rs.state === 'ended') return;
   rs.state = 'ended';
-  
+
   if (rs.resetTimeout) { clearTimeout(rs.resetTimeout); rs.resetTimeout = null; }
   const leaderboard = getLeaderboard(roomName);
   io.to(roomName).emit('matchOver', { winner: winningTeam, leaderboard, intermissionSeconds: INTERMISSION_SECONDS });
@@ -660,7 +946,7 @@ function generateRoomCode() {
     for (let i = 0; i < ROOM_CODE_LENGTH; i++) {
       code += ROOM_CODE_CHARS[Math.floor(Math.random() * ROOM_CODE_CHARS.length)];
     }
-  } while (privateRooms.has(code)); 
+  } while (privateRooms.has(code));
   return code;
 }
 
@@ -798,7 +1084,7 @@ function reassignHostIfNeeded(roomName, departingSocketId) {
 
 function cleanupEmptyRoom(roomName) {
   const adapterRoom = io.sockets.adapter.rooms.get(roomName);
-  if (adapterRoom && adapterRoom.size > 0) return; 
+  if (adapterRoom && adapterRoom.size > 0) return;
   for (const [code, room] of privateRooms) {
     if (room.roomName === roomName) {
       privateRooms.delete(code);
@@ -819,7 +1105,7 @@ const MELEE_RANGE = 50;
 const MELEE_DAMAGE = 50;
 
 const WEAPON_PROFILES = {
-  primary:   { name: 'Primary',   damage: 25, ammo: 5,  fireRateMs: 800 },
+  primary: { name: 'Primary', damage: 25, ammo: 5, fireRateMs: 800 },
   secondary: { name: 'Secondary', damage: 12.5, ammo: 12, fireRateMs: 150 }
 };
 
@@ -827,18 +1113,18 @@ function getBulletDamage(weaponType) {
   return (WEAPON_PROFILES[weaponType] && WEAPON_PROFILES[weaponType].damage) || BULLET_DAMAGE;
 }
 
-const NPC_MAX_HITS = 8;               
-const NPC_MAX_STRIKES = 6;            
-const NPC_STRIKE_DAMAGE = 17;         
-const NPC_ATTACK_COOLDOWN_MS = 1000;  
-const NPC_ATTACK_RANGE = PLAYER_RADIUS + 15;  
-const NPC_AGGRO_RADIUS = 300;         
-const NPC_AGGRO_DROP_RADIUS = 360;    
-const NPC_LEASH_RADIUS = 400;         
-const NPC_CHASE_SPEED_MULT = 1.5;     
-const NPC_RESPAWN_MS = 10000;         
-const NPC_LOOT_VALUE = 25;            
-const NPC_KILL_SCORE = 50;            
+const NPC_MAX_HITS = 8;
+const NPC_MAX_STRIKES = 6;
+const NPC_STRIKE_DAMAGE = 17;
+const NPC_ATTACK_COOLDOWN_MS = 1000;
+const NPC_ATTACK_RANGE = PLAYER_RADIUS + 15;
+const NPC_AGGRO_RADIUS = 300;
+const NPC_AGGRO_DROP_RADIUS = 360;
+const NPC_LEASH_RADIUS = 400;
+const NPC_CHASE_SPEED_MULT = 1.5;
+const NPC_RESPAWN_MS = 10000;
+const NPC_LOOT_VALUE = 25;
+const NPC_KILL_SCORE = 50;
 const GHOUL_MELEE_RADIUS = 45;        // melee cylinder around the 12x scaled ghoul (horizontal)
 const GHOUL_MELEE_HEIGHT = 60;        // melee cylinder around the 12x scaled ghoul (vertical)
 const GHOUL_MELEE_KILL_COINS = 25;    // coins paid when a prop's melee finishes a ghoul (score: 0)
@@ -867,10 +1153,10 @@ function createNPC(def) {
     maxHits: NPC_MAX_HITS,
     hitsTaken: 0,
     health: 100,
-    state: 'patrolling',       
-    targetId: null,            
-    lastAttackAt: 0,           
-    isLeashing: false          
+    state: 'patrolling',
+    targetId: null,
+    lastAttackAt: 0,
+    isLeashing: false
   };
 }
 
@@ -942,7 +1228,7 @@ function killNPC(npcId, npc, roomName, killerId, options = {}) {
 }
 
 const players = {};
-const wallets = {}; 
+const wallets = {};
 let lootDrops = {};
 let lootIdCounter = 0;
 
@@ -1008,11 +1294,18 @@ function syncWalletFromPlayer(player, socketId) {
 function walletPayloadFields(target) {
   const inventory = normalizeInventory(target); // target object → keeps a single starter
   const loadout = normalizeLoadout(target && target.loadout, inventory, target && target.equippedSkin);
+  const coins = (target && target.coins) || 0;
+  const ownedSkins = inventory.filter(id => STORE_ITEMS[id] && STORE_ITEMS[id].type === 'skin');
+  const ownedWeapons = inventory.filter(id => STORE_ITEMS[id] && STORE_ITEMS[id].type !== 'skin');
   return {
-    coins: (target && target.coins) || 0,
+    coins,
     inventory,
+    ownedSkins,
+    ownedWeapons,
+    ownedItems: inventory,
     loadout,
-    equippedSkin: loadout.equippedSkin
+    equippedSkin: loadout.equippedSkin,
+    equippedItems: loadout
   };
 }
 
@@ -1192,7 +1485,7 @@ function randomSpawnPoint(zone = ZONE_DEFINITIONS.oldCityCenter, occupied = []) 
 
 function getLeaderboard(roomName) {
   return Object.entries(players)
-    .filter(([, player]) => player.roomName === roomName) 
+    .filter(([, player]) => player.roomName === roomName)
     .map(([id, player]) => ({
       id,
       name: player.displayName || accountDisplayName(player, player.playerId),
@@ -1268,7 +1561,7 @@ function sendRadarAfterStateChange() {
 
 function getLateJoinerRole(roomName) {
   const roomPlayers = Object.values(players).filter(p => p.roomName === roomName);
-  const totalPlayers = roomPlayers.length + 1; 
+  const totalPlayers = roomPlayers.length + 1;
   const requiredHunters = getRequiredHunterCount(totalPlayers);
   const currentAliveHunters = roomPlayers.filter(p => p.role === 'hunter' && p.alive).length;
   if (currentAliveHunters < requiredHunters) {
@@ -1279,7 +1572,7 @@ function getLateJoinerRole(roomName) {
 
 io.on('connection', (socket) => {
   emitWallet(socket, getWallet(socket.id));
-  
+
   socket.on('requestWallet', async (playerId) => {
     if (!playerId) return;
     try {
@@ -1288,7 +1581,7 @@ io.on('connection', (socket) => {
         let doc = await dbPlayers.findOne({ _id: playerId });
         if (!doc) {
           const initialSkin = (players[socket.id] && safeEquippedSkinId(players[socket.id])) || MALE_STARTER_ID;
-          await dbPlayers.insertOne(buildDefaultPlayerDoc(playerId, initialSkin)).catch(() => {});
+          await dbPlayers.insertOne(buildDefaultPlayerDoc(playerId, initialSkin)).catch(() => { });
           doc = buildDefaultPlayerDoc(playerId, initialSkin);
         }
         walletData = parseWalletDoc(doc);
@@ -1392,7 +1685,7 @@ io.on('connection', (socket) => {
         {
           $addToSet: { inventory: chosenStarterForRegister }
         }
-      ).catch(() => {});
+      ).catch(() => { });
 
       if (players[socket.id]) {
         players[socket.id].username = username;
@@ -1509,7 +1802,7 @@ io.on('connection', (socket) => {
             initialSkin = cleanIncoming;
           }
           const newDoc = buildDefaultPlayerDoc(playerId, initialSkin);
-          await dbPlayers.insertOne(newDoc).catch(() => {});
+          await dbPlayers.insertOne(newDoc).catch(() => { });
           walletData = parseWalletDoc(newDoc);
           if (cleanIncoming && !walletData.inventory.includes(cleanIncoming)) {
             walletData.inventory.push(cleanIncoming);
@@ -1597,25 +1890,25 @@ io.on('connection', (socket) => {
     players[socket.id] = {
       id: socket.id,
       x: spawnX,
-      y: PLAYER_EYE_LEVEL, 
+      y: PLAYER_EYE_LEVEL,
       z: spawnZ,
       rotation: 0,
       yaw: 0,
       isMoving: false,
-      zoneId: zone.id,     
-      zone,                
-      roomName,            
-      matchType,           
-      roomCode,            
+      zoneId: zone.id,
+      zone,
+      roomName,
+      matchType,
+      roomCode,
       role: playerRole,
       isProp: false,
       propId: null,
       alive: true,
       score: 0,
       health: playerHealth,
-      npcStrikes: 0,       
+      npcStrikes: 0,
       disguiseBrokenAt: 0,
-      isHost,             
+      isHost,
       playerId,
       coins: 0,
       inventory: DEFAULT_INVENTORY.slice(),
@@ -1651,10 +1944,10 @@ io.on('connection', (socket) => {
 
     socket.emit('init', {
       id: socket.id,
-      players: getRoomPlayers(roomName), 
-      npcs: serializeNPCs(),            
-      lootDrops,                         
-      props: getPropsForZone(zone.id),   
+      players: getRoomPlayers(roomName),
+      npcs: serializeNPCs(),
+      lootDrops,
+      props: getPropsForZone(zone.id),
       map,
       world: { width: WORLD_WIDTH, height: WORLD_HEIGHT, zones: ZONES },
       zone,
@@ -1662,7 +1955,7 @@ io.on('connection', (socket) => {
       roomCode,
       matchType,
       hostId: roomState.hostId,
-      isHost,                            
+      isHost,
       // Phase 3: the spawning player's persistent loadout (skin + weapon
       // models) loaded straight from the database.
       loadout: players[socket.id].loadout,
@@ -1934,7 +2227,7 @@ io.on('connection', (socket) => {
         attacker.coins = (attacker.coins || 0) + HUNTER_KILL_COINS;
         syncWalletFromPlayer(attacker, socket.id);
         if (dbPlayers && attacker.playerId) {
-          dbPlayers.updateOne({ _id: attacker.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => {});
+          dbPlayers.updateOne({ _id: attacker.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => { });
         }
         emitWallet(socket, attacker);
 
@@ -1992,7 +2285,7 @@ io.on('connection', (socket) => {
             dbPlayers.updateOne(
               { _id: attacker.playerId },
               { $inc: { coins: GHOUL_MELEE_KILL_COINS } }
-            ).catch(() => {});
+            ).catch(() => { });
           }
           emitWallet(socket, attacker);
         }
@@ -2017,8 +2310,8 @@ io.on('connection', (socket) => {
     const roomState = player ? getRoomState(player.roomName) : null;
     if (!player || !roomState || roomState.state !== 'playing' || !player.alive) return;
 
-    player.health = HUNTER_MAX_HEALTH; 
-    player.npcStrikes = 0;             
+    player.health = HUNTER_MAX_HEALTH;
+    player.npcStrikes = 0;
     io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     sendRadarAfterStateChange();
   });
@@ -2034,7 +2327,7 @@ io.on('connection', (socket) => {
 
     player.x = spawn.x;
     player.z = spawn.z;
-    player.y = PLAYER_EYE_LEVEL; 
+    player.y = PLAYER_EYE_LEVEL;
     player.alive = true;
     player.isProp = false;
     player.propId = null;
@@ -2111,92 +2404,222 @@ io.on('connection', (socket) => {
     broadcastTimeUpdate(roomName);
   });
 
-  socket.on('buyItem', async (itemId) => {
-    // Works both in-game (live player object) and from the main-menu store
-    // (in-memory wallet), so purchases never depend on match state.
+  async function handleStorePurchase(socket, payload, requiredType = null) {
+    console.log('[buy-hit]', payload);
     const player = players[socket.id];
-    const target = player || wallets[socket.id];
+    const target = player || getWallet(socket.id);
     if (!target) return;
 
-    const item = itemForId(itemId);
-    if (!item || item.cost <= 0) {
+    let payloadPlayerId = null;
+    const candidates = [];
+    if (typeof payload === 'string') {
+      candidates.push(payload);
+    } else if (payload && typeof payload === 'object') {
+      [payload.id, payload.itemId, payload.weaponId, payload.skinId, payload.item, payload.file, payload.name, payload.model].forEach(c => {
+        if (c && typeof c === 'string') candidates.push(c);
+      });
+      payloadPlayerId = payload.playerId || null;
+    }
+
+    let item = null;
+    for (const cand of candidates) {
+      const trimmed = cand.trim();
+      const clean = cleanItemId(trimmed) || trimmed;
+      if (STORE_ITEMS[trimmed]) { item = STORE_ITEMS[trimmed]; break; }
+      if (STORE_ITEMS[clean]) { item = STORE_ITEMS[clean]; break; }
+      if (!clean.startsWith('l.') && STORE_ITEMS['l.' + clean]) { item = STORE_ITEMS['l.' + clean]; break; }
+      if (clean.startsWith('l.') && STORE_ITEMS[clean.slice(2)]) { item = STORE_ITEMS[clean.slice(2)]; break; }
+
+      // Check all 53 weapons and store items: exact match or case-insensitive ignoring .glb
+      const candNorm = clean.replace(/\.glb$/i, '').toLowerCase();
+      const candRawNorm = trimmed.replace(/\.glb$/i, '').toLowerCase();
+      for (const [key, storeIt] of Object.entries(STORE_ITEMS)) {
+        if (!storeIt) continue;
+        const keyNorm = key.replace(/\.glb$/i, '').toLowerCase();
+        const idNorm = (storeIt.id || '').replace(/\.glb$/i, '').toLowerCase();
+        const fileNorm = (storeIt.file || '').replace(/\.glb$/i, '').toLowerCase();
+        if (keyNorm === candNorm || keyNorm === candRawNorm ||
+            idNorm === candNorm || idNorm === candRawNorm ||
+            fileNorm === candNorm || fileNorm === candRawNorm) {
+          item = storeIt;
+          break;
+        }
+        const keyNoL = keyNorm.replace(/^l\./, '');
+        const candNoL = candNorm.replace(/^l\./, '');
+        if (keyNoL === candNoL) {
+          item = storeIt;
+          break;
+        }
+      }
+      if (item) break;
+
+      const found = findStoreItem(trimmed) || findStoreItem(clean);
+      if (found) { item = found; break; }
+    }
+
+    const currentTargetCoins = (target && typeof target.coins === 'number') ? target.coins : 0;
+
+    if (!item) {
+      console.log('[buy-server]', payload, 'found: false', 'coinsBefore:', currentTargetCoins, 'coinsAfter:', currentTargetCoins);
       socket.emit('buyResult', Object.assign({
         ok: false,
-        message: item ? 'Default items are permanently owned — equip them instead.' : 'Unknown item.'
+        message: 'Unknown item.'
       }, walletPayloadFields(target)));
       return;
     }
+
+    const itemPrice = (typeof item.price === 'number') ? item.price : ((typeof item.cost === 'number') ? item.cost : 0);
+
+    if (itemPrice <= 0) {
+      console.log('[buy-server]', payload, 'found:', !!item, 'coinsBefore:', currentTargetCoins, 'coinsAfter:', currentTargetCoins);
+      socket.emit('buyResult', Object.assign({
+        ok: false,
+        message: item.type === 'skin' ? 'Starter skins are free — equip them instead.' : 'Default items are permanently owned — equip them instead.'
+      }, walletPayloadFields(target)));
+      return;
+    }
+
     if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
 
-    const ownedAlready = normalizeInventory(target).includes(item.id);
-    if (ownedAlready) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Already owned.' }, walletPayloadFields(target)));
-      return;
-    }
-    const coins = target.coins || 0;
-    if (coins < item.cost) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Not enough coins.' }, walletPayloadFields(target)));
-      return;
-    }
-
-    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+    const playerId = payloadPlayerId ||
       target.playerId ||
       (player && player.playerId) ||
       (wallets[socket.id] && wallets[socket.id].playerId) ||
       null;
 
-    // ---- Database-backed purchase: ONE atomic conditional update. -----------
-    // The filter itself enforces affordability ($gte) and non-ownership
-    // ($ne), so two rapid clicks (or two browser tabs) can never double-spend:
-    // once the first update lands, the second matches zero documents.
+    if (playerId) {
+      target.playerId = playerId;
+      if (wallets[socket.id]) wallets[socket.id].playerId = playerId;
+      if (player) player.playerId = playerId;
+    }
+
+    let currentCoins = (target && typeof target.coins === 'number') ? target.coins : 0;
+
     if (dbPlayers && playerId) {
       try {
         await ensurePlayerDoc(playerId);
-        const result = await dbPlayers.updateOne(
-          { _id: playerId, coins: { $gte: item.cost }, inventory: { $ne: item.id } },
-          { $inc: { coins: -item.cost }, $addToSet: { inventory: item.id } }
-        );
-        if (result.modifiedCount !== 1) {
-          // Lost the race (or state drifted): re-read the source of truth and
-          // report exactly why the purchase could not go through.
-          const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-          applyParsedWallet(target, fresh);
-          if (player) syncWalletFromPlayer(player, socket.id);
-          const reason = fresh.inventory.includes(item.id) ? 'Already owned.' : 'Not enough coins.';
-          socket.emit('buyResult', Object.assign({ ok: false, message: reason }, walletPayloadFields(target)));
-          emitWallet(socket, target);
-          return;
+        const existingDoc = await dbPlayers.findOne({ _id: playerId });
+        if (existingDoc) {
+          if (typeof existingDoc.coins === 'number') {
+            currentCoins = Math.max(currentCoins, existingDoc.coins);
+            target.coins = currentCoins;
+          }
+          if (Array.isArray(existingDoc.inventory) && (existingDoc.inventory.includes(item.id) || normalizeInventory(existingDoc.inventory).includes(item.id))) {
+            target.inventory = normalizeInventory(existingDoc.inventory);
+            console.log('[buy-server]', payload, 'found:', !!item, 'coinsBefore:', currentCoins, 'coinsAfter:', currentCoins);
+            socket.emit('buyResult', Object.assign({ ok: false, message: 'Already owned.' }, walletPayloadFields(target)));
+            emitWallet(socket, target);
+            return;
+          }
         }
-        const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-        applyParsedWallet(target, fresh);
-      } catch (dbErr) {
-        socket.emit('buyResult', Object.assign({ ok: false, message: 'Store unavailable, try again.' }, walletPayloadFields(target)));
-        return;
+      } catch (err) {
+        console.error('[server] Error reading player doc for purchase:', err);
       }
-    } else {
-      // In-memory fallback (database offline): plain local mutation.
-      target.coins = coins - item.cost;
-      target.inventory = normalizeInventory(target);
-      target.inventory.push(item.id);
-      target.loadout = normalizeLoadout(target.loadout, target.inventory);
-      target.equippedSkin = target.loadout.equippedSkin;
     }
 
-    if (player) syncWalletFromPlayer(player, socket.id);
+    const ownedAlready = normalizeInventory(target).includes(item.id) ||
+      (Array.isArray(target.inventory) && target.inventory.includes(item.id));
+    if (ownedAlready) {
+      console.log('[buy-server]', payload, 'found:', !!item, 'coinsBefore:', currentCoins, 'coinsAfter:', currentCoins);
+      socket.emit('buyResult', Object.assign({ ok: false, message: 'Already owned.' }, walletPayloadFields(target)));
+      return;
+    }
 
-    socket.emit('buyResult', Object.assign({
+    if (currentCoins < itemPrice) {
+      console.log('[buy-server]', payload, 'found:', !!item, 'coinsBefore:', currentCoins, 'coinsAfter:', currentCoins);
+      socket.emit('buyResult', Object.assign({ ok: false, message: 'Not enough coins.' }, walletPayloadFields(target)));
+      return;
+    }
+
+    const before = currentCoins;
+    const newCoins = currentCoins - itemPrice;
+    const after = newCoins;
+
+    target.coins = newCoins;
+    if (!target.inventory.includes(item.id)) {
+      target.inventory.push(item.id);
+    }
+    target.inventory = normalizeInventory(target);
+    target.loadout = normalizeLoadout(target.loadout, target.inventory);
+    target.equippedSkin = target.loadout.equippedSkin;
+
+    const ownedWeapons = target.inventory.filter(id => STORE_ITEMS[id] && STORE_ITEMS[id].type !== 'skin');
+    target.ownedWeapons = ownedWeapons;
+
+    if (player) {
+      player.coins = newCoins;
+      player.inventory = target.inventory.slice();
+      player.ownedWeapons = ownedWeapons.slice();
+      player.loadout = Object.assign({}, target.loadout);
+      player.equippedSkin = target.equippedSkin;
+      syncWalletFromPlayer(player, socket.id);
+    }
+    if (wallets[socket.id]) {
+      wallets[socket.id].coins = newCoins;
+      wallets[socket.id].inventory = target.inventory.slice();
+      wallets[socket.id].ownedWeapons = ownedWeapons.slice();
+      wallets[socket.id].loadout = Object.assign({}, target.loadout);
+      wallets[socket.id].equippedSkin = target.equippedSkin;
+      if (playerId) wallets[socket.id].playerId = playerId;
+    }
+
+    if (dbPlayers && playerId) {
+      try {
+        await dbPlayers.updateOne(
+          { _id: playerId },
+          {
+            $set: {
+              coins: newCoins,
+              inventory: target.inventory,
+              ownedWeapons: ownedWeapons,
+              loadout: target.loadout,
+              equippedSkin: target.equippedSkin
+            }
+          },
+          { upsert: true }
+        );
+      } catch (dbErr) {
+        console.error('[server] MongoDB error during purchase save:', dbErr);
+      }
+    }
+
+    console.log('[buy-server]', payload, 'found:', !!item, 'coinsBefore:', before, 'coinsAfter:', after);
+
+    const payloadResult = Object.assign({
       ok: true,
       itemId: item.id
-    }, walletPayloadFields(target)));
+    }, walletPayloadFields(target));
+
+    socket.emit('buyResult', payloadResult);
     emitWallet(socket, target);
+  }
+
+  socket.on('buyItem', async (payload) => {
+    console.log('[buy-hit]', payload);
+    await handleStorePurchase(socket, payload);
   });
 
-  socket.on('equipItem', async (itemId) => {
+  socket.on('storeBuy', async (payload) => {
+    console.log('[buy-hit]', payload);
+    await handleStorePurchase(socket, payload);
+  });
+
+  socket.on('equipItem', async (payload) => {
     const player = players[socket.id];
-    const target = player || wallets[socket.id];
+    const target = player || getWallet(socket.id);
     if (!target) return;
 
-    const item = itemForId(itemId);
+    let rawId = null;
+    let payloadPlayerId = null;
+    if (typeof payload === 'string') {
+      rawId = payload;
+    } else if (payload && typeof payload === 'object') {
+      rawId = payload.itemId || payload.id || payload.weaponId || payload.skinId || payload.item || payload.file || payload.name || payload.model || null;
+      payloadPlayerId = payload.playerId || null;
+    }
+
+    const clean = cleanItemId(rawId) || rawId;
+    const item = findStoreItem(rawId) || findStoreItem(clean) || itemForId(clean) || itemForId(rawId);
     if (!item) {
       socket.emit('equipResult', Object.assign({ ok: false, message: 'Unknown item.' }, walletPayloadFields(target)));
       return;
@@ -2208,38 +2631,36 @@ io.on('connection', (socket) => {
     }
     if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
 
-    // Ownership gate: the item must already be in the inventory.
-    if (!normalizeInventory(target).includes(item.id)) {
+    // Ownership gate: the item must already be in the inventory or be a free default item.
+    const isFree = FREE_WEAPON_IDS.includes(item.id) || (typeof item.cost === 'number' && item.cost <= 0) || (typeof item.price === 'number' && item.price <= 0);
+    const isOwned = isFree || normalizeInventory(target).includes(item.id) || (Array.isArray(target.inventory) && target.inventory.includes(item.id));
+    if (!isOwned) {
       socket.emit('equipResult', Object.assign({ ok: false, message: 'Item not owned.' }, walletPayloadFields(target)));
       return;
     }
 
-    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
+    const playerId = payloadPlayerId ||
       target.playerId ||
       (player && player.playerId) ||
       (wallets[socket.id] && wallets[socket.id].playerId) ||
       null;
 
-    // ---- Database-backed equip: ownership is enforced ATOMICALLY in the ----
-    // query filter (`inventory: item.id`), so an item that is not in the
-    // stored inventory can never be written into a loadout slot.
+    if (playerId) {
+      target.playerId = playerId;
+      if (wallets[socket.id]) wallets[socket.id].playerId = playerId;
+      if (player) player.playerId = playerId;
+    }
+
     if (dbPlayers && playerId) {
       try {
         await ensurePlayerDoc(playerId);
         const update = { [`loadout.${slot}`]: item.id };
         if (slot === 'equippedSkin') update.equippedSkin = item.id; // legacy mirror
-        const result = await dbPlayers.updateOne(
-          { _id: playerId, inventory: item.id },
-          { $set: update }
+        await dbPlayers.updateOne(
+          { _id: playerId },
+          { $set: update },
+          { upsert: true }
         );
-        if (result.modifiedCount !== 1) {
-          const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-          applyParsedWallet(target, fresh);
-          if (player) syncWalletFromPlayer(player, socket.id);
-          socket.emit('equipResult', Object.assign({ ok: false, message: 'Item not owned.' }, walletPayloadFields(target)));
-          emitWallet(socket, target);
-          return;
-        }
         const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
         applyParsedWallet(target, fresh);
       } catch (dbErr) {
@@ -2300,7 +2721,14 @@ io.on('connection', (socket) => {
     }
 
     if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
-    if (!target.inventory.includes(item.id)) target.inventory.push(item.id);
+
+    // Ownership gate: must be a starter skin, free skin, or already owned in inventory
+    const isStarter = STARTER_SKIN_IDS.includes(item.id) || (typeof item.cost === 'number' && item.cost <= 0) || (typeof item.price === 'number' && item.price <= 0);
+    const isOwned = isStarter || normalizeInventory(target).includes(item.id) || (Array.isArray(target.inventory) && target.inventory.includes(item.id));
+    if (!isOwned) {
+      socket.emit('equipResult', Object.assign({ ok: false, message: 'Skin not owned.' }, walletPayloadFields(target)));
+      return;
+    }
 
     const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
       target.playerId ||
@@ -2311,12 +2739,14 @@ io.on('connection', (socket) => {
     if (dbPlayers && playerId) {
       try {
         await ensurePlayerDoc(playerId, item.id);
+        const updateFields = { 'loadout.equippedSkin': item.id, equippedSkin: item.id };
+        const updateOp = { $set: updateFields };
+        if (isStarter) {
+          updateOp.$addToSet = { inventory: item.id };
+        }
         await dbPlayers.updateOne(
           { _id: playerId },
-          {
-            $addToSet: { inventory: item.id },
-            $set: { 'loadout.equippedSkin': item.id, equippedSkin: item.id }
-          },
+          updateOp,
           { upsert: true }
         );
         const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
@@ -2335,7 +2765,6 @@ io.on('connection', (socket) => {
       player.equippedSkin = item.id;
       player.skinId = item.id;
       if (player.loadout) player.loadout.equippedSkin = item.id;
-      if (!player.inventory.includes(item.id)) player.inventory.push(item.id);
       syncWalletFromPlayer(player, socket.id);
     }
 
@@ -2360,76 +2789,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('buySkin', async (skinId) => {
-    // Alias for buyItem restricted to skins — uses same atomic $addToSet + $inc safety.
-    const player = players[socket.id];
-    const target = player || wallets[socket.id];
-    if (!target) return;
-
-    let rawId = typeof skinId === 'string' ? skinId : (skinId && (skinId.skinId || skinId.id)) || null;
-    if (!rawId) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Missing skin id.' }, walletPayloadFields(target)));
-      return;
-    }
-    const cleanId = typeof rawId === 'string' ? rawId.replace(/\.glb$/i, '').trim() : rawId;
-    const item = itemForId(cleanId) || itemForId(rawId);
-    if (!item || item.type !== 'skin') {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Unknown skin.' }, walletPayloadFields(target)));
-      return;
-    }
-    if (item.cost <= 0) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Starter skins are free — equip them instead.' }, walletPayloadFields(target)));
-      return;
-    }
-    if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
-    if (normalizeInventory(target).includes(item.id)) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Already owned.' }, walletPayloadFields(target)));
-      return;
-    }
-    if ((target.coins || 0) < item.cost) {
-      socket.emit('buyResult', Object.assign({ ok: false, message: 'Not enough coins.' }, walletPayloadFields(target)));
-      return;
-    }
-
-    const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
-      target.playerId ||
-      (player && player.playerId) ||
-      (wallets[socket.id] && wallets[socket.id].playerId) ||
-      null;
-
-    if (dbPlayers && playerId) {
-      try {
-        await ensurePlayerDoc(playerId);
-        const result = await dbPlayers.updateOne(
-          { _id: playerId, coins: { $gte: item.cost }, inventory: { $ne: item.id } },
-          { $inc: { coins: -item.cost }, $addToSet: { inventory: item.id } }
-        );
-        if (result.modifiedCount !== 1) {
-          const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-          applyParsedWallet(target, fresh);
-          if (player) syncWalletFromPlayer(player, socket.id);
-          const reason = fresh.inventory.includes(item.id) ? 'Already owned.' : 'Not enough coins.';
-          socket.emit('buyResult', Object.assign({ ok: false, message: reason }, walletPayloadFields(target)));
-          emitWallet(socket, target);
-          return;
-        }
-        const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
-        applyParsedWallet(target, fresh);
-      } catch (dbErr) {
-        socket.emit('buyResult', Object.assign({ ok: false, message: 'Store unavailable, try again.' }, walletPayloadFields(target)));
-        return;
-      }
-    } else {
-      target.coins = (target.coins || 0) - item.cost;
-      target.inventory = normalizeInventory(target);
-      target.inventory.push(item.id);
-      target.loadout = normalizeLoadout(target.loadout, target.inventory);
-      target.equippedSkin = target.loadout.equippedSkin;
-    }
-
-    if (player) syncWalletFromPlayer(player, socket.id);
-    socket.emit('buyResult', Object.assign({ ok: true, itemId: item.id }, walletPayloadFields(target)));
-    emitWallet(socket, target);
+  socket.on('buySkin', async (payload) => {
+    console.log('[buy-hit]', payload);
+    await handleStorePurchase(socket, payload);
   });
 
   socket.on('leaveGame', () => {
@@ -2437,14 +2799,14 @@ io.on('connection', (socket) => {
     if (!player) return;
 
     const roomName = player.roomName;
-    socket.leave(roomName);           
+    socket.leave(roomName);
     syncWalletFromPlayer(player, socket.id);
     if (dbPlayers && player.playerId) {
-      persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => {});
+      persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => { });
     }
     delete players[socket.id];
     reassignHostIfNeeded(roomName, socket.id);
-    cleanupEmptyRoom(roomName);       
+    cleanupEmptyRoom(roomName);
 
     io.to(roomName).emit('playerLeft', socket.id);
     sendRadarAfterStateChange();
@@ -2458,7 +2820,7 @@ io.on('connection', (socket) => {
       const roomName = player.roomName;
       syncWalletFromPlayer(player, socket.id);
       if (dbPlayers && player.playerId) {
-        persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => {});
+        persistNormalizedWallet(player.playerId, wallets[socket.id]).catch(() => { });
       }
       delete players[socket.id];
       delete wallets[socket.id];
@@ -2657,7 +3019,7 @@ function applyHitscanHit(hit, ctx) {
         killer.coins = (killer.coins || 0) + HUNTER_KILL_COINS;
         syncWalletFromPlayer(killer, ctx.ownerId);
         if (dbPlayers && killer.playerId) {
-          dbPlayers.updateOne({ _id: killer.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => {});
+          dbPlayers.updateOne({ _id: killer.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => { });
         }
         emitWallet(io.sockets.sockets.get(ctx.ownerId), killer);
       }
@@ -2693,7 +3055,7 @@ function applyHitscanHit(hit, ctx) {
       killer.coins = (killer.coins || 0) + HUNTER_KILL_COINS;
       syncWalletFromPlayer(killer, ctx.ownerId);
       if (dbPlayers && killer.playerId) {
-        dbPlayers.updateOne({ _id: killer.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => {});
+        dbPlayers.updateOne({ _id: killer.playerId }, { $inc: { coins: HUNTER_KILL_COINS } }).catch(() => { });
       }
       emitWallet(io.sockets.sockets.get(ctx.ownerId), killer);
     }
@@ -2754,7 +3116,7 @@ function tickNPCs() {
       npc.state = 'returning';
       npc.targetId = null;
       target = null;
-      npc.currentWaypoint = 0; 
+      npc.currentWaypoint = 0;
       const npcRoom = npcRooms.get(npc.id);
       if (npcRoom) io.to(npcRoom).emit('npcStateChange', { npcId: npc.id, state: 'returning' });
     }
@@ -2818,7 +3180,7 @@ function tickNPCs() {
             if (npcs[npc.id] !== npc || npc.state !== 'exhausted_slow') return;
             npc.state = 'patrolling';
             npc.isLeashing = false;
-            npc.currentWaypoint = 0; 
+            npc.currentWaypoint = 0;
             if (npcRooms.get(npc.id)) io.to(npcRooms.get(npc.id)).emit('npcStateChange', { npcId: npc.id, state: 'patrolling' });
           }, 3500);
         }, 3500);
@@ -2913,7 +3275,7 @@ function tickLoot() {
           dbPlayers.updateOne(
             { _id: player.playerId },
             { $inc: { coins: drop.value } }
-          ).catch(() => {});
+          ).catch(() => { });
         }
 
         delete lootDrops[lootId];
@@ -2957,7 +3319,7 @@ function tickPropSurvival() {
       player.score = (player.score || 0) + PROP_SURVIVAL_SCORE;
       player.coins = (player.coins || 0) + PROP_SURVIVAL_COINS;
       if (dbPlayers && player.playerId) {
-        dbPlayers.updateOne({ _id: player.playerId }, { $inc: { coins: PROP_SURVIVAL_COINS } }).catch(() => {});
+        dbPlayers.updateOne({ _id: player.playerId }, { $inc: { coins: PROP_SURVIVAL_COINS } }).catch(() => { });
       }
       const sock = io.sockets.sockets.get(id);
       syncWalletFromPlayer(player, id);

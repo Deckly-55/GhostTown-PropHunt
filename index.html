@@ -2301,6 +2301,518 @@
     #characterHoverPreview { transition: none; }
   }
 
+  /* ====================================================================
+     LEGENDARY WEAPONS SECTION & CARD STYLING
+     ==================================================================== */
+  .store-section-legendary {
+    margin-bottom: 24px;
+    padding: 14px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(38, 28, 8, 0.45) 0%, rgba(18, 14, 8, 0.25) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.28);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 200, 0, 0.05);
+    position: relative;
+  }
+  .store-section-legendary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.8), transparent);
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
+  }
+  .legendary-title {
+    color: #ffd700 !important;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.65), 0 0 24px rgba(255, 170, 0, 0.4) !important;
+    font-size: 13px !important;
+    letter-spacing: 0.22em !important;
+  }
+  .legendary-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #f1c40f;
+    opacity: 0.85;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+  }
+  .store-card.legendary-card {
+    border: 1.5px solid rgba(255, 215, 0, 0.55);
+    background:
+      linear-gradient(175deg, rgba(38, 28, 12, 0.98) 0%, rgba(22, 17, 10, 0.98) 55%, rgba(14, 12, 8, 0.98) 100%),
+      radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.16), transparent 75%);
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.7),
+      0 0 16px rgba(255, 215, 0, 0.16),
+      inset 0 1px 0 rgba(255, 240, 150, 0.28),
+      inset 0 0 24px rgba(0, 0, 0, 0.7);
+  }
+  .store-card.legendary-card::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.75), transparent);
+  }
+  .store-card.legendary-card:hover {
+    border-color: #ffd700;
+    box-shadow:
+      0 14px 34px rgba(0, 0, 0, 0.85),
+      0 0 28px rgba(255, 215, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 200, 0.4);
+    transform: translateY(-4px) scale(1.02);
+  }
+  .card-tier-badge {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .card-tier-badge.badge-legendary {
+    background: linear-gradient(135deg, #ffd700 0%, #ff9900 100%);
+    color: #120c02;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .card-tier-badge.badge-standard {
+    background: rgba(100, 130, 160, 0.25);
+    border: 1px solid rgba(140, 180, 220, 0.35);
+    color: #9cb8d4;
+  }
+  .store-card.legendary-card h3 {
+    color: #ffe680;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+  }
+  .store-card.legendary-card .store-action {
+    border-color: rgba(255, 215, 0, 0.6);
+    background: linear-gradient(180deg, rgba(65, 45, 12, 0.9) 0%, rgba(30, 22, 6, 0.95) 100%);
+    color: #ffd700;
+  }
+  .store-card.legendary-card .store-action:hover:not(:disabled) {
+    border-color: #ffd700;
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.45);
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(95, 68, 18, 0.95) 0%, rgba(45, 32, 10, 0.98) 100%);
+  }
+
+  /* Make store cards interactive click targets */
+  .store-card {
+    cursor: pointer;
+  }
+
+  /* ====================================================================
+     360° INTERACTIVE 3D PREVIEW MODAL
+     ==================================================================== */
+  #storePreviewModal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(4, 6, 10, 0.88);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    padding: 16px;
+    box-sizing: border-box;
+    animation: previewFadeIn 0.25s ease-out;
+  }
+  @keyframes previewFadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .preview-3d-box {
+    width: min(720px, 94vw);
+    max-height: min(760px, 95vh);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 160, 40, 0.12), transparent 60%),
+      linear-gradient(180deg, #1b1614 0%, #110e0d 50%, #0a0909 100%);
+    border: 2px solid rgba(255, 200, 40, 0.45);
+    border-radius: 18px;
+    box-shadow:
+      0 25px 75px rgba(0, 0, 0, 0.95),
+      0 0 35px rgba(255, 140, 30, 0.2),
+      inset 0 1px 0 rgba(255, 235, 130, 0.25),
+      inset 0 0 50px rgba(0, 0, 0, 0.85);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .preview-3d-box.preview-legendary {
+    border-color: rgba(255, 215, 0, 0.7);
+    box-shadow:
+      0 25px 80px rgba(0, 0, 0, 0.95),
+      0 0 45px rgba(255, 215, 0, 0.35),
+      inset 0 1px 0 rgba(255, 240, 160, 0.4),
+      inset 0 0 55px rgba(0, 0, 0, 0.9);
+  }
+  .preview-3d-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  }
+  .preview-3d-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .preview-3d-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: #fff4e6;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .preview-3d-badge {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .preview-3d-close-btn {
+    appearance: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e0d0c0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+  }
+  .preview-3d-close-btn:hover {
+    background: rgba(255, 70, 70, 0.25);
+    border-color: #ff5555;
+    color: #ffffff;
+    transform: rotate(90deg);
+  }
+  .preview-3d-viewport-wrap {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    margin: 14px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(45, 55, 75, 0.4) 0%, rgba(12, 16, 24, 0.95) 75%),
+      linear-gradient(180deg, #090c12 0%, #05070a 100%);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85);
+  }
+  .preview-3d-viewport {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    display: block;
+  }
+  .preview-3d-viewport:active {
+    cursor: grabbing;
+  }
+  .preview-3d-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(10, 12, 18, 0.85);
+    color: #ffd700;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .preview-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 215, 0, 0.2);
+    border-top-color: #ffd700;
+    border-radius: 50%;
+    animation: previewSpin 0.8s linear infinite;
+  }
+  @keyframes previewSpin {
+    to { transform: rotate(360deg); }
+  }
+  .preview-3d-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .preview-3d-hint span {
+    background: rgba(10, 12, 18, 0.7);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #d8c8a8;
+  }
+  .preview-3d-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 215, 0, 0.15);
+  }
+  .preview-3d-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .preview-3d-cost-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .preview-3d-cost-wrap .cost-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a49685;
+  }
+  .preview-3d-cost-wrap .cost-value {
+    font-size: 18px;
+    font-weight: 900;
+    font-family: monospace;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  }
+  .preview-3d-status {
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 16px;
+    color: #8ee8ff;
+  }
+  .preview-3d-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .preview-3d-action-btn {
+    appearance: none;
+    background: linear-gradient(180deg, #3d2a14 0%, #1e1509 100%);
+    border: 1px solid rgba(255, 215, 0, 0.7);
+    color: #ffd866;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border-radius: 9px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all 0.18s ease;
+  }
+  .preview-3d-action-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #573c1c 0%, #2b1f0e 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.45);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .preview-3d-action-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+    border-color: rgba(140, 150, 160, 0.3);
+    background: rgba(30, 35, 45, 0.5);
+    color: #8fa0b0;
+    box-shadow: none;
+  }
+  .preview-3d-action-btn.owned {
+    background: linear-gradient(180deg, #1b4d32 0%, #0d281a 100%);
+    border-color: rgba(64, 224, 150, 0.75);
+    color: #9effd4;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  .preview-3d-action-btn.owned:hover:not(:disabled) {
+    background: linear-gradient(180deg, #256b46 0%, #123824 100%);
+    border-color: #40e096;
+    box-shadow: 0 0 20px rgba(64, 224, 150, 0.45);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .preview-3d-action-btn.equipped {
+    background: rgba(23, 31, 26, 0.85);
+    border-color: rgba(90, 125, 105, 0.45);
+    color: #7b9487;
+    cursor: default;
+    box-shadow: none;
+  }
+  .store-owned-note {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #40e096;
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: rgba(18, 60, 42, 0.55);
+    border: 1px solid rgba(64, 224, 150, 0.35);
+    text-shadow: 0 0 8px rgba(64, 224, 150, 0.35);
+  }
+
+  /* ====================================================================
+     TWO-STEP BUY CONFIRMATION DIALOG MODAL
+     ==================================================================== */
+  #storeBuyConfirmModal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.78);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    padding: 16px;
+    box-sizing: border-box;
+    animation: confirmFadeIn 0.18s ease-out;
+  }
+  @keyframes confirmFadeIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .confirm-dialog-box {
+    width: min(450px, 92vw);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 200, 40, 0.15), transparent 70%),
+      linear-gradient(180deg, #1e1814 0%, #120e0c 55%, #0a0808 100%);
+    border: 2px solid rgba(255, 215, 0, 0.75);
+    border-radius: 16px;
+    box-shadow:
+      0 30px 80px rgba(0, 0, 0, 0.95),
+      0 0 30px rgba(255, 215, 0, 0.3),
+      inset 0 1px 0 rgba(255, 240, 150, 0.3);
+    padding: 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: #f2eee8;
+  }
+  .confirm-dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  }
+  .confirm-dialog-icon {
+    font-size: 24px;
+  }
+  .confirm-dialog-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  .confirm-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .confirm-dialog-prompt {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #e8ded2;
+  }
+  .confirm-item-preview-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 800;
+  }
+  .confirm-item-preview-badge span:first-child {
+    font-size: 14px;
+    color: #fff4ea;
+  }
+  .confirm-badge-price {
+    font-family: monospace;
+    font-size: 15px;
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  }
+  .confirm-dialog-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .confirm-btn {
+    flex: 1;
+    appearance: none;
+    border-radius: 9px;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .confirm-btn-yes {
+    background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%);
+    border: 1px solid #2ecc71;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.35);
+  }
+  .confirm-btn-yes:hover {
+    background: linear-gradient(180deg, #2ecc71 0%, #229954 100%);
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+    transform: translateY(-1px);
+  }
+  .confirm-btn-no {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #d0c0b0;
+  }
+  .confirm-btn-no:hover {
+    background: rgba(255, 80, 80, 0.2);
+    border-color: rgba(255, 80, 80, 0.5);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
   /* Inventory: a dedicated Key 1 / Key 2 loadout control row */
   .inventory-layout {
     display: grid;
@@ -3866,6 +4378,10 @@
       }
 
       function shouldOpenPause() {
+        var confirmModal = document.getElementById('storeBuyConfirmModal');
+        if (confirmModal && !confirmModal.classList.contains('hidden')) return false;
+        var previewModal = document.getElementById('storePreviewModal');
+        if (previewModal && !previewModal.classList.contains('hidden')) return false;
         var store = document.getElementById('storeOverlay');
         if (store && !store.classList.contains('hidden')) return false;
         var hostSettings = document.getElementById('hostSettingsOverlay');
@@ -4005,6 +4521,22 @@
       // Handle Escape key with priority chain
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' || e.code === 'Escape') {
+          // If buy confirmation modal is open: close ONLY confirmation dialog
+          var confirmModal = document.getElementById('storeBuyConfirmModal');
+          if (confirmModal && !confirmModal.classList.contains('hidden')) {
+            if (window.__closeBuyConfirmModal) window.__closeBuyConfirmModal();
+            else confirmModal.classList.add('hidden');
+            return;
+          }
+
+          // If 360 preview modal is open: close preview modal
+          var previewModal = document.getElementById('storePreviewModal');
+          if (previewModal && !previewModal.classList.contains('hidden')) {
+            if (window.__close3dPreviewModal) window.__close3dPreviewModal();
+            else previewModal.classList.add('hidden');
+            return;
+          }
+
           // 1. If currently rebinding a key: cancel rebinding
           if (activeRebindingAction) {
             cancelKeyRebinding();
@@ -4266,6 +4798,62 @@
     </div>
     <p id="chpTheme" class="chp-theme">Preview unavailable.</p>
     <div id="chpCost" class="chp-cost"><span class="chp-coins">🪙</span><span>—</span></div>
+  </div>
+
+  <!-- 360-Degree Interactive 3D Preview Modal -->
+  <div id="storePreviewModal" class="hidden" aria-modal="true" role="dialog">
+    <div id="preview3dBox" class="preview-3d-box">
+      <div class="preview-3d-header">
+        <div class="preview-3d-title-group">
+          <h2 id="preview3dTitle" class="preview-3d-title">Weapon / Skin Name</h2>
+          <span id="preview3dBadge" class="preview-3d-badge badge-legendary">LEGENDARY</span>
+        </div>
+        <button id="preview3dCloseBtn" class="preview-3d-close-btn" type="button" aria-label="Close preview">✕</button>
+      </div>
+
+      <div class="preview-3d-viewport-wrap">
+        <div id="preview3dCanvasContainer" class="preview-3d-viewport"></div>
+        <div id="preview3dLoading" class="preview-3d-loading">
+          <div class="preview-spinner"></div>
+          <span>Loading 3D Model...</span>
+        </div>
+        <div class="preview-3d-hint"><span>✦ Drag to rotate 360° ✦</span></div>
+      </div>
+
+      <div class="preview-3d-footer">
+        <div class="preview-3d-info">
+          <div class="preview-3d-cost-wrap">
+            <span class="cost-label">Price:</span>
+            <span id="preview3dCost" class="cost-value">🪙 2,500 Coins</span>
+          </div>
+          <div id="preview3dStatus" class="preview-3d-status"></div>
+        </div>
+        <div class="preview-3d-actions">
+          <button id="preview3dActionBtn" class="preview-3d-action-btn" type="button">Buy — 2500</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-Step Buy Confirmation Modal -->
+  <div id="storeBuyConfirmModal" class="hidden" aria-modal="true" role="dialog">
+    <div class="confirm-dialog-box">
+      <div class="confirm-dialog-header">
+        <span class="confirm-dialog-icon">🪙</span>
+        <h3 class="confirm-dialog-title">Confirm Purchase</h3>
+      </div>
+      <div class="confirm-dialog-body">
+        <p id="confirmBuyPrompt" class="confirm-dialog-prompt">Buy Eclipse Rifle for 2500 coins?</p>
+        <div class="confirm-item-preview-badge">
+          <span id="confirmItemName">Eclipse Rifle</span>
+          <span id="confirmItemPrice" class="confirm-badge-price">2500 Coins</span>
+        </div>
+      </div>
+      <div class="confirm-dialog-actions">
+        <button id="confirmBuyYesBtn" class="confirm-btn confirm-btn-yes" type="button">Yes, Buy</button>
+        <button id="confirmBuyNoBtn" class="confirm-btn confirm-btn-no" type="button">No, Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Starter character selection (shown on first launch until a choice is
@@ -4693,8 +5281,19 @@
     document.addEventListener('click', (e) => {
       const actionBtn = e.target.closest('.store-action, .loadout-equip-button, [id^="storeBuy-"]');
       if (actionBtn) {
-        window.__lastClickedStoreCard = actionBtn.closest('.store-card') || actionBtn.closest('.loadout-slot-card') || actionBtn;
-        const card = window.__lastClickedStoreCard;
+        const card = actionBtn.closest('.store-card') || actionBtn.closest('.loadout-slot-card') || actionBtn;
+        window.__lastClickedStoreCard = card;
+
+        // Never equip on buy buttons or unowned store cards!
+        const isBuy = actionBtn.id?.startsWith('storeBuy-') ||
+                      actionBtn.id?.startsWith('storePreviewBtn-') ||
+                      actionBtn.classList.contains('store-buy-action') ||
+                      actionBtn.textContent?.includes('Buy');
+        const isUnowned = card && card.classList && card.classList.contains('store-card') && !card.classList.contains('is-owned');
+        if (isBuy || isUnowned) {
+          return;
+        }
+
         const itemId = actionBtn.dataset?.item || card?.dataset?.item || actionBtn.id?.replace(/^storeBuy-/, '');
         if (itemId) {
           window.__myEquippedSkin = itemId;
