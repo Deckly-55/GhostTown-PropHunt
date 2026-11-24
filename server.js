@@ -592,8 +592,12 @@ function normalizeInventory(source, preferredStarter) {
   // Resolve the single starter this account owns.
   let keep = preferredStarter;
   if (!keep && source && typeof source === 'object' && !Array.isArray(source)) {
-    const eq = (source.loadout && source.loadout.equippedSkin) || source.equippedSkin;
-    if (typeof eq === 'string' && STARTER_SKIN_IDS.includes(eq)) keep = eq;
+    if (source.gender === 'female') keep = FEMALE_STARTER_ID;
+    else if (source.gender === 'male') keep = MALE_STARTER_ID;
+    else {
+      const eq = (source.loadout && source.loadout.equippedSkin) || source.equippedSkin;
+      if (typeof eq === 'string' && STARTER_SKIN_IDS.includes(eq)) keep = eq;
+    }
   }
   if (keep && STARTER_SKIN_IDS.includes(keep)) {
     for (const id of STARTER_SKIN_IDS) if (id !== keep) set.delete(id);
@@ -655,6 +659,18 @@ function normalizeLoadout(loadout, inventory, legacyEquippedSkin) {
 function parseWalletDoc(doc) {
   const inventory = normalizeInventory(doc); // doc object → derives the single owned starter
   const loadout = normalizeLoadout(doc && doc.loadout, inventory, doc && doc.equippedSkin);
+  let gender = (doc && typeof doc.gender === 'string') ? doc.gender.toLowerCase() : null;
+  let genderLocked = !!(doc && doc.genderLocked);
+  if (gender !== 'male' && gender !== 'female') gender = null;
+  if (!gender && doc) {
+    const starterId = (doc.loadout && doc.loadout.equippedSkin) || doc.equippedSkin;
+    if (starterId === FEMALE_STARTER_ID) { gender = 'female'; }
+    else if (starterId === MALE_STARTER_ID) { gender = 'male'; }
+    else if (Array.isArray(doc.inventory)) {
+      if (doc.inventory.includes(FEMALE_STARTER_ID) && !doc.inventory.includes(MALE_STARTER_ID)) gender = 'female';
+      else if (doc.inventory.includes(MALE_STARTER_ID) && !doc.inventory.includes(FEMALE_STARTER_ID)) gender = 'male';
+    }
+  }
   return {
     coins: (doc && typeof doc.coins === 'number') ? doc.coins : 0,
     inventory,
@@ -662,13 +678,15 @@ function parseWalletDoc(doc) {
     // Top-level mirror kept in the document for older clients / tools:
     equippedSkin: loadout.equippedSkin,
     isRegistered: !!(doc && doc.isRegistered),
-    username: (doc && doc.username) || null
+    username: (doc && doc.username) || null,
+    gender,
+    genderLocked
   };
 }
 
 // The document shape created for brand-new accounts.
 // chosenStarterInput can be gender string, skin id, or object containing gender.
-function buildDefaultPlayerDoc(playerId, chosenStarterInput) {
+function buildDefaultPlayerDoc(playerId, chosenStarterInput, isExplicit = false) {
   const chosenId = resolveStarterId(chosenStarterInput) || MALE_STARTER_ID;
   const inventorySet = new Set([...DEFAULT_INVENTORY, chosenId]);
   // Ensure chosen starter is definitely included
@@ -680,12 +698,16 @@ function buildDefaultPlayerDoc(playerId, chosenStarterInput) {
     primaryKnife: DEFAULT_LOADOUT.primaryKnife,
     secondaryKnife: DEFAULT_LOADOUT.secondaryKnife
   };
+  const resolvedGender = chosenId === FEMALE_STARTER_ID ? 'female' : 'male';
+  const hasGenderChoice = isExplicit || !!chosenStarterInput;
   return {
     _id: playerId,
     coins: 0,
     inventory: Array.from(inventorySet),
     loadout,
     equippedSkin: chosenId,
+    gender: hasGenderChoice ? resolvedGender : null,
+    genderLocked: hasGenderChoice,
     isRegistered: false,
     username: null
   };
@@ -697,7 +719,7 @@ function buildDefaultPlayerDoc(playerId, chosenStarterInput) {
 async function ensurePlayerDoc(playerId, chosenStarterInput) {
   if (!dbPlayers || !playerId) return;
   const chosenId = resolveStarterId(chosenStarterInput) || MALE_STARTER_ID;
-  const defaultDoc = buildDefaultPlayerDoc(playerId, chosenId);
+  const defaultDoc = buildDefaultPlayerDoc(playerId, chosenId, !!chosenStarterInput);
   await dbPlayers.updateOne(
     { _id: playerId },
     { $setOnInsert: defaultDoc },
@@ -708,15 +730,18 @@ async function ensurePlayerDoc(playerId, chosenStarterInput) {
 // Writes a normalized wallet back to the database (lazy schema migration).
 function persistNormalizedWallet(playerId, parsed) {
   if (!dbPlayers || !playerId || !parsed) return Promise.resolve();
+  const updateFields = {
+    coins: parsed.coins,
+    inventory: parsed.inventory,
+    loadout: parsed.loadout,
+    equippedSkin: parsed.equippedSkin
+  };
+  if (parsed.gender) updateFields.gender = parsed.gender;
+  if (typeof parsed.genderLocked === 'boolean') updateFields.genderLocked = parsed.genderLocked;
   return dbPlayers.updateOne(
     { _id: playerId },
     {
-      $set: {
-        coins: parsed.coins,
-        inventory: parsed.inventory,
-        loadout: parsed.loadout,
-        equippedSkin: parsed.equippedSkin
-      }
+      $set: updateFields
     },
     { upsert: true }
   );
@@ -753,7 +778,9 @@ function emitWallet(socket, player) {
     equippedItems: loadout,
     isRegistered: !!player.isRegistered,
     username: player.username || null,
-    displayName: player.displayName || accountDisplayName(player, player.playerId)
+    displayName: player.displayName || accountDisplayName(player, player.playerId),
+    gender: player.gender || null,
+    genderLocked: !!player.genderLocked
   });
 }
 const LEADERBOARD_SIZE = 10;
@@ -1299,7 +1326,9 @@ function defaultWallet() {
     coins: 0,
     inventory,
     loadout: Object.assign({}, DEFAULT_LOADOUT),
-    equippedSkin: DEFAULT_LOADOUT.equippedSkin
+    equippedSkin: DEFAULT_LOADOUT.equippedSkin,
+    gender: null,
+    genderLocked: false
   };
 }
 
@@ -1329,6 +1358,8 @@ function applyWalletToPlayer(player, socketId) {
   player.isRegistered = w.isRegistered || false;
   player.username = w.username || null;
   player.displayName = player.isRegistered ? player.username : guestDisplayName(player.playerId);
+  player.gender = w.gender || null;
+  player.genderLocked = !!w.genderLocked;
 }
 
 function syncWalletFromPlayer(player, socketId) {
@@ -1345,7 +1376,9 @@ function syncWalletFromPlayer(player, socketId) {
     equippedSkin: loadout.equippedSkin,
     isRegistered: player.isRegistered || false,
     username: player.username || null,
-    displayName: player.displayName || guestDisplayName(player.playerId)
+    displayName: player.displayName || guestDisplayName(player.playerId),
+    gender: player.gender || null,
+    genderLocked: !!player.genderLocked
   };
 }
 
@@ -1365,7 +1398,9 @@ function walletPayloadFields(target) {
     ownedItems: inventory,
     loadout,
     equippedSkin: loadout.equippedSkin,
-    equippedItems: loadout
+    equippedItems: loadout,
+    gender: (target && target.gender) || null,
+    genderLocked: !!(target && target.genderLocked)
   };
 }
 
@@ -1375,6 +1410,8 @@ function applyParsedWallet(target, parsed) {
   target.inventory = parsed.inventory.slice();
   target.loadout = Object.assign({}, parsed.loadout);
   target.equippedSkin = parsed.loadout.equippedSkin;
+  if (parsed.gender) target.gender = parsed.gender;
+  if (typeof parsed.genderLocked === 'boolean') target.genderLocked = parsed.genderLocked;
 }
 
 const PROP_COLORS = ['#8B5A2B', '#6b7280', '#a0522d', '#5b7553', '#7a5c3e'];
@@ -1640,9 +1677,11 @@ io.on('connection', (socket) => {
       if (dbPlayers) {
         let doc = await dbPlayers.findOne({ _id: playerId });
         if (!doc) {
-          const initialSkin = (players[socket.id] && safeEquippedSkinId(players[socket.id])) || MALE_STARTER_ID;
-          await dbPlayers.insertOne(buildDefaultPlayerDoc(playerId, initialSkin)).catch(() => { });
-          doc = buildDefaultPlayerDoc(playerId, initialSkin);
+          const liveSkin = players[socket.id] && safeEquippedSkinId(players[socket.id]);
+          const hasExplicitSkin = liveSkin && STORE_ITEMS[liveSkin] && STORE_ITEMS[liveSkin].type === 'skin';
+          const defaultDoc = buildDefaultPlayerDoc(playerId, hasExplicitSkin ? liveSkin : null, hasExplicitSkin);
+          await dbPlayers.insertOne(defaultDoc).catch(() => { });
+          doc = defaultDoc;
         }
         walletData = parseWalletDoc(doc);
         if (players[socket.id]) {
@@ -1719,11 +1758,35 @@ io.on('connection', (socket) => {
         return;
       }
 
-      const chosenStarterForRegister = getChosenStarterFromData(payload);
+      const existingDoc = await dbPlayers.findOne({ _id: playerId });
+      let registerGender = (existingDoc && existingDoc.gender) || null;
+      let registerLocked = existingDoc ? !!existingDoc.genderLocked : false;
+
+      if (!registerGender) {
+        const payloadGender = (payload && (payload.gender || payload.starterGender));
+        if (payloadGender === 'male' || payloadGender === 'female') {
+          registerGender = payloadGender;
+          registerLocked = true;
+        } else {
+          const res = resolveStarterId(payload);
+          if (res === FEMALE_STARTER_ID) { registerGender = 'female'; registerLocked = true; }
+          else if (res === MALE_STARTER_ID) { registerGender = 'male'; registerLocked = true; }
+        }
+      }
+      const chosenStarterForRegister = registerGender === 'female' ? FEMALE_STARTER_ID : MALE_STARTER_ID;
+      const updateSet = { username, password, isRegistered: true };
+      if (!existingDoc || !existingDoc.genderLocked) {
+        if (registerGender) {
+          updateSet.gender = registerGender;
+          updateSet.genderLocked = true;
+          registerLocked = true;
+        }
+      }
+
       await dbPlayers.updateOne(
         { _id: playerId },
         {
-          $set: { username, password, isRegistered: true },
+          $set: updateSet,
           $setOnInsert: {
             coins: 0,
             inventory: Array.from(new Set([...DEFAULT_INVENTORY, chosenStarterForRegister])),
@@ -1734,7 +1797,9 @@ io.on('connection', (socket) => {
               primaryKnife: DEFAULT_LOADOUT.primaryKnife,
               secondaryKnife: DEFAULT_LOADOUT.secondaryKnife
             },
-            equippedSkin: chosenStarterForRegister
+            equippedSkin: chosenStarterForRegister,
+            gender: registerGender,
+            genderLocked: registerLocked
           }
         },
         { upsert: true }
@@ -1751,6 +1816,8 @@ io.on('connection', (socket) => {
         players[socket.id].username = username;
         players[socket.id].isRegistered = true;
         players[socket.id].displayName = username;
+        if (registerGender) players[socket.id].gender = registerGender;
+        players[socket.id].genderLocked = registerLocked;
         if (players[socket.id].roomName) {
           io.to(players[socket.id].roomName).emit('stateUpdate', buildStateUpdatePayload(players[socket.id].roomName));
           broadcastLeaderboard(players[socket.id].roomName);
@@ -1760,6 +1827,8 @@ io.on('connection', (socket) => {
         wallets[socket.id].username = username;
         wallets[socket.id].isRegistered = true;
         wallets[socket.id].displayName = username;
+        if (registerGender) wallets[socket.id].gender = registerGender;
+        wallets[socket.id].genderLocked = registerLocked;
       }
 
       socket.emit('registerResult', {
@@ -1767,7 +1836,9 @@ io.on('connection', (socket) => {
         username,
         isRegistered: true,
         displayName: username,
-        playerId
+        playerId,
+        gender: registerGender,
+        genderLocked: registerLocked
       });
     } catch (e) {
       socket.emit('registerResult', { ok: false, message: 'Registration failed.' });
@@ -1800,7 +1871,9 @@ io.on('connection', (socket) => {
         ok: true,
         playerId: account._id,
         username: account.username,
-        isRegistered: true
+        isRegistered: true,
+        gender: account.gender || null,
+        genderLocked: !!account.genderLocked
       });
     } catch (e) {
       socket.emit('loginResult', { ok: false, message: 'Login failed.' });
@@ -1840,9 +1913,22 @@ io.on('connection', (socket) => {
             if (!walletData.inventory.includes(cleanIncoming)) walletData.inventory.push(cleanIncoming);
           }
 
-          // If the currently equipped skin is a starter skin and player changed starter gender, update it
-          if (STARTER_SKIN_IDS.includes(activeSkin) && activeSkin !== chosenStarterId && !cleanIncoming) {
-            activeSkin = chosenStarterId;
+          // Locked gender handling:
+          if (walletData.genderLocked && walletData.gender) {
+            const lockedStarter = walletData.gender === 'female' ? FEMALE_STARTER_ID : MALE_STARTER_ID;
+            // If the active skin is a starter skin, it MUST be the locked starter skin
+            if (STARTER_SKIN_IDS.includes(activeSkin)) {
+              activeSkin = lockedStarter;
+            }
+          } else {
+            // First time joining or not locked yet
+            if (STARTER_SKIN_IDS.includes(activeSkin) && activeSkin !== chosenStarterId && !cleanIncoming) {
+              activeSkin = chosenStarterId;
+            }
+            if (chosenStarterId && !walletData.genderLocked) {
+              walletData.gender = chosenStarterId === FEMALE_STARTER_ID ? 'female' : 'male';
+              walletData.genderLocked = true;
+            }
           }
 
           // If activeSkin is invalid or empty, default to chosen starter
@@ -1861,7 +1947,8 @@ io.on('connection', (socket) => {
           if (cleanIncoming && STORE_ITEMS[cleanIncoming] && STORE_ITEMS[cleanIncoming].type === 'skin') {
             initialSkin = cleanIncoming;
           }
-          const newDoc = buildDefaultPlayerDoc(playerId, initialSkin);
+          const hasGender = !!data.gender || !!data.starterSkin;
+          const newDoc = buildDefaultPlayerDoc(playerId, chosenStarterId, hasGender);
           await dbPlayers.insertOne(newDoc).catch(() => { });
           walletData = parseWalletDoc(newDoc);
           if (cleanIncoming && !walletData.inventory.includes(cleanIncoming)) {
@@ -2760,6 +2847,75 @@ io.on('connection', (socket) => {
   });
 
 
+  socket.on('setGender', async (payload) => {
+    const rawGender = payload && typeof payload === 'object' ? (payload.gender || payload.starterGender) : payload;
+    const requestedGender = typeof rawGender === 'string' ? rawGender.trim().toLowerCase() : null;
+    if (requestedGender !== 'male' && requestedGender !== 'female') {
+      socket.emit('genderResult', { ok: false, message: 'Invalid character gender.' });
+      return;
+    }
+    const playerId = (payload && typeof payload === 'object' && payload.playerId) ||
+      (players[socket.id] && players[socket.id].playerId) ||
+      (wallets[socket.id] && wallets[socket.id].playerId);
+
+    const target = players[socket.id] || wallets[socket.id] || getWallet(socket.id);
+    const starterId = requestedGender === 'female' ? FEMALE_STARTER_ID : MALE_STARTER_ID;
+
+    if (dbPlayers && playerId) {
+      try {
+        const doc = await dbPlayers.findOne({ _id: playerId });
+        if (doc && doc.genderLocked) {
+          if (doc.gender && doc.gender !== requestedGender) {
+            socket.emit('genderResult', { ok: false, message: 'Character choice is permanently locked.', gender: doc.gender, genderLocked: true });
+            return;
+          }
+          // Already locked to requestedGender
+          socket.emit('genderResult', { ok: true, gender: doc.gender, genderLocked: true });
+          return;
+        }
+
+        await ensurePlayerDoc(playerId, starterId);
+        const updateRes = await dbPlayers.updateOne(
+          { _id: playerId, $or: [{ genderLocked: { $ne: true } }, { gender: requestedGender }] },
+          {
+            $set: { gender: requestedGender, genderLocked: true },
+            $addToSet: { inventory: starterId }
+          }
+        );
+        if (updateRes.matchedCount === 0) {
+          socket.emit('genderResult', { ok: false, message: 'Character choice is permanently locked.' });
+          return;
+        }
+        const fresh = parseWalletDoc(await dbPlayers.findOne({ _id: playerId }));
+        applyParsedWallet(target, fresh);
+        target.gender = requestedGender;
+        target.genderLocked = true;
+        if (players[socket.id]) {
+          players[socket.id].gender = requestedGender;
+          players[socket.id].genderLocked = true;
+        }
+        emitWallet(socket, target);
+        socket.emit('genderResult', { ok: true, gender: requestedGender, genderLocked: true });
+      } catch (err) {
+        socket.emit('genderResult', { ok: false, message: 'Database error locking character choice.' });
+      }
+    } else {
+      if (target.genderLocked && target.gender && target.gender !== requestedGender) {
+        socket.emit('genderResult', { ok: false, message: 'Character choice is permanently locked.', gender: target.gender, genderLocked: true });
+        return;
+      }
+      target.gender = requestedGender;
+      target.genderLocked = true;
+      if (!target.inventory.includes(starterId)) target.inventory.push(starterId);
+      if (players[socket.id]) {
+        players[socket.id].gender = requestedGender;
+        players[socket.id].genderLocked = true;
+      }
+      emitWallet(socket, target);
+      socket.emit('genderResult', { ok: true, gender: requestedGender, genderLocked: true });
+    }
+  });
+
   socket.on('equipSkin', async (skinId) => {
     // Dedicated skin equip path required by the character skin system.
     // Validates ownership before updating loadout.equippedSkin.
@@ -2767,11 +2923,16 @@ io.on('connection', (socket) => {
     const target = player || wallets[socket.id];
     if (!target) return;
 
-    // Accept either raw string id or object { skinId, id, equippedSkin }
+    // Accept either raw string id or object { skinId, id, equippedSkin, gender }
     let rawId = null;
+    let requestedGender = null;
     if (typeof skinId === 'string') rawId = skinId;
     else if (skinId && typeof skinId === 'object') {
       rawId = skinId.skinId || skinId.id || skinId.equippedSkin || skinId.skin || null;
+      if (typeof skinId.gender === 'string') {
+        const g = skinId.gender.trim().toLowerCase();
+        if (g === 'male' || g === 'female') requestedGender = g;
+      }
     }
 
     const item = itemForId(rawId);
@@ -2782,13 +2943,8 @@ io.on('connection', (socket) => {
 
     if (!Array.isArray(target.inventory)) target.inventory = DEFAULT_INVENTORY.slice();
 
-    // Ownership gate: must be a starter skin, free skin, or already owned in inventory
+    // Starter skin identification
     const isStarter = STARTER_SKIN_IDS.includes(item.id) || (typeof item.cost === 'number' && item.cost <= 0) || (typeof item.price === 'number' && item.price <= 0);
-    const isOwned = isStarter || normalizeInventory(target).includes(item.id) || (Array.isArray(target.inventory) && target.inventory.includes(item.id));
-    if (!isOwned) {
-      socket.emit('equipResult', Object.assign({ ok: false, message: 'Skin not owned.' }, walletPayloadFields(target)));
-      return;
-    }
 
     const playerId = (typeof skinId === 'object' && skinId && skinId.playerId) ||
       target.playerId ||
@@ -2796,10 +2952,57 @@ io.on('connection', (socket) => {
       (wallets[socket.id] && wallets[socket.id].playerId) ||
       null;
 
+    // Gender Lock enforcement: reject any attempt to switch gender once locked
+    if (dbPlayers && playerId) {
+      const existingDoc = await dbPlayers.findOne({ _id: playerId });
+      if (existingDoc && existingDoc.genderLocked && existingDoc.gender) {
+        const currentLockedGender = existingDoc.gender;
+        if (requestedGender && requestedGender !== currentLockedGender) {
+          socket.emit('equipResult', Object.assign({ ok: false, message: 'Character choice is permanently locked.' }, walletPayloadFields(target)));
+          return;
+        }
+        if (isStarter) {
+          const expectedStarter = currentLockedGender === 'female' ? FEMALE_STARTER_ID : MALE_STARTER_ID;
+          if (item.id !== expectedStarter) {
+            socket.emit('equipResult', Object.assign({ ok: false, message: 'Character choice is permanently locked.' }, walletPayloadFields(target)));
+            return;
+          }
+        }
+      }
+    } else if (target && target.genderLocked && target.gender) {
+      const currentLockedGender = target.gender;
+      if (requestedGender && requestedGender !== currentLockedGender) {
+        socket.emit('equipResult', Object.assign({ ok: false, message: 'Character choice is permanently locked.' }, walletPayloadFields(target)));
+        return;
+      }
+      if (isStarter) {
+        const expectedStarter = currentLockedGender === 'female' ? FEMALE_STARTER_ID : MALE_STARTER_ID;
+        if (item.id !== expectedStarter) {
+          socket.emit('equipResult', Object.assign({ ok: false, message: 'Character choice is permanently locked.' }, walletPayloadFields(target)));
+          return;
+        }
+      }
+    }
+
+    // Ownership gate: must be a starter skin, free skin, or already owned in inventory
+    const isOwned = isStarter || normalizeInventory(target).includes(item.id) || (Array.isArray(target.inventory) && target.inventory.includes(item.id));
+    if (!isOwned) {
+      socket.emit('equipResult', Object.assign({ ok: false, message: 'Skin not owned.' }, walletPayloadFields(target)));
+      return;
+    }
+
     if (dbPlayers && playerId) {
       try {
         await ensurePlayerDoc(playerId, item.id);
         const updateFields = { 'loadout.equippedSkin': item.id, equippedSkin: item.id };
+        const chosenGender = requestedGender || (item.id === FEMALE_STARTER_ID ? 'female' : (item.id === MALE_STARTER_ID ? 'male' : null));
+        if (chosenGender) {
+          const doc = await dbPlayers.findOne({ _id: playerId });
+          if (!doc || !doc.genderLocked) {
+            updateFields.gender = chosenGender;
+            updateFields.genderLocked = true;
+          }
+        }
         const updateOp = { $set: updateFields };
         if (isStarter) {
           updateOp.$addToSet = { inventory: item.id };
@@ -2819,6 +3022,11 @@ io.on('connection', (socket) => {
       target.loadout = normalizeLoadout(target.loadout, target.inventory);
       target.loadout.equippedSkin = item.id;
       target.equippedSkin = item.id;
+      const chosenGender = requestedGender || (item.id === FEMALE_STARTER_ID ? 'female' : (item.id === MALE_STARTER_ID ? 'male' : null));
+      if (chosenGender && !target.genderLocked) {
+        target.gender = chosenGender;
+        target.genderLocked = true;
+      }
     }
 
     if (player) {

@@ -440,6 +440,7 @@ const STARTER_BY_GENDER = {
 const LS_STARTER_GENDER = 'prophunt.starterGender';
 const LS_STARTER_MODEL  = 'prophunt.starterModel';
 const LS_STARTER_SKIN   = 'prophunt.starterSkinId';
+const LS_GENDER_LOCKED  = 'prophunt.genderLocked';
 
 const SHOP_SKIN_ORDER = [
   'Beach_Character', 'Casual_w2', 'Farmer', 'Hoodie_Character', 'Worker', 'Worker_w',
@@ -570,6 +571,7 @@ let myDisplayName = 'Guest_' + String(persistentPlayerId).slice(-4);
 let starterGender = null;
 let chosenStarterSkinId = null;
 let hasChosenStarter = false;
+let isGenderLocked = false;
 
 const mainMenu = document.getElementById('main-menu');
 const menuButtonsRoot = document.getElementById('menu-buttons-root');
@@ -3708,6 +3710,23 @@ function applyWalletPayload(data) {
     if (!myInventory.includes(data.itemId)) myInventory.push(data.itemId);
   }
   if (typeof data.isRegistered === 'boolean') isRegistered = data.isRegistered;
+  if (typeof data.genderLocked === 'boolean') {
+    isGenderLocked = data.genderLocked;
+    try { localStorage.setItem(LS_GENDER_LOCKED, data.genderLocked ? 'true' : 'false'); } catch (e) {}
+  }
+  if (data.gender === 'male' || data.gender === 'female') {
+    starterGender = data.gender;
+    hasChosenStarter = true;
+    try {
+      localStorage.setItem(LS_STARTER_GENDER, data.gender);
+      const starterObj = STARTER_BY_GENDER[data.gender];
+      if (starterObj) {
+        localStorage.setItem(LS_STARTER_MODEL, starterObj.file);
+        localStorage.setItem(LS_STARTER_SKIN, starterObj.id);
+      }
+    } catch (e) {}
+    ensureExclusiveStarterInventory();
+  }
   if (data.username !== undefined) myUsername = data.username || null;
   if (typeof data.displayName === 'string' && data.displayName) {
     myDisplayName = data.displayName;
@@ -4653,10 +4672,11 @@ function bindCharacterHoverPreview() {
 }
 
 function readStoredStarter() {
-  let gender = null, skinId = null;
+  let gender = null, skinId = null, locked = false;
   try {
     gender = localStorage.getItem(LS_STARTER_GENDER);
     skinId = localStorage.getItem(LS_STARTER_SKIN);
+    locked = localStorage.getItem(LS_GENDER_LOCKED) === 'true';
     if (!skinId) {
       const model = localStorage.getItem(LS_STARTER_MODEL);
       if (model === 'Casual_w.glb') skinId = FEMALE_STARTER_ID;
@@ -4665,9 +4685,10 @@ function readStoredStarter() {
   } catch (err) {}
   if (gender !== 'male' && gender !== 'female') gender = null;
   if (!gender && skinId) gender = skinId === FEMALE_STARTER_ID ? 'female' : 'male';
-  if (gender && !skinId) skinId = STARTER_BY_GENDER[gender].id;
+  if (gender && !skinId) skinId = STARTER_BY_GENDER[gender] ? STARTER_BY_GENDER[gender].id : null;
   if (skinId && !STARTER_SKIN_IDS.includes(skinId)) skinId = null;
-  return { gender, skinId };
+  if (gender || skinId) locked = true;
+  return { gender, skinId, locked };
 }
 
 function persistStarterChoice(gender) {
@@ -4676,10 +4697,12 @@ function persistStarterChoice(gender) {
   starterGender = gender;
   chosenStarterSkinId = starter.id;
   hasChosenStarter = true;
+  isGenderLocked = true;
   try {
     localStorage.setItem(LS_STARTER_GENDER, gender);
     localStorage.setItem(LS_STARTER_MODEL, starter.file);
     localStorage.setItem(LS_STARTER_SKIN, starter.id);
+    localStorage.setItem(LS_GENDER_LOCKED, 'true');
   } catch (err) {}
   return true;
 }
@@ -4690,6 +4713,7 @@ function selectedStarterGender() {
 }
 
 function reflectStarterSelection() {
+  if (isGenderLocked) return;
   const gender = selectedStarterGender();
   const starter = gender ? STARTER_BY_GENDER[gender] : null;
   if (starterConfirmBtn) starterConfirmBtn.disabled = !starter;
@@ -4700,9 +4724,67 @@ function reflectStarterSelection() {
 
 function openStarterSelection() {
   if (!starterOverlay) return;
+  const isLocked = isGenderLocked || hasChosenStarter || !!starterGender;
   const target = starterGender || 'male';
-  starterRadios.forEach((radio) => { radio.checked = radio.value === target; });
-  reflectStarterSelection();
+
+  const starterKicker = document.getElementById('starterKicker');
+  const starterTitle = document.getElementById('starterTitle');
+  const starterSub = document.getElementById('starterSub');
+  const genderCardsContainer = document.getElementById('genderCardsContainer');
+  const genderCardMale = document.getElementById('genderCardMale');
+  const genderCardFemale = document.getElementById('genderCardFemale');
+  const genderSelectCopyMale = document.getElementById('genderSelectCopyMale');
+  const genderSelectCopyFemale = document.getElementById('genderSelectCopyFemale');
+  const starterCloseBtn = document.getElementById('starterCloseBtn');
+
+  if (isLocked && starterGender) {
+    if (starterKicker) starterKicker.textContent = 'Character Profile';
+    if (starterTitle) starterTitle.innerHTML = 'Your Chosen <span>Character</span>';
+    if (starterSub) starterSub.innerHTML = 'Your character choice is permanently locked.';
+    if (genderCardsContainer) genderCardsContainer.classList.add('locked-single');
+
+    if (starterGender === 'female') {
+      if (genderCardMale) genderCardMale.classList.add('hidden');
+      if (genderCardFemale) genderCardFemale.classList.remove('hidden');
+      if (genderSelectCopyFemale) genderSelectCopyFemale.innerHTML = '<b>Chosen Character</b>';
+    } else {
+      if (genderCardFemale) genderCardFemale.classList.add('hidden');
+      if (genderCardMale) genderCardMale.classList.remove('hidden');
+      if (genderSelectCopyMale) genderSelectCopyMale.innerHTML = '<b>Chosen Character</b>';
+    }
+
+    starterRadios.forEach((radio) => {
+      radio.checked = radio.value === starterGender;
+      radio.disabled = true;
+    });
+
+    if (starterStatus) {
+      const label = starterGender === 'female' ? 'Female' : 'Male';
+      starterStatus.innerHTML = '<span class="starter-locked-msg">Your chosen character: <strong>' + label + '</strong></span>';
+    }
+
+    if (starterConfirmBtn) starterConfirmBtn.classList.add('hidden');
+    if (starterCloseBtn) starterCloseBtn.classList.remove('hidden');
+  } else {
+    if (starterKicker) starterKicker.textContent = 'Step 1';
+    if (starterTitle) starterTitle.innerHTML = 'Choose Your <span>Character</span>';
+    if (starterSub) starterSub.textContent = 'Pick the starter you\'ll enter PropHunt.io as. This choice is permanent and cannot be changed later.';
+    if (genderCardsContainer) genderCardsContainer.classList.remove('locked-single');
+    if (genderCardMale) genderCardMale.classList.remove('hidden');
+    if (genderCardFemale) genderCardFemale.classList.remove('hidden');
+    if (genderSelectCopyMale) genderSelectCopyMale.innerHTML = '<b>Select Male</b>';
+    if (genderSelectCopyFemale) genderSelectCopyFemale.innerHTML = '<b>Select Female</b>';
+
+    starterRadios.forEach((radio) => {
+      radio.disabled = false;
+      radio.checked = radio.value === target;
+    });
+
+    if (starterConfirmBtn) starterConfirmBtn.classList.remove('hidden');
+    if (starterCloseBtn) starterCloseBtn.classList.add('hidden');
+    reflectStarterSelection();
+  }
+
   starterOverlay.classList.remove('hidden');
 }
 
@@ -4711,8 +4793,12 @@ function closeStarterSelection() {
 }
 
 function confirmStarterSelection() {
+  if (isGenderLocked) {
+    closeStarterSelection();
+    return;
+  }
   const gender = selectedStarterGender();
-  if (!persistStarterChoice(gender)) return;
+  if (!gender || !persistStarterChoice(gender)) return;
   const starter = STARTER_BY_GENDER[gender];
 
   if (!myInventory.includes(starter.id)) myInventory.push(starter.id);
@@ -4725,6 +4811,10 @@ function confirmStarterSelection() {
   persistEquippedSkin(activeSkin);
 
   if (socket) {
+    socket.emit('setGender', {
+      gender,
+      playerId: persistentPlayerId
+    });
     socket.emit('equipSkin', {
       skinId: activeSkin,
       gender,
@@ -4756,6 +4846,7 @@ function initStarterSelection() {
   starterGender = stored.gender;
   chosenStarterSkinId = stored.skinId;
   hasChosenStarter = !!stored.skinId;
+  isGenderLocked = !!stored.locked;
 
   if (chosenStarterSkinId) {
     if (!myInventory.includes(chosenStarterSkinId)) myInventory.push(chosenStarterSkinId);
@@ -4773,7 +4864,10 @@ function initStarterSelection() {
 
   starterRadios.forEach((radio) => radio.addEventListener('change', reflectStarterSelection));
   if (starterConfirmBtn) starterConfirmBtn.addEventListener('click', confirmStarterSelection);
+  const starterCloseBtn = document.getElementById('starterCloseBtn');
+  if (starterCloseBtn) starterCloseBtn.addEventListener('click', closeStarterSelection);
   if (btnCharacter) btnCharacter.addEventListener('click', openStarterSelection);
+  window.__openStarterSelection = openStarterSelection;
   if (!hasChosenStarter) openStarterSelection();
   prefetchStarterModel();
 }
@@ -4790,7 +4884,13 @@ if (authRegisterBtn) {
     const username = authUsername ? authUsername.value.trim() : '';
     const password = authPassword ? authPassword.value : '';
     if (!username || !password) { showAuthError('Enter a username and password.'); return; }
-    socket.emit('registerAccount', { username, password, playerId: persistentPlayerId });
+    socket.emit('registerAccount', {
+      username,
+      password,
+      playerId: persistentPlayerId,
+      gender: starterGender,
+      genderLocked: isGenderLocked
+    });
   });
 }
 if (authLoginBtn) {
@@ -5001,13 +5101,60 @@ function leaveMatchToMainMenu() {
 
 function attachSocketListeners() {
   socket.on('registerResult', (data) => {
-    if (data && data.ok) { sessionStorage.setItem('propHuntPlayerId', data.playerId); window.location.reload(); }
-    else { showAuthError((data && data.message) || 'Registration failed.'); }
+    if (data && data.ok) {
+      sessionStorage.setItem('propHuntPlayerId', data.playerId);
+      if (data.gender) {
+        localStorage.setItem(LS_STARTER_GENDER, data.gender);
+        const starter = STARTER_BY_GENDER[data.gender];
+        if (starter) {
+          localStorage.setItem(LS_STARTER_MODEL, starter.file);
+          localStorage.setItem(LS_STARTER_SKIN, starter.id);
+        }
+      }
+      if (typeof data.genderLocked === 'boolean') {
+        localStorage.setItem(LS_GENDER_LOCKED, data.genderLocked ? 'true' : 'false');
+      }
+      window.location.reload();
+    } else {
+      showAuthError((data && data.message) || 'Registration failed.');
+    }
   });
 
   socket.on('loginResult', (data) => {
-    if (data && data.ok) { sessionStorage.setItem('propHuntPlayerId', data.playerId); window.location.reload(); }
-    else { showAuthError((data && data.message) || 'Login failed.'); }
+    if (data && data.ok) {
+      sessionStorage.setItem('propHuntPlayerId', data.playerId);
+      if (data.gender) {
+        localStorage.setItem(LS_STARTER_GENDER, data.gender);
+        const starter = STARTER_BY_GENDER[data.gender];
+        if (starter) {
+          localStorage.setItem(LS_STARTER_MODEL, starter.file);
+          localStorage.setItem(LS_STARTER_SKIN, starter.id);
+        }
+      }
+      if (typeof data.genderLocked === 'boolean') {
+        localStorage.setItem(LS_GENDER_LOCKED, data.genderLocked ? 'true' : 'false');
+      }
+      window.location.reload();
+    } else {
+      showAuthError((data && data.message) || 'Login failed.');
+    }
+  });
+
+  socket.on('genderResult', (data) => {
+    if (data && data.ok && data.gender) {
+      starterGender = data.gender;
+      hasChosenStarter = true;
+      isGenderLocked = true;
+      try {
+        localStorage.setItem(LS_STARTER_GENDER, data.gender);
+        localStorage.setItem(LS_GENDER_LOCKED, 'true');
+        const starter = STARTER_BY_GENDER[data.gender];
+        if (starter) {
+          localStorage.setItem(LS_STARTER_MODEL, starter.file);
+          localStorage.setItem(LS_STARTER_SKIN, starter.id);
+        }
+      } catch (e) {}
+    }
   });
 
   socket.on('walletUpdate', (data) => {

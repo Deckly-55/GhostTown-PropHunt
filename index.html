@@ -3182,6 +3182,45 @@
     box-shadow: 0 8px 20px rgba(102, 204, 255, 0.25);
   }
   #starterConfirmBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+  #starterCloseBtn {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(137, 179, 219, 0.4);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #233446, #162230);
+    color: #eaf8ff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  #starterCloseBtn:hover {
+    background: linear-gradient(180deg, #2e445b, #1d2c3e);
+    border-color: rgba(102, 204, 255, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .gender-cards.locked-single {
+    grid-template-columns: 1fr;
+    max-width: 290px;
+    margin: 0 auto 20px;
+  }
+  .gender-cards.locked-single .gender-card {
+    cursor: default;
+  }
+  .starter-locked-msg {
+    color: #66ccff;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-block;
+  }
+  .starter-locked-msg strong {
+    color: #f1c40f;
+  }
   #starterChangeBtn {
     display: block;
     width: 100%;
@@ -4864,15 +4903,14 @@
        chosen gender/model from localStorage to load the actual GLB. -->
   <div id="starterOverlay" class="menu-overlay hidden">
     <div class="starter-panel">
-      <span class="starter-kicker">Step 1</span>
-      <h1 class="starter-title">Choose Your <span>Character</span></h1>
-      <p class="starter-sub">
-        Pick the starter you'll enter PropHunt.io as. You can change it later
-        from the <strong>Character</strong> button on the main menu.
+      <span class="starter-kicker" id="starterKicker">Step 1</span>
+      <h1 class="starter-title" id="starterTitle">Choose Your <span>Character</span></h1>
+      <p class="starter-sub" id="starterSub">
+        Pick the starter you'll enter PropHunt.io as. This choice is permanent and cannot be changed later.
       </p>
 
-      <div class="gender-cards">
-        <label class="gender-card">
+      <div class="gender-cards" id="genderCardsContainer">
+        <label class="gender-card" id="genderCardMale" data-gender="male">
           <input type="radio" name="starter-gender" value="male" />
           <div class="gender-card-body">
             <div class="gender-avatar male" aria-hidden="true"><img src="/images/skins/Casual_Character.png" alt="Male starter" /></div>
@@ -4880,12 +4918,12 @@
             <span class="gender-tagline">All-round starter uniform with a confident, classic look.</span>
             <div class="gender-select-row">
               <span class="gender-radio-dot" aria-hidden="true"></span>
-              <span class="gender-radio-copy"><b>Select Male</b></span>
+              <span class="gender-radio-copy" id="genderSelectCopyMale"><b>Select Male</b></span>
             </div>
           </div>
         </label>
 
-        <label class="gender-card">
+        <label class="gender-card" id="genderCardFemale" data-gender="female">
           <input type="radio" name="starter-gender" value="female" />
           <div class="gender-card-body">
             <div class="gender-avatar female" aria-hidden="true"><img src="/images/skins/Casual_w.png" alt="Female starter" /></div>
@@ -4893,7 +4931,7 @@
             <span class="gender-tagline">Starter uniform cut for a lighter, agile silhouette.</span>
             <div class="gender-select-row">
               <span class="gender-radio-dot" aria-hidden="true"></span>
-              <span class="gender-radio-copy"><b>Select Female</b></span>
+              <span class="gender-radio-copy" id="genderSelectCopyFemale"><b>Select Female</b></span>
             </div>
           </div>
         </label>
@@ -4902,6 +4940,7 @@
       <div class="starter-footer">
         <p id="starterStatus">Tap a card above to preview your starter.</p>
         <button id="starterConfirmBtn" type="button" disabled>Confirm &amp; Continue</button>
+        <button id="starterCloseBtn" type="button" class="hidden">Close</button>
       </div>
     </div>
   </div>
@@ -5468,27 +5507,107 @@
   'use strict';
   var LS_GENDER = 'prophunt.starterGender';
   var LS_MODEL  = 'prophunt.starterModel';
+  var LS_LOCKED = 'prophunt.genderLocked';
   var MODELS = {
     male:   { label: 'Male',   file: 'Casual_Character.glb' },
     female: { label: 'Female', file: 'Casual_w.glb' }
   };
 
-  var overlay   = document.getElementById('starterOverlay');
-  var confirmBtn = document.getElementById('starterConfirmBtn');
-  var statusEl   = document.getElementById('starterStatus');
-  var radios     = Array.prototype.slice.call(document.querySelectorAll('input[name="starter-gender"]'));
-  var charBtn    = document.getElementById('btn-character');
+  var overlay      = document.getElementById('starterOverlay');
+  var confirmBtn   = document.getElementById('starterConfirmBtn');
+  var closeBtn     = document.getElementById('starterCloseBtn');
+  var statusEl     = document.getElementById('starterStatus');
+  var radios       = Array.prototype.slice.call(document.querySelectorAll('input[name="starter-gender"]'));
+  var charBtn      = document.getElementById('btn-character');
+  var kickerEl     = document.getElementById('starterKicker');
+  var titleEl      = document.getElementById('starterTitle');
+  var subEl        = document.getElementById('starterSub');
+  var cardsContainer = document.getElementById('genderCardsContainer');
+  var maleCard     = document.getElementById('genderCardMale');
+  var femaleCard   = document.getElementById('genderCardFemale');
+  var maleCopy     = document.getElementById('genderSelectCopyMale');
+  var femaleCopy   = document.getElementById('genderSelectCopyFemale');
 
-  if (!overlay || !confirmBtn) return; // UI not present — bail silently.
+  if (!overlay) return;
+
+  function isLocked() {
+    try {
+      if (localStorage.getItem(LS_LOCKED) === 'true') return true;
+      var g = localStorage.getItem(LS_GENDER);
+      if (g === 'male' || g === 'female') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function getLockedGender() {
+    try {
+      var g = localStorage.getItem(LS_GENDER);
+      if (g === 'male' || g === 'female') return g;
+    } catch (e) {}
+    return null;
+  }
 
   function currentChoice() {
     var checked = document.querySelector('input[name="starter-gender"]:checked');
     return checked ? checked.value : null;
   }
 
+  function renderView() {
+    var locked = isLocked();
+    var lockedGender = getLockedGender();
+
+    if (locked && lockedGender) {
+      if (kickerEl) kickerEl.textContent = 'Character Profile';
+      if (titleEl) titleEl.innerHTML = 'Your Chosen <span>Character</span>';
+      if (subEl) subEl.innerHTML = 'Your character choice is permanently locked.';
+      if (cardsContainer) cardsContainer.classList.add('locked-single');
+
+      if (lockedGender === 'female') {
+        if (maleCard) maleCard.classList.add('hidden');
+        if (femaleCard) femaleCard.classList.remove('hidden');
+        if (femaleCopy) femaleCopy.innerHTML = '<b>Chosen Character</b>';
+      } else {
+        if (femaleCard) femaleCard.classList.add('hidden');
+        if (maleCard) maleCard.classList.remove('hidden');
+        if (maleCopy) maleCopy.innerHTML = '<b>Chosen Character</b>';
+      }
+
+      radios.forEach(function (r) {
+        r.checked = (r.value === lockedGender);
+        r.disabled = true;
+      });
+
+      if (statusEl) {
+        var label = lockedGender === 'female' ? 'Female' : 'Male';
+        statusEl.innerHTML = '<span class="starter-locked-msg">Your chosen character: <strong>' + label + '</strong></span>';
+      }
+
+      if (confirmBtn) confirmBtn.classList.add('hidden');
+      if (closeBtn) closeBtn.classList.remove('hidden');
+    } else {
+      if (kickerEl) kickerEl.textContent = 'Step 1';
+      if (titleEl) titleEl.innerHTML = 'Choose Your <span>Character</span>';
+      if (subEl) subEl.textContent = 'Pick the starter you\'ll enter PropHunt.io as. This choice is permanent and cannot be changed later.';
+      if (cardsContainer) cardsContainer.classList.remove('locked-single');
+      if (maleCard) maleCard.classList.remove('hidden');
+      if (femaleCard) femaleCard.classList.remove('hidden');
+      if (maleCopy) maleCopy.innerHTML = '<b>Select Male</b>';
+      if (femaleCopy) femaleCopy.innerHTML = '<b>Select Female</b>';
+
+      radios.forEach(function (r) {
+        r.disabled = false;
+      });
+
+      if (confirmBtn) confirmBtn.classList.remove('hidden');
+      if (closeBtn) closeBtn.classList.add('hidden');
+      reflectState();
+    }
+  }
+
   function reflectState() {
+    if (isLocked()) return;
     var choice = currentChoice();
-    confirmBtn.disabled = !choice;
+    if (confirmBtn) confirmBtn.disabled = !choice;
     if (statusEl) {
       if (choice && MODELS[choice]) {
         statusEl.textContent = 'Starter selected: ' + MODELS[choice].label;
@@ -5498,7 +5617,15 @@
     }
   }
 
-  function open() { overlay.classList.remove('hidden'); }
+  function open() {
+    if (window.__openStarterSelection) {
+      window.__openStarterSelection();
+      return;
+    }
+    renderView();
+    overlay.classList.remove('hidden');
+  }
+
   function close() { overlay.classList.add('hidden'); }
 
   function preselect() {
@@ -5512,17 +5639,28 @@
   }
 
   function persist() {
+    if (isLocked()) {
+      close();
+      return;
+    }
     var choice = currentChoice();
     if (!choice || !MODELS[choice]) return;
     try {
       localStorage.setItem(LS_GENDER, choice);
       localStorage.setItem(LS_MODEL, MODELS[choice].file);
+      localStorage.setItem(LS_LOCKED, 'true');
       var skinId = choice === 'female' ? 'Casual_w' : 'Casual_Character';
       localStorage.setItem('prophunt.starterSkinId', skinId);
-      localStorage.setItem('prophunt.equippedSkin', skinId);
-      window.__myEquippedSkin = skinId;
+      // Strictly preserve equippedSkin if custom/bought skin is equipped
+      var currentEq = localStorage.getItem('prophunt.equippedSkin');
+      if (!currentEq || currentEq === 'Casual_w' || currentEq === 'Casual_Character' || currentEq === 'default') {
+        localStorage.setItem('prophunt.equippedSkin', skinId);
+        window.__myEquippedSkin = skinId;
+      }
+      var pid = sessionStorage.getItem('propHuntPlayerId');
       if (window.__gameSocket && window.__gameSocket.connected) {
-        window.__gameSocket.emit('equipSkin', { skinId: skinId, equippedSkin: skinId });
+        window.__gameSocket.emit('setGender', { gender: choice, playerId: pid });
+        window.__gameSocket.emit('equipSkin', { skinId: window.__myEquippedSkin || skinId, gender: choice, starterSkin: skinId, playerId: pid });
       }
     } catch (e) {}
     close();
@@ -5531,12 +5669,11 @@
   radios.forEach(function (r) {
     r.addEventListener('change', reflectState);
   });
-  confirmBtn.addEventListener('click', persist);
-
+  if (confirmBtn) confirmBtn.addEventListener('click', persist);
+  if (closeBtn) closeBtn.addEventListener('click', close);
   if (charBtn) charBtn.addEventListener('click', open);
 
-  var alreadyChosen = false;
-  try { alreadyChosen = !!localStorage.getItem(LS_GENDER); } catch (e) {}
+  var alreadyChosen = isLocked();
   // First launch only: show until a starter is confirmed.
   if (!alreadyChosen) {
     preselect();
