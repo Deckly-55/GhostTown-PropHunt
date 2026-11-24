@@ -193,88 +193,241 @@ const STORE_CATALOG = {
   shadowHunter:  { id: 'shadowHunter',  name: 'Shadow Hunter Skin', file: 'Casual_Character.glb', cost: 500,  type: 'skin',            slot: 'equippedSkin',    color: 0x111111, tracer: null,      legacy: true, stats: 'Pitch-black silhouette for Hunters.' },
   steelProp:     { id: 'steelProp',     name: 'Steel Prop Crate',   file: 'Casual_w.glb',         cost: 500,  type: 'skin',            slot: 'equippedSkin',    color: 0x7f8c8d, tracer: null,      legacy: true, stats: 'Brushed-metal finish for disguised Props.' },
 
-  standardRifle: { id: 'standardRifle', name: 'Assault Rifle',      file: 'militiaCarbine.glb', thumb: '/store/weapons/militiaCarbine.png', cost: 0,    type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 25 · 5 rds · dependable all-rounder.' },
-  shotgun:       { id: 'shotgun',       name: 'Combat Shotgun',     file: 'graveyardPump.glb',  thumb: '/store/weapons/graveyardPump.png',  cost: 700,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xffd08a, legacy: true, stats: 'Dmg 25 · 5 rds · heavy close-range profile.' },
-  vulcanRifle:   { id: 'vulcanRifle',   name: 'VK-47 Vulcan',       file: 'hellhoundMK3.glb',   thumb: '/store/weapons/hellhoundMK3.png',   cost: 800,  type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0xff8c42, legacy: true, stats: 'Dmg 25 · 5 rds · molten-ember tracer.' },
-  longshotMk2:   { id: 'longshotMk2',   name: 'Longshot Mk II',     file: 'nightwatchDMR.glb',  thumb: '/store/weapons/nightwatchDMR.png',  cost: 1200, type: 'primaryGun',      slot: 'primaryGun',      color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Dmg 25 · 5 rds · cold-blue tracer.' },
+  standardRifle: { id: 'standardRifle', name: 'Militia Carbine',      file: 'militiaCarbine.glb', thumb: '/store/weapons/militiaCarbine.png', cost: 0,    type: 'hunterWeapon',    slot: 'primaryGun',      color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 25 · 5 rds · dependable all-rounder.' },
+  shotgun:       { id: 'shotgun',       name: 'Graveyard Pump',     file: 'graveyardPump.glb',  thumb: '/store/weapons/graveyardPump.png',  cost: 700,  type: 'hunterWeapon',    slot: 'primaryGun',      color: null,      tracer: 0xffd08a, legacy: true, stats: 'Dmg 25 · 5 rds · heavy close-range profile.' },
+  vulcanRifle:   { id: 'vulcanRifle',   name: 'Hellhound MK-III',   file: 'hellhoundMK3.glb',   thumb: '/store/weapons/hellhoundMK3.png',   cost: 800,  type: 'hunterWeapon',    slot: 'primaryGun',      color: null,      tracer: 0xff8c42, legacy: true, stats: 'Dmg 25 · 5 rds · molten-ember tracer.' },
+  longshotMk2:   { id: 'longshotMk2',   name: 'Nightwatch DMR',     file: 'nightwatchDMR.glb',  thumb: '/store/weapons/nightwatchDMR.png',  cost: 1200, type: 'hunterWeapon',    slot: 'primaryGun',      color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Dmg 25 · 5 rds · cold-blue tracer.' },
 
-  sidearmPistol: { id: 'sidearmPistol', name: 'Pistol',             file: 'watchman9mm.glb',    thumb: '/store/weapons/watchman9mm.png',    cost: 0,    type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · fast and reliable.' },
-  revolver:      { id: 'revolver',      name: 'Revolver',            file: 'outlawRevolver.glb', thumb: '/store/weapons/outlawRevolver.png', cost: 700,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xffc27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · hard-hitting hand cannon.' },
-  viperSMG:      { id: 'viperSMG',      name: 'Viper SMG',          file: 'cryptkeeperAuto.glb', thumb: '/store/weapons/cryptkeeperAuto.png', cost: 600,  type: 'secondaryGun',   slot: 'secondaryGun',    color: null,      tracer: 0xa2ff9f, legacy: true, stats: 'Dmg 12.5 · 12 rds · toxic-green tracer.' },
+  sidearmPistol: { id: 'sidearmPistol', name: 'Watchman 9mm',       file: 'watchman9mm.glb',    thumb: '/store/weapons/watchman9mm.png',    cost: 0,    type: 'hunterWeapon',    slot: 'secondaryGun',    color: null,      tracer: 0xffe27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · fast and reliable.' },
+  revolver:      { id: 'revolver',      name: 'Outlaw Six-Shooter', file: 'outlawRevolver.glb', thumb: '/store/weapons/outlawRevolver.png', cost: 700,  type: 'hunterWeapon',    slot: 'secondaryGun',    color: null,      tracer: 0xffc27a, legacy: true, stats: 'Dmg 12.5 · 12 rds · hard-hitting hand cannon.' },
+  viperSMG:      { id: 'viperSMG',      name: 'Cryptkeeper Auto',   file: 'cryptkeeperAuto.glb', thumb: '/store/weapons/cryptkeeperAuto.png', cost: 600,  type: 'hunterWeapon',    slot: 'secondaryGun',    color: null,      tracer: 0xa2ff9f, legacy: true, stats: 'Dmg 12.5 · 12 rds · toxic-green tracer.' },
 
-  fieldBlade:    { id: 'fieldBlade',    name: 'Field Blade',        file: 'fieldBlade.glb',     thumb: '/store/weapons/fieldBlade.png',     cost: 0,    type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      stats: 'Trusted close-range melee blade.' },
-  carbonCleaver: { id: 'carbonCleaver', name: 'Carbon Cleaver',     file: 'cursedCleaver.glb',  thumb: '/store/weapons/cursedCleaver.png',  cost: 400,  type: 'primaryKnife',   slot: 'primaryKnife',    color: null,      tracer: null,      legacy: true, stats: 'Featherweight carbon melee cleaver.' },
-  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife',     file: 'Arrow.glb',          thumb: '/store/weapons/Arrow.png',          cost: 0,    type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Balanced Prop throwing knife.' },
-  phantomDagger: { id: 'phantomDagger', name: 'Phantom Dagger',     file: 'bloodfangDagger.glb', thumb: '/store/weapons/bloodfangDagger.png', cost: 650,  type: 'secondaryKnife', slot: 'secondaryKnife',  color: null,      tracer: 0xd8a2ff, legacy: true, stats: 'Haunting violet throw trail.' }
+  fieldBlade:    { id: 'fieldBlade',    name: 'Field Blade',        file: 'fieldBlade.glb',     thumb: '/store/weapons/fieldBlade.png',     cost: 0,    type: 'propWeapon',      slot: 'primaryKnife',    color: null,      tracer: null,      stats: 'Trusted close-range melee blade.' },
+  carbonCleaver: { id: 'carbonCleaver', name: 'Cursed Cleaver',     file: 'cursedCleaver.glb',  thumb: '/store/weapons/cursedCleaver.png',  cost: 400,  type: 'propWeapon',      slot: 'primaryKnife',    color: null,      tracer: null,      legacy: true, stats: 'Featherweight carbon melee cleaver.' },
+  throwingKnife: { id: 'throwingKnife', name: 'Throwing Knife',     file: 'Arrow.glb',          thumb: '/store/weapons/Arrow.png',          cost: 0,    type: 'propWeapon',      slot: 'secondaryKnife',  color: null,      tracer: 0x9fd8ff, legacy: true, stats: 'Balanced Prop throwing knife.' },
+  phantomDagger: { id: 'phantomDagger', name: 'Bloodfang Dagger',   file: 'bloodfangDagger.glb', thumb: '/store/weapons/bloodfangDagger.png', cost: 650,  type: 'propWeapon',      slot: 'secondaryKnife',  color: null,      tracer: 0xd8a2ff, legacy: true, stats: 'Haunting violet throw trail.' }
 };
 
+function formatWeaponDisplayName(rawId) {
+  if (!rawId || typeof rawId !== 'string') return '';
+  let clean = rawId.replace(/^.*[\\\/]/, '').replace(/\.glb$/i, '');
+  if (clean.toLowerCase().startsWith('l.')) {
+    clean = clean.slice(2);
+  }
+  const key = clean.toLowerCase();
+  const nameMap = {
+    // Hunter Weapons
+    'rustbolt308': 'Rustbolt .308',
+    'nightwatchdmr': 'Nightwatch DMR',
+    'wraithlongshot': 'Wraith Longshot',
+    'hollowpointmk4': 'Hollow Point MK-IV',
+    'reaperseye': "Reaper's Eye",
+    'militiacarbine': 'Militia Carbine',
+    'blackoutar': 'Blackout AR',
+    'hellhoundmk3': 'Hellhound MK-III',
+    'duskbreakerar': 'Duskbreaker AR',
+    'alleyvipersmg': 'Alley Viper SMG',
+    'submachinegun': 'Alley Viper SMG',
+    'submachine gun': 'Alley Viper SMG',
+    'pulseshredderx9': 'Pulse Shredder X9',
+    'watchman9mm': 'Watchman 9mm',
+    'shadow45': 'Shadow .45',
+    'nightshadepistol': 'Nightshade Tactical',
+    'cryptkeeperauto': 'Cryptkeeper Auto',
+    'outlawrevolver': 'Outlaw Six-Shooter',
+    'ironjudge44': 'Iron Judge .44',
+    'palerider': 'Pale Rider',
+    'graveyardpump': 'Graveyard Pump',
+    'alleysweeper': 'Alley Sweeper',
+    'breacher12g': 'Breacher 12G',
+    'widowmaker': 'Widowmaker',
+    'whisperingrecurve': 'Whispering Recurve',
+    'silentstalker': 'Silent Stalker',
+    'ammopistol': 'Ammo Pistol',
+    'ammoshotgun': 'Ammo Shotgun',
+    'ammosniper': 'Ammo Sniper',
+    'arrow': 'Arrow',
+    'quiver': 'Quiver',
+
+    // Prop Weapons
+    'rustyshiv': 'Rusty Shiv',
+    'fieldblade': 'Field Blade',
+    'shadowfang': 'Shadow Fang',
+    'cursedcleaver': 'Cursed Cleaver',
+    'timberripper': 'Timber Ripper',
+    'skullcracker': 'Skullcracker',
+    'slaughterhousecleaver': 'Slaughterhouse Cleaver',
+    'ironpry': 'Iron Pry',
+    'bloodfangdagger': 'Bloodfang Dagger',
+    'trackersedge': "Tracker's Edge",
+    'ghostblade': 'Ghostblade',
+    'marshcarver': 'Marsh Carver',
+    'grimharvester': 'Grim Harvester',
+    'bonecrusher': 'Bonecrusher',
+    'rustyjaw': 'Rusty Jaw',
+    'carboncleaver': 'Carbon Cleaver',
+    'throwingknife': 'Throwing Knife',
+    'phantomdagger': 'Phantom Dagger',
+
+    // Legendary Weapons
+    'ionstriker': 'Ion Striker',
+    'vanguardpulsear': 'Vanguard Pulse AR',
+    'spectrexcarbine': 'Spectre-X Carbine',
+    'hyperionmk2': 'Hyperion MK-II',
+    'eclipserifle': 'Eclipse Rifle',
+    'plasmamortar': 'Plasma Mortar',
+    'novafrag': 'Nova Frag',
+    'arcsidearm': 'Arc Sidearm',
+    'nova7blaster': 'Nova-7 Blaster',
+    'volt9auto': 'Volt-9 Auto',
+    'photonripper': 'Photon Ripper',
+    'voidlance': 'Void Lance',
+    'railghostx1': 'Railghost X1'
+  };
+
+  if (nameMap[key]) return nameMap[key];
+
+  let formatted = clean
+    .replace(/[-_]+/g, ' ')
+    .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
+    .replace(/([0-9])([a-zA-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .trim();
+
+  return formatted
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function getItemDisplayName(item) {
+  if (!item) return '';
+  if (typeof item === 'string') {
+    return formatWeaponDisplayName(item) || item;
+  }
+  if (item.type !== 'skin') {
+    return formatWeaponDisplayName(item.id || item.file) || item.name || '';
+  }
+  return item.name || '';
+}
+
+function isLegendaryWeapon(itemOrId) {
+  if (!itemOrId) return false;
+  if (typeof itemOrId === 'string') {
+    return itemOrId.toLowerCase().startsWith('l.') || itemOrId.toLowerCase().includes('legendary');
+  }
+  return !!(itemOrId.isLegendary || (itemOrId.id && itemOrId.id.toLowerCase().startsWith('l.')) || (itemOrId.file && itemOrId.file.toLowerCase().startsWith('l.')));
+}
+
+function isPropWeapon(itemOrId) {
+  if (!itemOrId) return false;
+  if (isLegendaryWeapon(itemOrId)) return false;
+  if (typeof itemOrId === 'object') {
+    if (itemOrId.type === 'skin') return false;
+    if (itemOrId.type === 'propWeapon') return true;
+    if (itemOrId.type === 'hunterWeapon') return false;
+  }
+  const id = typeof itemOrId === 'string' ? itemOrId : (itemOrId.id || itemOrId.file || '');
+  const lower = id.replace(/\.glb$/i, '').toLowerCase();
+
+  const propSet = new Set([
+    'rustyshiv', 'fieldblade', 'shadowfang', 'cursedcleaver',
+    'timberripper', 'skullcracker', 'slaughterhousecleaver', 'ironpry',
+    'bloodfangdagger', 'trackersedge', 'ghostblade', 'marshcarver',
+    'grimharvester', 'bonecrusher', 'rustyjaw', 'carboncleaver',
+    'phantomdagger'
+  ]);
+  if (propSet.has(lower)) return true;
+
+  const propKeywords = [
+    'knife', 'dagger', 'cleaver', 'shiv', 'katana', 'machete', 'axe',
+    'bat', 'crowbar', 'sickle', 'hammer', 'wrench', 'blade', 'jaw',
+    'crusher', 'pry', 'harvester', 'cracker', 'ripper', 'fang', 'carver'
+  ];
+  return propKeywords.some(kw => lower.includes(kw));
+}
+
+function isHunterWeapon(itemOrId) {
+  if (!itemOrId) return false;
+  if (isLegendaryWeapon(itemOrId)) return false;
+  if (typeof itemOrId === 'object' && itemOrId.type === 'skin') return false;
+  if (typeof itemOrId === 'object' && itemOrId.type === 'hunterWeapon') return true;
+  if (typeof itemOrId === 'object' && itemOrId.type === 'propWeapon') return false;
+  return !isPropWeapon(itemOrId);
+}
+
 // Weapons Store Catalog: 53 weapons scanned from public/Skins/Weapons/ and public/store/weapons/
-// 11 Legendary weapons prefixed with 'l.' have stripped display names, higher coin prices, and gold status.
+// Non-legendary weapons are cleanly separated by role into Hunter Weapons vs. Prop Weapons.
+// All 'l.' prefixed Sci-Fi weapons are grouped into Legendary Weapons.
 const WEAPON_REGISTRY = [
   // — Legendary Weapons (Gold/Legendary section, stripped display names, higher pricing) —
-  { id: 'l.arcSidearm', name: 'Arc Sidearm', file: 'l.arcSidearm.glb', cost: 2200, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary plasma sidearm emitting high-voltage arcs.' },
-  { id: 'l.eclipseRifle', name: 'Eclipse Rifle', file: 'l.eclipseRifle.glb', cost: 2500, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary precision assault rifle forged in darkness.' },
-  { id: 'l.hyperionMK2', name: 'Hyperion MK2', file: 'l.hyperionMK2.glb', cost: 2800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary heavy combat platform with hyper-accelerated fire.' },
-  { id: 'l.ionStriker', name: 'Ion Striker', file: 'l.ionStriker.glb', cost: 2600, type: 'primaryGun', slot: 'primaryGun', tracer: 0x66ccff, isLegendary: true, stats: 'Legendary ionized beam weapon with lethal stopping power.' },
-  { id: 'l.nova7Blaster', name: 'Nova 7 Blaster', file: 'l.nova7Blaster.glb', cost: 2700, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff6600, isLegendary: true, stats: 'Legendary solar-energy blaster with devastating burst output.' },
-  { id: 'l.photonRipper', name: 'Photon Ripper', file: 'l.photonRipper.glb', cost: 2500, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, isLegendary: true, stats: 'Legendary high-frequency photon blade that cleaves cleanly.' },
-  { id: 'l.railghostX1', name: 'Railghost X1', file: 'l.railghostX1.glb', cost: 3000, type: 'primaryGun', slot: 'primaryGun', tracer: 0x00ffff, isLegendary: true, stats: 'Legendary flagship railgun designed for ethereal target elimination.' },
-  { id: 'l.spectreXCarbine', name: 'Spectre X Carbine', file: 'l.spectreXCarbine.glb', cost: 2500, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary lightweight carbine optimized for ghost hunters.' },
-  { id: 'l.vanguardPulseAR', name: 'Vanguard Pulse AR', file: 'l.vanguardPulseAR.glb', cost: 2750, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary pulse assault rifle with automated cadence control.' },
-  { id: 'l.voidLance', name: 'Void Lance', file: 'l.voidLance.glb', cost: 2600, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0xcc66ff, isLegendary: true, stats: 'Legendary spectral projectile infused with dark void energy.' },
-  { id: 'l.volt9Auto', name: 'Volt 9 Auto', file: 'l.volt9Auto.glb', cost: 2400, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary full-auto machine pistol delivering rapid electrostatic rounds.' },
+  { id: 'l.arcSidearm', name: 'Arc Sidearm', file: 'l.arcSidearm.glb', cost: 2200, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary plasma sidearm emitting high-voltage arcs.' },
+  { id: 'l.eclipseRifle', name: 'Eclipse Rifle', file: 'l.eclipseRifle.glb', cost: 2500, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary precision assault rifle forged in darkness.' },
+  { id: 'l.hyperionMK2', name: 'Hyperion MK-II', file: 'l.hyperionMK2.glb', cost: 2800, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary heavy combat platform with hyper-accelerated fire.' },
+  { id: 'l.ionStriker', name: 'Ion Striker', file: 'l.ionStriker.glb', cost: 2600, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x66ccff, isLegendary: true, stats: 'Legendary ionized beam weapon with lethal stopping power.' },
+  { id: 'l.nova7Blaster', name: 'Nova-7 Blaster', file: 'l.nova7Blaster.glb', cost: 2700, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xff6600, isLegendary: true, stats: 'Legendary solar-energy blaster with devastating burst output.' },
+  { id: 'l.photonRipper', name: 'Photon Ripper', file: 'l.photonRipper.glb', cost: 2500, type: 'propWeapon', slot: 'primaryKnife', tracer: null, isLegendary: true, stats: 'Legendary high-frequency photon blade that cleaves cleanly.' },
+  { id: 'l.railghostX1', name: 'Railghost X1', file: 'l.railghostX1.glb', cost: 3000, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x00ffff, isLegendary: true, stats: 'Legendary flagship railgun designed for ethereal target elimination.' },
+  { id: 'l.spectreXCarbine', name: 'Spectre-X Carbine', file: 'l.spectreXCarbine.glb', cost: 2500, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary lightweight carbine optimized for ghost hunters.' },
+  { id: 'l.vanguardPulseAR', name: 'Vanguard Pulse AR', file: 'l.vanguardPulseAR.glb', cost: 2750, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary pulse assault rifle with automated cadence control.' },
+  { id: 'l.voidLance', name: 'Void Lance', file: 'l.voidLance.glb', cost: 2600, type: 'propWeapon', slot: 'secondaryKnife', tracer: 0xcc66ff, isLegendary: true, stats: 'Legendary spectral projectile infused with dark void energy.' },
+  { id: 'l.volt9Auto', name: 'Volt-9 Auto', file: 'l.volt9Auto.glb', cost: 2400, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffd700, isLegendary: true, stats: 'Legendary full-auto machine pistol delivering rapid electrostatic rounds.' },
 
-  // — Standard Weapons —
-  { id: 'alleySweeper', name: 'Alley Sweeper', file: 'alleySweeper.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Close-quarters street sweeper with formidable spread.' },
-  { id: 'ammopistol', name: 'Ammo Pistol', file: 'ammopistol.glb', cost: 500, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Reliable service pistol with high-capacity magazines.' },
-  { id: 'ammoshotgun', name: 'Ammo Shotgun', file: 'ammoshotgun.glb', cost: 700, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Heavy tactical pump-action shotgun for breach operations.' },
-  { id: 'ammosniper', name: 'Ammo Sniper', file: 'ammosniper.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Bolt-action precision sniper rifle with long-range scope.' },
-  { id: 'Arrow', name: 'Arrow', file: 'Arrow.glb', cost: 500, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Steel-tipped silent hunting arrow.' },
-  { id: 'blackoutAR', name: 'Blackout AR', file: 'blackoutAR.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Suppressed black-ops assault rifle for covert missions.' },
-  { id: 'bloodfangDagger', name: 'Bloodfang Dagger', file: 'bloodfangDagger.glb', cost: 600, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Curved serrated blade designed for swift silent takedowns.' },
-  { id: 'bonecrusher', name: 'Bonecrusher', file: 'bonecrusher.glb', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Brutal bludgeoning weapon with devastating impact.' },
-  { id: 'breacher12G', name: 'Breacher 12G', file: 'breacher12G.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: '12-gauge close-quarters combat shotgun.' },
-  { id: 'cryptkeeperAuto', name: 'Cryptkeeper Auto', file: 'cryptkeeperAuto.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Fully automatic carbine from the forgotten catacombs.' },
-  { id: 'cursedCleaver', name: 'Cursed Cleaver', file: 'cursedCleaver.glb', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy butcher cleaver whispering with ancient curses.' },
-  { id: 'duskbreakerAR', name: 'Duskbreaker AR', file: 'duskbreakerAR.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Thermal-treated assault rifle that pierces through gloom.' },
-  { id: 'fieldBlade', name: 'Field Blade', file: 'fieldBlade.glb', cost: 0, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Trusted close-range melee blade.' },
-  { id: 'ghostblade', name: 'Ghostblade', file: 'ghostblade.glb', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Semi-translucent blade that cuts without sound.' },
-  { id: 'graveyardPump', name: 'Graveyard Pump', file: 'graveyardPump.glb', cost: 750, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Weathered shotgun salvaged from the churchyard.' },
-  { id: 'grimHarvester', name: 'Grim Harvester', file: 'grimHarvester.glb', cost: 950, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Razor-sharp scythe blade reminiscent of death himself.' },
-  { id: 'hellhoundMK3', name: 'Hellhound MK3', file: 'hellhoundMK3.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Aggressive rapid-fire assault rifle with fiery muzzle brake.' },
-  { id: 'hollowPointMK4', name: 'Hollow Point MK4', file: 'hollowPointMK4.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Chambered for expanding rounds with severe impact shock.' },
-  { id: 'ironJudge44', name: 'Iron Judge .44', file: 'ironJudge44.glb', cost: 750, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Heavy .44 magnum revolver dispensing absolute justice.' },
-  { id: 'ironPry', name: 'Iron Pry', file: 'ironPry.glb', cost: 450, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Hardened iron prybar for cracking doors and skulls.' },
-  { id: 'marshCarver', name: 'Marsh Carver', file: 'marshCarver.glb', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Rust-resistant survival knife from the stagnant swamplands.' },
-  { id: 'militiaCarbine', name: 'Militia Carbine', file: 'militiaCarbine.glb', cost: 800, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Rugged semi-auto carbine favored by resistance fighters.' },
-  { id: 'nightshadePistol', name: 'Nightshade Pistol', file: 'nightshadePistol.glb', cost: 650, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Sleek tactical pistol with toxic nightshade aesthetics.' },
-  { id: 'nightwatchDMR', name: 'Nightwatch DMR', file: 'nightwatchDMR.glb', cost: 900, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Designated marksman rifle with rapid follow-up shot capability.' },
-  { id: 'outlawRevolver', name: 'Outlaw Revolver', file: 'outlawRevolver.glb', cost: 700, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Classic 6-shooter with hair-trigger hammer cocking.' },
-  { id: 'paleRider', name: 'Pale Rider', file: 'paleRider.glb', cost: 800, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Silver-plated hand cannon with ivory grips.' },
-  { id: 'Quiver', name: 'Quiver', file: 'Quiver.glb', cost: 600, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Reinforced leather quiver holding specialized projectile darts.' },
-  { id: 'reapersEye', name: 'Reapers Eye', file: 'reapersEye.glb', cost: 1000, type: 'primaryGun', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Long-range marksman rifle with eerie infrared scope.' },
-  { id: 'rustbolt308', name: 'Rustbolt .308', file: 'rustbolt308.glb', cost: 850, type: 'primaryGun', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Heavy .308 calibre hunting rifle with oxidized patina.' },
-  { id: 'rustyJaw', name: 'Rusty Jaw', file: 'rustyJaw.glb', cost: 500, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Serrated iron jaws re-forged into a savage melee blade.' },
-  { id: 'rustyShiv', name: 'Rusty Shiv', file: 'rustyShiv.glb', cost: 400, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Crude improvised blade with tetanus-inducing tip.' },
-  { id: 'shadow45', name: 'Shadow .45', file: 'shadow45.glb', cost: 600, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Matte-black .45 caliber semi-automatic sidearm.' },
-  { id: 'shadowFang', name: 'Shadow Fang', file: 'shadowFang.glb', cost: 800, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Obsidian dagger shaped like a predatory serpent tooth.' },
-  { id: 'silentStalker', name: 'Silent Stalker', file: 'silentStalker.glb', cost: 750, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Aerodynamic throwing blade tuned for complete silence.' },
-  { id: 'skullcracker', name: 'Skullcracker', file: 'skullcracker.glb', cost: 750, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy spiked trench club delivering skull-shattering blows.' },
-  { id: 'slaughterhouseCleaver', name: 'Slaughterhouse Cleaver', file: 'slaughterhouseCleaver.glb', cost: 850, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Massive iron cleaver with broad cutting surface.' },
-  { id: 'timberRipper', name: 'Timber Ripper', file: 'timberRipper.glb', cost: 700, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Heavy woodsman axe with aggressive ripping teeth.' },
-  { id: 'trackersEdge', name: 'Trackers Edge', file: 'trackersEdge.glb', cost: 650, type: 'primaryKnife', slot: 'primaryKnife', tracer: null, stats: 'Finely honed Bowie knife for tracking prey across ruins.' },
-  { id: 'watchman9mm', name: 'Watchman 9mm', file: 'watchman9mm.glb', cost: 550, type: 'secondaryGun', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Standard security issue 9mm sidearm with crisp trigger pull.' },
-  { id: 'whisperingRecurve', name: 'Whispering Recurve', file: 'whisperingRecurve.glb', cost: 800, type: 'secondaryKnife', slot: 'secondaryKnife', tracer: 0x9fd8ff, stats: 'Composite recurve bow delivering silent lethal shafts.' },
-  { id: 'widowmaker', name: 'Widowmaker', file: 'widowmaker.glb', cost: 950, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'High-caliber sniper rifle that leaves mourning in its wake.' },
-  { id: 'wraithLongshot', name: 'Wraith Longshot', file: 'wraithLongshot.glb', cost: 1100, type: 'primaryGun', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Mastercrafted anti-materiel rifle with bone-chilling muzzle velocity.' }
+  // — Hunter Weapons (ranged firearms + bows/crossbows) —
+  { id: 'alleySweeper', name: 'Alley Sweeper', file: 'alleySweeper.glb', cost: 800, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Close-quarters street sweeper with formidable spread.' },
+  { id: 'ammopistol', name: 'Ammo Pistol', file: 'ammopistol.glb', cost: 500, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Reliable service pistol with high-capacity magazines.' },
+  { id: 'ammoshotgun', name: 'Ammo Shotgun', file: 'ammoshotgun.glb', cost: 700, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Heavy tactical pump-action shotgun for breach operations.' },
+  { id: 'ammosniper', name: 'Ammo Sniper', file: 'ammosniper.glb', cost: 950, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Bolt-action precision sniper rifle with long-range scope.' },
+  { id: 'Arrow', name: 'Arrow', file: 'Arrow.glb', cost: 500, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Steel-tipped silent hunting arrow.' },
+  { id: 'blackoutAR', name: 'Blackout AR', file: 'blackoutAR.glb', cost: 850, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Suppressed black-ops assault rifle for covert missions.' },
+  { id: 'breacher12G', name: 'Breacher 12G', file: 'breacher12G.glb', cost: 800, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd08a, stats: '12-gauge close-quarters combat shotgun.' },
+  { id: 'cryptkeeperAuto', name: 'Cryptkeeper Auto', file: 'cryptkeeperAuto.glb', cost: 900, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Fully automatic carbine from the forgotten catacombs.' },
+  { id: 'duskbreakerAR', name: 'Duskbreaker AR', file: 'duskbreakerAR.glb', cost: 850, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Thermal-treated assault rifle that pierces through gloom.' },
+  { id: 'graveyardPump', name: 'Graveyard Pump', file: 'graveyardPump.glb', cost: 750, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffd08a, stats: 'Weathered shotgun salvaged from the churchyard.' },
+  { id: 'hellhoundMK3', name: 'Hellhound MK-III', file: 'hellhoundMK3.glb', cost: 950, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Aggressive rapid-fire assault rifle with fiery muzzle brake.' },
+  { id: 'hollowPointMK4', name: 'Hollow Point MK-IV', file: 'hollowPointMK4.glb', cost: 900, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Chambered for expanding rounds with severe impact shock.' },
+  { id: 'ironJudge44', name: 'Iron Judge .44', file: 'ironJudge44.glb', cost: 750, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Heavy .44 magnum revolver dispensing absolute justice.' },
+  { id: 'militiaCarbine', name: 'Militia Carbine', file: 'militiaCarbine.glb', cost: 800, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Rugged semi-auto carbine favored by resistance fighters.' },
+  { id: 'nightshadePistol', name: 'Nightshade Tactical', file: 'nightshadePistol.glb', cost: 650, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Sleek tactical pistol with toxic nightshade aesthetics.' },
+  { id: 'nightwatchDMR', name: 'Nightwatch DMR', file: 'nightwatchDMR.glb', cost: 900, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Designated marksman rifle with rapid follow-up shot capability.' },
+  { id: 'outlawRevolver', name: 'Outlaw Six-Shooter', file: 'outlawRevolver.glb', cost: 700, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Classic 6-shooter with hair-trigger hammer cocking.' },
+  { id: 'paleRider', name: 'Pale Rider', file: 'paleRider.glb', cost: 800, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Silver-plated hand cannon with ivory grips.' },
+  { id: 'Quiver', name: 'Quiver', file: 'Quiver.glb', cost: 600, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Reinforced leather quiver holding specialized projectile darts.' },
+  { id: 'reapersEye', name: "Reaper's Eye", file: 'reapersEye.glb', cost: 1000, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xff8c42, stats: 'Long-range marksman rifle with eerie infrared scope.' },
+  { id: 'rustbolt308', name: 'Rustbolt .308', file: 'rustbolt308.glb', cost: 850, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0xffe27a, stats: 'Heavy .308 calibre hunting rifle with oxidized patina.' },
+  { id: 'shadow45', name: 'Shadow .45', file: 'shadow45.glb', cost: 600, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Matte-black .45 caliber semi-automatic sidearm.' },
+  { id: 'silentStalker', name: 'Silent Stalker', file: 'silentStalker.glb', cost: 750, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Aerodynamic silent crossbow tuned for complete silence.' },
+  { id: 'watchman9mm', name: 'Watchman 9mm', file: 'watchman9mm.glb', cost: 550, type: 'hunterWeapon', slot: 'secondaryGun', tracer: 0xffc27a, stats: 'Standard security issue 9mm sidearm with crisp trigger pull.' },
+  { id: 'whisperingRecurve', name: 'Whispering Recurve', file: 'whisperingRecurve.glb', cost: 800, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Composite recurve bow delivering silent lethal shafts.' },
+  { id: 'widowmaker', name: 'Widowmaker', file: 'widowmaker.glb', cost: 950, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'High-caliber sniper rifle that leaves mourning in its wake.' },
+  { id: 'wraithLongshot', name: 'Wraith Longshot', file: 'wraithLongshot.glb', cost: 1100, type: 'hunterWeapon', slot: 'primaryGun', tracer: 0x9fd8ff, stats: 'Mastercrafted anti-materiel rifle with bone-chilling muzzle velocity.' },
+
+  // — Prop Weapons (melee & knives only) —
+  { id: 'bloodfangDagger', name: 'Bloodfang Dagger', file: 'bloodfangDagger.glb', cost: 600, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Curved serrated blade designed for swift silent takedowns.' },
+  { id: 'bonecrusher', name: 'Bonecrusher', file: 'bonecrusher.glb', cost: 750, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Brutal bludgeoning weapon with devastating impact.' },
+  { id: 'cursedCleaver', name: 'Cursed Cleaver', file: 'cursedCleaver.glb', cost: 700, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Heavy butcher cleaver whispering with ancient curses.' },
+  { id: 'fieldBlade', name: 'Field Blade', file: 'fieldBlade.glb', cost: 0, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Trusted close-range melee blade.' },
+  { id: 'ghostblade', name: 'Ghostblade', file: 'ghostblade.glb', cost: 850, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Semi-translucent blade that cuts without sound.' },
+  { id: 'grimHarvester', name: 'Grim Harvester', file: 'grimHarvester.glb', cost: 950, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Razor-sharp scythe blade reminiscent of death himself.' },
+  { id: 'ironPry', name: 'Iron Pry', file: 'ironPry.glb', cost: 450, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Hardened iron prybar for cracking doors and skulls.' },
+  { id: 'marshCarver', name: 'Marsh Carver', file: 'marshCarver.glb', cost: 650, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Rust-resistant survival knife from the stagnant swamplands.' },
+  { id: 'rustyJaw', name: 'Rusty Jaw', file: 'rustyJaw.glb', cost: 500, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Serrated iron jaws re-forged into a savage melee blade.' },
+  { id: 'rustyShiv', name: 'Rusty Shiv', file: 'rustyShiv.glb', cost: 400, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Crude improvised blade with tetanus-inducing tip.' },
+  { id: 'shadowFang', name: 'Shadow Fang', file: 'shadowFang.glb', cost: 800, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Obsidian dagger shaped like a predatory serpent tooth.' },
+  { id: 'skullcracker', name: 'Skullcracker', file: 'skullcracker.glb', cost: 750, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Heavy spiked trench club delivering skull-shattering blows.' },
+  { id: 'slaughterhouseCleaver', name: 'Slaughterhouse Cleaver', file: 'slaughterhouseCleaver.glb', cost: 850, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Massive iron cleaver with broad cutting surface.' },
+  { id: 'timberRipper', name: 'Timber Ripper', file: 'timberRipper.glb', cost: 700, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Heavy woodsman axe with aggressive ripping teeth.' },
+  { id: 'trackersEdge', name: "Tracker's Edge", file: 'trackersEdge.glb', cost: 650, type: 'propWeapon', slot: 'primaryKnife', tracer: null, stats: 'Finely honed Bowie knife for tracking prey across ruins.' }
 ];
 
 WEAPON_REGISTRY.forEach((weapon) => {
+  const isLeg = isLegendaryWeapon(weapon.id);
+  const displayName = formatWeaponDisplayName(weapon.id || weapon.file) || weapon.name;
   STORE_CATALOG[weapon.id] = Object.assign({
     color: null,
     tracer: 0xffe27a,
-    isLegendary: weapon.id.startsWith('l.')
-  }, weapon);
+    isLegendary: isLeg
+  }, weapon, { name: displayName });
 });
 
 const MALE_STARTER_ID = 'Casual_Character';
@@ -349,11 +502,9 @@ function defaultEquippedSkinId() {
 }
 
 const STORE_CATEGORIES = [
-  { type: 'skin',           slot: 'equippedSkin',   label: 'Skins' },
-  { type: 'primaryGun',     slot: 'primaryGun',     label: 'Primary Weapons' },
-  { type: 'secondaryGun',   slot: 'secondaryGun',   label: 'Secondary Weapons' },
-  { type: 'primaryKnife',   slot: 'primaryKnife',   label: 'Primary Knives' },
-  { type: 'secondaryKnife', slot: 'secondaryKnife', label: 'Secondary Knives' }
+  { type: 'skin',           slot: 'equippedSkin',   label: 'Player Skins' },
+  { type: 'hunterWeapon',                           label: 'Hunter Weapons' },
+  { type: 'propWeapon',                             label: 'Prop Weapons' }
 ];
 
 let STORE_ITEM_IDS = Object.keys(STORE_CATALOG);
@@ -3672,7 +3823,7 @@ function refreshCharacterPreview() {
       if (!container) return;
       const nameEl = container.querySelector('.preview-gear-name');
       const thumbEl = container.querySelector('.preview-gear-thumb');
-      if (nameEl) nameEl.textContent = item ? item.name : '—';
+      if (nameEl) nameEl.textContent = item ? getItemDisplayName(item) : '—';
       if (thumbEl) {
         const src = item ? itemPreviewSrc(item.id) : '';
         if (src) { thumbEl.src = src; thumbEl.classList.remove('hidden'); }
@@ -3771,7 +3922,7 @@ function createStoreSwatch(item) {
   const img = document.createElement('img');
   img.className = 'item-preview-img';
   img.src = itemPreviewSrc(item.id);
-  img.alt = item.name;
+  img.alt = getItemDisplayName(item);
   img.loading = 'lazy';
   if (item.type !== 'skin') {
     img.onerror = () => {
@@ -3803,7 +3954,7 @@ function createStoreCard(item, mode = 'shop') {
   card.appendChild(createStoreSwatch(item));
 
   const heading = document.createElement('h3');
-  heading.textContent = item.name;
+  heading.textContent = getItemDisplayName(item);
   card.appendChild(heading);
 
   const desc = document.createElement('p');
@@ -3930,7 +4081,7 @@ function appendCategorySection(container, category, items, mode = 'inventory') {
   const equippedItem = STORE_CATALOG[equippedItemId(category.slot)];
   const current = document.createElement('span');
   current.className = 'store-slot-current';
-  current.textContent = equippedItem ? `Equipped: ${equippedItem.name}` : '';
+  current.textContent = equippedItem ? `Equipped: ${getItemDisplayName(equippedItem)}` : '';
   title.appendChild(current);
   section.appendChild(title);
 
@@ -3945,25 +4096,44 @@ function itemsForCategory(type) {
   if (type === 'skin') {
     return SHOP_SKIN_ORDER.map((id) => STORE_CATALOG[id]).filter(Boolean);
   }
-  return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id]).filter((item) => item && item.type === type && !item.legacy && !item.isLegendary && !item.id.startsWith('l.'));
+  if (type === 'hunterWeapon') {
+    return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
+      .filter((item) => item && !item.legacy && !isLegendaryWeapon(item) && isHunterWeapon(item));
+  }
+  if (type === 'propWeapon') {
+    return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
+      .filter((item) => item && !item.legacy && !isLegendaryWeapon(item) && isPropWeapon(item));
+  }
+  return STORE_ITEM_IDS.map((id) => STORE_CATALOG[id]).filter((item) => item && item.type === type && !item.legacy && !isLegendaryWeapon(item));
 }
 
 function renderShopCatalog() {
   if (!shopItemsEl) return;
   shopItemsEl.innerHTML = '';
 
-  // 1. Separate "LEGENDARY WEAPONS" section at top of Store (keep all visible, including owned)
+  // Exact Store Display Order:
+  // 1. Player Skins (first)
+  const skinCategory = STORE_CATEGORIES.find((c) => c.type === 'skin') || { type: 'skin', slot: 'equippedSkin', label: 'Player Skins' };
+  const skinItems = itemsForCategory('skin');
+  appendCategorySection(shopItemsEl, skinCategory, skinItems, 'shop');
+
+  // 2. Hunter Weapons (second)
+  const hunterCategory = STORE_CATEGORIES.find((c) => c.type === 'hunterWeapon') || { type: 'hunterWeapon', label: 'Hunter Weapons' };
+  const hunterItems = itemsForCategory('hunterWeapon');
+  appendCategorySection(shopItemsEl, hunterCategory, hunterItems, 'shop');
+
+  // 3. Prop Weapons (third)
+  const propCategory = STORE_CATEGORIES.find((c) => c.type === 'propWeapon') || { type: 'propWeapon', label: 'Prop Weapons' };
+  const propItems = itemsForCategory('propWeapon');
+  appendCategorySection(shopItemsEl, propCategory, propItems, 'shop');
+
+  // 4. Legendary Weapons (last — all l. prefixed weapons in gold-styled section)
   const legendaryItems = STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
-    .filter((item) => item && (item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.'))));
+    .filter((item) => item && isLegendaryWeapon(item));
   if (legendaryItems.length > 0) {
     appendLegendarySection(shopItemsEl, legendaryItems, 'shop');
   }
 
-  // 2. Standard categories: Regular Skins, Primary Weapons, Secondary Weapons, Primary Knives, Secondary Knives (keep all visible, including owned)
-  for (const category of STORE_CATEGORIES) {
-    const items = itemsForCategory(category.type);
-    appendCategorySection(shopItemsEl, category, items, 'shop');
-  }
   if (!shopItemsEl.children.length) {
     const empty = document.createElement('p');
     empty.className = 'store-empty';
@@ -3996,7 +4166,7 @@ function renderDedicatedLoadoutSlots() {
     const current = document.createElement('div');
     current.className = 'loadout-slot-current';
     const currentItem = STORE_CATALOG[equippedItemId(slotInfo.slot)];
-    current.textContent = `Equipped: ${currentItem ? currentItem.name : '—'}`;
+    current.textContent = `Equipped: ${currentItem ? getItemDisplayName(currentItem) : '—'}`;
     card.appendChild(current);
 
     const options = document.createElement('div');
@@ -4011,8 +4181,9 @@ function renderDedicatedLoadoutSlots() {
       option.className = 'loadout-equip-button' + (equipped ? ' active' : '') + (item.isLegendary ? ' loadout-legendary' : '');
       option.dataset.item = item.id;
       option.disabled = equipped;
-      option.textContent = equipped ? `✓ ${item.name}` : (item.isLegendary ? `★ ${item.name}` : item.name);
-      option.title = equipped ? `${item.name} is equipped` : `Equip ${item.name} in ${slotInfo.label}`;
+      const itemName = getItemDisplayName(item);
+      option.textContent = equipped ? `✓ ${itemName}` : (item.isLegendary ? `★ ${itemName}` : itemName);
+      option.title = equipped ? `${itemName} is equipped` : `Equip ${itemName} in ${slotInfo.label}`;
       option.addEventListener('click', () => { if (!equipped) requestEquipItem(item.id); });
       options.appendChild(option);
     }
@@ -4033,17 +4204,26 @@ function refreshInventoryUi() {
   if (!inventoryItemsEl) return;
   inventoryItemsEl.innerHTML = '';
 
-  // Owned Legendary Weapons
+  // 1. Owned Player Skins (first)
+  const skinCategory = STORE_CATEGORIES.find((c) => c.type === 'skin') || { type: 'skin', slot: 'equippedSkin', label: 'Player Skins' };
+  const ownedSkins = STARTER_SKIN_IDS.map((id) => STORE_CATALOG[id]).concat(itemsForCategory('skin')).filter((item) => item && isOwnedItem(item.id));
+  appendCategorySection(inventoryItemsEl, skinCategory, ownedSkins, 'inventory');
+
+  // 2. Owned Hunter Weapons (second)
+  const hunterCategory = STORE_CATEGORIES.find((c) => c.type === 'hunterWeapon') || { type: 'hunterWeapon', label: 'Hunter Weapons' };
+  const ownedHunter = itemsForCategory('hunterWeapon').filter((item) => item && isOwnedItem(item.id));
+  appendCategorySection(inventoryItemsEl, hunterCategory, ownedHunter, 'inventory');
+
+  // 3. Owned Prop Weapons (third)
+  const propCategory = STORE_CATEGORIES.find((c) => c.type === 'propWeapon') || { type: 'propWeapon', label: 'Prop Weapons' };
+  const ownedProp = itemsForCategory('propWeapon').filter((item) => item && isOwnedItem(item.id));
+  appendCategorySection(inventoryItemsEl, propCategory, ownedProp, 'inventory');
+
+  // 4. Owned Legendary Weapons (last — gold-styled section)
   const ownedLegendary = STORE_ITEM_IDS.map((id) => STORE_CATALOG[id])
-    .filter((item) => item && (item.isLegendary || item.id.startsWith('l.')) && isOwnedItem(item.id));
+    .filter((item) => item && isLegendaryWeapon(item) && isOwnedItem(item.id));
   if (ownedLegendary.length > 0) {
     appendLegendarySection(inventoryItemsEl, ownedLegendary, 'inventory');
-  }
-
-  for (const category of STORE_CATEGORIES) {
-    const pool = category.type === 'skin' ? STARTER_SKIN_IDS.map((id) => STORE_CATALOG[id]).concat(itemsForCategory('skin')) : itemsForCategory(category.type);
-    const ownedItems = pool.filter((item) => item && isOwnedItem(item.id));
-    appendCategorySection(inventoryItemsEl, category, ownedItems, 'inventory');
   }
 }
 
@@ -4111,8 +4291,9 @@ window.__closeBuyConfirmModal = closeBuyConfirmModal;
 
 function openBuyConfirmModal(item) {
   if (!storeBuyConfirmModal || !item) return;
-  if (confirmBuyPrompt) confirmBuyPrompt.textContent = `Buy ${item.name} for ${item.cost} coins?`;
-  if (confirmItemName) confirmItemName.textContent = item.name;
+  const dName = getItemDisplayName(item);
+  if (confirmBuyPrompt) confirmBuyPrompt.textContent = `Buy ${dName} for ${item.cost} coins?`;
+  if (confirmItemName) confirmItemName.textContent = dName;
   if (confirmItemPrice) confirmItemPrice.textContent = `${item.cost} Coins`;
   storeBuyConfirmModal.classList.remove('hidden');
 }
@@ -4152,7 +4333,7 @@ function open3dPreviewModal(item) {
 
   const isLeg = item.isLegendary || (typeof item.id === 'string' && item.id.startsWith('l.'));
   if (preview3dBox) preview3dBox.classList.toggle('preview-legendary', isLeg);
-  if (preview3dTitle) preview3dTitle.textContent = item.name;
+  if (preview3dTitle) preview3dTitle.textContent = getItemDisplayName(item);
 
   if (preview3dBadge) {
     if (isLeg) {
@@ -4336,17 +4517,18 @@ function populateCharacterHoverPreview(item) {
   if (!characterHoverPreview || !item) return;
   const rarity = storeItemRarity(item);
   const src = itemPreviewSrc(item.id);
+  const displayName = getItemDisplayName(item);
 
   if (chpImage) {
     if (src) {
-      chpImage.src = src; chpImage.alt = item.name + ' — full preview'; chpImage.classList.remove('hidden');
+      chpImage.src = src; chpImage.alt = displayName + ' — full preview'; chpImage.classList.remove('hidden');
       if (chpFallback) chpFallback.classList.add('hidden');
     } else {
       chpImage.removeAttribute('src'); chpImage.classList.add('hidden');
       if (chpFallback) { chpFallback.textContent = STORE_ITEM_ICON[item.id] || '🎭'; chpFallback.classList.remove('hidden'); }
     }
   }
-  if (chpTitle) { chpTitle.textContent = item.name; chpTitle.title = item.name; }
+  if (chpTitle) { chpTitle.textContent = displayName; chpTitle.title = displayName; }
   if (chpRarity) chpRarity.textContent = rarity.label;
   if (chpTheme) chpTheme.textContent = item.stats ? rarity.theme + ' ' + item.stats : rarity.theme;
   characterHoverPreview.setAttribute('data-rarity', rarity.key);
@@ -4732,18 +4914,22 @@ async function syncStoreCatalogFromServer() {
       const list = await res.json();
       if (Array.isArray(list)) {
         for (const w of list) {
+          const displayName = formatWeaponDisplayName(w.id || w.file) || w.name;
+          const isLeg = isLegendaryWeapon(w);
           if (!STORE_CATALOG[w.id]) {
             STORE_CATALOG[w.id] = Object.assign({
               file: w.file || (w.id + '.glb'),
               color: null,
-              stats: w.stats || (w.isLegendary ? 'Legendary weaponry.' : 'Standard ordnance.')
-            }, w);
+              stats: w.stats || (isLeg ? 'Legendary weaponry.' : 'Standard ordnance.')
+            }, w, { name: displayName, isLegendary: isLeg });
           } else {
             if (w.thumb) STORE_CATALOG[w.id].thumb = w.thumb;
             if (w.file) STORE_CATALOG[w.id].file = w.file;
-            if (w.name) STORE_CATALOG[w.id].name = w.name;
+            STORE_CATALOG[w.id].name = displayName;
             if (w.cost !== undefined) STORE_CATALOG[w.id].cost = w.cost;
-            if (w.isLegendary !== undefined) STORE_CATALOG[w.id].isLegendary = w.isLegendary;
+            STORE_CATALOG[w.id].isLegendary = isLeg;
+            if (w.type) STORE_CATALOG[w.id].type = w.type;
+            if (w.slot) STORE_CATALOG[w.id].slot = w.slot;
           }
         }
         STORE_ITEM_IDS = Object.keys(STORE_CATALOG);
@@ -5372,7 +5558,7 @@ function equippedItemId(slot) {
 
 function equippedItemName(slot) {
   const item = STORE_CATALOG[equippedItemId(slot)];
-  return item ? item.name : '—';
+  return item ? getItemDisplayName(item) : '—';
 }
 
 function updateWeaponHud() {

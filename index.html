@@ -4752,8 +4752,11 @@
       </div>
 
       <div id="storeTabContent-shop" class="store-tab-content" aria-label="Shop catalog">
-        <!-- client.js renders every STORE_CATALOG category here, including
-             both Hunter weapon slots and both Prop knife slots. -->
+        <!-- client.js renders Store sections in exact top-to-bottom order:
+             1. Player Skins (first)
+             2. Hunter Weapons (second)
+             3. Prop Weapons (third)
+             4. Legendary Weapons (last — gold-styled section) -->
         <div id="shopItems" class="store-items"></div>
       </div>
 
@@ -4770,8 +4773,8 @@
           </aside>
 
           <div class="inventory-main">
-            <!-- Dedicated buttons for the two gun slots selected by Keys 1/2,
-                 plus independent primary/secondary Prop knife slots. -->
+            <!-- Dedicated buttons for equipped loadout slots (Key 1, Key 2, Melee, Throw),
+                 followed by owned Player Skins, Hunter Weapons, Prop Weapons, and Legendary Weapons. -->
             <section id="inventoryLoadoutSlots" class="inventory-loadout-slots" aria-label="Equipped weapon slots"></section>
             <div id="inventoryItems" class="store-items"></div>
           </div>
