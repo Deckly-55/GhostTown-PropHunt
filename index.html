@@ -159,14 +159,24 @@
     position: fixed;
     top: 110px;
     right: 10px;
-    width: 150px;
+    width: 154px;
     background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
     padding: 6px 10px;
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 6;
+    box-sizing: border-box;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  #health-bar-row {
+    display: flex;
     align-items: center;
     gap: 8px;
-    z-index: 6;
+    width: 100%;
   }
 
   #health-bar-container .health-label {
@@ -198,8 +208,91 @@
     color: white;
     font-size: 12px;
     font-weight: bold;
-    min-width: 28px;
+    min-width: 24px;
     text-align: right;
+  }
+
+  /* Subtle green regen icon for Hunter */
+  .hunter-regen-icon {
+    color: #2ecc71;
+    font-size: 11px;
+    line-height: 1;
+    margin-left: 2px;
+    animation: regenPulseAnim 1s infinite alternate ease-in-out;
+  }
+  @keyframes regenPulseAnim {
+    0% { transform: scale(0.85); opacity: 0.6; filter: drop-shadow(0 0 1px #2ecc71); }
+    100% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 5px #2ecc71); }
+  }
+
+  /* Subtle green pulse on health bar when active healing (Props) or passive healing (Hunters) */
+  #health-bar-container.healing-pulse {
+    border-color: rgba(46, 204, 113, 0.7);
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.5), inset 0 0 6px rgba(46, 204, 113, 0.25);
+    animation: healthBarHealPulse 1.4s infinite ease-in-out;
+  }
+  @keyframes healthBarHealPulse {
+    0%, 100% {
+      border-color: rgba(46, 204, 113, 0.4);
+      box-shadow: 0 0 6px rgba(46, 204, 113, 0.35);
+    }
+    50% {
+      border-color: rgba(46, 204, 113, 0.9);
+      box-shadow: 0 0 14px rgba(46, 204, 113, 0.75), inset 0 0 8px rgba(46, 204, 113, 0.3);
+    }
+  }
+
+  /* Compact Prop Heal Status Indicator */
+  .prop-heal-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .prop-heal-status-ready {
+    color: #2ecc71;
+    letter-spacing: 0.03em;
+  }
+  .prop-heal-status-ready kbd {
+    background: rgba(46, 204, 113, 0.2);
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 10px;
+    font-family: inherit;
+    margin-right: 3px;
+  }
+
+  .prop-heal-status-active {
+    color: #7fff8f;
+    letter-spacing: 0.04em;
+    animation: propHealingTextPulse 1s infinite alternate;
+  }
+  @keyframes propHealingTextPulse {
+    0% { opacity: 0.75; text-shadow: 0 0 4px rgba(46, 204, 113, 0.4); }
+    100% { opacity: 1; text-shadow: 0 0 10px rgba(127, 255, 143, 0.9); }
+  }
+
+  .prop-heal-status-cooldown {
+    color: #aaa;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .prop-heal-status-interrupted {
+    color: #ff6b6b;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    animation: interruptedFlash 0.3s ease infinite alternate;
+  }
+  @keyframes interruptedFlash {
+    0% { opacity: 0.8; text-shadow: 0 0 2px #ff4757; }
+    100% { opacity: 1; text-shadow: 0 0 8px #ff4757; }
   }
 
   /* Group 3 — Healing progress bar (centered; hidden until [H] channel runs) */
@@ -295,7 +388,7 @@
 
   #leaderboard {
     position: fixed;
-    top: 145px;
+    top: 165px;
     right: 10px;
     width: 220px;
     color: white;
@@ -3528,9 +3621,9 @@
                 <td>Camouflage as targeted prop or unhide</td>
               </tr>
               <tr>
-                <td>Channel Healing</td>
+                <td>Prop Active Heal</td>
                 <td><button class="keybind-keycap-btn" data-action="heal" type="button">H</button></td>
-                <td>Restore health over 3s stationary channel</td>
+                <td>Regenerate health over time while moving (Props)</td>
               </tr>
               <tr>
                 <td>Lobby Match Settings</td>
@@ -4662,11 +4755,17 @@
   <div id="roleDisplay" class="hidden">Role: —</div>
 
   <div id="health-bar-container" class="hidden">
-    <span class="health-label">HP</span>
-    <div id="health-bar-bg">
-      <div id="health-fill"></div>
+    <div id="health-bar-row">
+      <span class="health-label">HP</span>
+      <div id="health-bar-bg">
+        <div id="health-fill"></div>
+      </div>
+      <span id="health-text">100</span>
+      <span id="hunter-regen-icon" class="hunter-regen-icon hidden" title="Regenerating Health">✚</span>
     </div>
-    <span id="health-text">100</span>
+    <div id="prop-heal-indicator" class="prop-heal-indicator hidden">
+      <span id="prop-heal-status-text" class="prop-heal-status-ready"><kbd>[H]</kbd> Heal</span>
+    </div>
   </div>
 
   <!-- Group 3 — Healing progress (hidden; shown while the [H] channel runs) -->

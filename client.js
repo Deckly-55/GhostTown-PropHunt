@@ -120,6 +120,11 @@ let isCrouching = false;
 let crouchAmount = 0;
 let isHealing = false;
 let healStartedAt = 0;
+let myIsHealing = false;
+let myIsPropHealing = false;
+let myIsPassiveHealing = false;
+let myHealCooldownRemaining = 0;
+let healInterruptedUntil = 0;
 
 let equippedWeapon = 'primary';
 let ammo = { primary: WEAPONS.primary.ammo, secondary: WEAPONS.secondary.ammo };
@@ -587,6 +592,9 @@ const hudLeaderboard = document.getElementById('leaderboard');
 const hudHealthBar = document.getElementById('health-bar-container');
 const hudHealthFill = document.getElementById('health-fill');
 const hudHealthText = document.getElementById('health-text');
+const hunterRegenIcon = document.getElementById('hunter-regen-icon');
+const propHealIndicator = document.getElementById('prop-heal-indicator');
+const propHealStatusText = document.getElementById('prop-heal-status-text');
 const healProgressContainer = document.getElementById('heal-progress-container');
 const healProgressFill = document.getElementById('heal-progress-fill');
 const weaponHud = document.getElementById('weaponHud');
@@ -3218,6 +3226,93 @@ function setRoomCodeHudText(code) {
   roomCodeSmallText.querySelector('.rc-code').textContent = code;
 }
 
+function isInputOrModalActive() {
+  const activeEl = document.activeElement;
+  if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+    return true;
+  }
+  const store = document.getElementById('storeOverlay');
+  if (store && !store.classList.contains('hidden')) return true;
+  const pause = document.getElementById('pauseMenuOverlay');
+  if (pause && !pause.classList.contains('hidden')) return true;
+  const settings = document.getElementById('settingsModalOverlay');
+  if (settings && !settings.classList.contains('hidden')) return true;
+  const hostSettings = document.getElementById('hostSettingsOverlay');
+  if (hostSettings && !hostSettings.classList.contains('hidden')) return true;
+  const auth = document.getElementById('authOverlay');
+  if (auth && !auth.classList.contains('hidden')) return true;
+  const starter = document.getElementById('starterOverlay');
+  if (starter && !starter.classList.contains('hidden')) return true;
+  const mainMenu = document.getElementById('main-menu');
+  if (mainMenu && !mainMenu.classList.contains('hidden')) return true;
+  const deathScreen = document.getElementById('death-screen');
+  if (deathScreen && !deathScreen.classList.contains('hidden')) return true;
+  return false;
+}
+
+function triggerPropHeal() {
+  if (!socket || !hasJoined || matchState !== 'playing' || !amAlive) return;
+  if (myRole !== 'prop') return;
+  if (myHealth >= 100) return;
+  if (myIsPropHealing) return;
+  if (myHealCooldownRemaining > 0) return;
+  if (isInputOrModalActive()) return;
+
+  socket.emit('requestPropHeal');
+}
+
+function updateHealStatusHud() {
+  if (!amAlive || (myRole !== 'prop' && myRole !== 'hunter') || matchState === 'waiting') {
+    if (propHealIndicator) propHealIndicator.classList.add('hidden');
+    if (hunterRegenIcon) hunterRegenIcon.classList.add('hidden');
+    if (hudHealthBar) hudHealthBar.classList.remove('healing-pulse');
+    return;
+  }
+
+  if (myRole === 'hunter') {
+    if (propHealIndicator) propHealIndicator.classList.add('hidden');
+    if (myIsPassiveHealing) {
+      if (hudHealthBar) hudHealthBar.classList.add('healing-pulse');
+      if (hunterRegenIcon) hunterRegenIcon.classList.remove('hidden');
+    } else {
+      if (hudHealthBar) hudHealthBar.classList.remove('healing-pulse');
+      if (hunterRegenIcon) hunterRegenIcon.classList.add('hidden');
+    }
+  } else if (myRole === 'prop') {
+    if (hunterRegenIcon) hunterRegenIcon.classList.add('hidden');
+    if (propHealIndicator) propHealIndicator.classList.remove('hidden');
+
+    const now = performance.now();
+    const isInterrupted = now < healInterruptedUntil;
+
+    if (myIsPropHealing) {
+      if (hudHealthBar) hudHealthBar.classList.add('healing-pulse');
+      if (propHealStatusText) {
+        propHealStatusText.className = 'prop-heal-status-active';
+        propHealStatusText.textContent = 'Healing...';
+        propHealStatusText.style.opacity = '1';
+      }
+    } else {
+      if (hudHealthBar) hudHealthBar.classList.remove('healing-pulse');
+      if (propHealStatusText) {
+        if (isInterrupted) {
+          propHealStatusText.className = 'prop-heal-status-interrupted';
+          propHealStatusText.textContent = 'Heal interrupted!';
+          propHealStatusText.style.opacity = '1';
+        } else if (myHealCooldownRemaining > 0) {
+          propHealStatusText.className = 'prop-heal-status-cooldown';
+          propHealStatusText.textContent = `Heal: ${myHealCooldownRemaining}s`;
+          propHealStatusText.style.opacity = '1';
+        } else {
+          propHealStatusText.className = 'prop-heal-status-ready';
+          propHealStatusText.innerHTML = '<kbd>[H]</kbd> Heal';
+          propHealStatusText.style.opacity = myHealth >= 100 ? '0.55' : '1';
+        }
+      }
+    }
+  }
+}
+
 function updateHealthDisplay() {
   if (!hudHealthFill || !hudHealthText || !hudHealthBar) return;
   if (amAlive && (myRole === 'prop' || myRole === 'hunter')) {
@@ -3228,8 +3323,11 @@ function updateHealthDisplay() {
     if (pct > 60) hudHealthFill.style.background = '#2ecc71';
     else if (pct > 30) hudHealthFill.style.background = '#f39c12';
     else hudHealthFill.style.background = '#e74c3c';
+    updateHealStatusHud();
   } else {
     hudHealthBar.classList.add('hidden');
+    if (propHealIndicator) propHealIndicator.classList.add('hidden');
+    if (hunterRegenIcon) hunterRegenIcon.classList.add('hidden');
   }
 }
 
@@ -5391,8 +5489,17 @@ function attachSocketListeners() {
     const wasAlive = amAlive;
     players = data.players; npcs = data.npcs || {}; lootDrops = data.lootDrops || {};
     if (!players[myId]) return;
-    isDisguised = players[myId].isProp; myRole = players[myId].role; amAlive = players[myId].alive;
-    myHealth = players[myId].health != null ? players[myId].health : myHealth;
+    const me = players[myId];
+    isDisguised = me.isProp;
+    myRole = me.role;
+    amAlive = me.alive;
+    myHealth = me.health != null ? me.health : (me.hp != null ? me.hp : myHealth);
+    myIsPropHealing = !!me.isPropHealing;
+    myIsPassiveHealing = !!me.isPassiveHealing;
+    myIsHealing = !!me.isHealing;
+    if (typeof me.healCooldownRemaining === 'number') {
+      myHealCooldownRemaining = me.healCooldownRemaining;
+    }
 
     updateRoleDisplay(); updateHealthDisplay();
 
@@ -5482,20 +5589,52 @@ function attachSocketListeners() {
   });
 
   socket.on('hit', (data) => {
-    myHealth = data.health; damageFlashAlpha = 0.75; cancelHeal();
+    myHealth = data.health != null ? data.health : (data.hp != null ? data.hp : myHealth);
+    damageFlashAlpha = 0.75;
+    if (myRole === 'prop' && myIsPropHealing) {
+      healInterruptedUntil = performance.now() + 2000;
+      myIsPropHealing = false;
+      myIsHealing = false;
+    }
+    cancelHeal();
     if (data.disguiseBroken) { disguiseBreakNotification = performance.now(); isDisguised = false; }
     if (data.wasMelee) damageFlashAlpha = 0.85;
     updateHealthDisplay();
   });
 
+  socket.on('healInterrupted', () => {
+    healInterruptedUntil = performance.now() + 2000;
+    myIsPropHealing = false;
+    myIsHealing = false;
+    updateHealthDisplay();
+  });
+
   socket.on('disguiseBroken', (data) => {
-    myHealth = data.health; damageFlashAlpha = 0.8; disguiseBreakNotification = performance.now();
-    isDisguised = false; cancelHeal(); updateHealthDisplay();
+    myHealth = data.health != null ? data.health : (data.hp != null ? data.hp : myHealth);
+    damageFlashAlpha = 0.8;
+    disguiseBreakNotification = performance.now();
+    isDisguised = false;
+    if (myRole === 'prop' && myIsPropHealing) {
+      healInterruptedUntil = performance.now() + 2000;
+      myIsPropHealing = false;
+      myIsHealing = false;
+    }
+    cancelHeal();
+    updateHealthDisplay();
   });
 
   socket.on('meleeHit', () => { triggerMeleeHitIndicator(); });
   socket.on('meleeMiss', () => {});
-  socket.on('meleeDamaged', () => { damageFlashAlpha = 0.85; cancelHeal(); });
+  socket.on('meleeDamaged', () => {
+    damageFlashAlpha = 0.85;
+    if (myRole === 'prop' && myIsPropHealing) {
+      healInterruptedUntil = performance.now() + 2000;
+      myIsPropHealing = false;
+      myIsHealing = false;
+    }
+    cancelHeal();
+    updateHealthDisplay();
+  });
 
   socket.on('died', () => {
     amAlive = false; radarContacts = {}; isAiming = false; cancelHeal(); isCrouching = false;
@@ -5575,12 +5714,11 @@ window.addEventListener('keydown', (event) => {
   if (key === 'e') { tryToggleDisguise(); }
   if (key === 'f' && nearLobbyComputer && myIsHost && !hostSettingsOpen) { event.preventDefault(); openHostSettings(); }
   if ((key === 'c' || key === 'control') && hasJoined && amAlive) { isCrouching = true; }
-  if (key === 'h' && hasJoined && amAlive) { startHeal(); }
+  if (key === 'h' && hasJoined && amAlive) { triggerPropHeal(); }
   if (key === '1' && hasJoined && amAlive) { switchWeapon('primary'); }
   if (key === '2' && hasJoined && amAlive) { switchWeapon('secondary'); }
   if (key === 'r' && hasJoined && amAlive) { startReload(); }
   if (key === 'g' && hasJoined && amAlive) { handleThrowKnife(); }
-  if (isHealing && (key === 'w' || key === 'a' || key === 's' || key === 'd' || event.code === 'Space')) { cancelHeal(); }
 });
 
 window.addEventListener('keyup', (event) => {
@@ -5658,26 +5796,16 @@ function handleThrowKnife() {
 }
 
 function startHeal() {
-  if (!socket || !hasJoined || matchState !== 'playing' || !amAlive || myHealth >= 100 || isHealing) return;
-  isHealing = true; healStartedAt = performance.now();
-  if (healProgressContainer) healProgressContainer.classList.remove('hidden');
-  updateHealProgress();
+  triggerPropHeal();
 }
 
 function cancelHeal() {
-  if (!isHealing) return;
-  isHealing = false; healStartedAt = 0;
   if (healProgressContainer) healProgressContainer.classList.add('hidden');
   if (healProgressFill) healProgressFill.style.width = '0%';
 }
 
 function updateHealProgress() {
-  if (!isHealing) return;
-  if (keys.w || keys.a || keys.s || keys.d || keys.space) { cancelHeal(); return; }
-  const elapsed = performance.now() - healStartedAt;
-  const progress = Math.min(1, elapsed / HEAL_CHANNEL_MS);
-  if (healProgressFill) healProgressFill.style.width = (progress * 100) + '%';
-  if (progress >= 1) { socket.emit('requestHeal'); cancelHeal(); }
+  updateHealStatusHud();
 }
 
 function switchWeapon(weaponKey) {
@@ -5732,6 +5860,11 @@ function resetCombatState() {
   isCrouching = false; crouchAmount = 0; cancelHeal(); isReloading = false; reloadEndsAt = 0;
   equippedWeapon = 'primary'; ammo.primary = WEAPONS.primary.ammo; ammo.secondary = WEAPONS.secondary.ammo;
   lastShotTimeByWeapon.primary = 0; lastShotTimeByWeapon.secondary = 0; lastKnifeThrowTime = 0;
+  myIsHealing = false; myIsPropHealing = false; myIsPassiveHealing = false;
+  myHealCooldownRemaining = 0; healInterruptedUntil = 0;
+  if (hudHealthBar) hudHealthBar.classList.remove('healing-pulse');
+  if (hunterRegenIcon) hunterRegenIcon.classList.add('hidden');
+  if (propHealIndicator) propHealIndicator.classList.add('hidden');
   updateWeaponHud();
 }
 

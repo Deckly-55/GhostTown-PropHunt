@@ -861,10 +861,21 @@ function lobbySpawn(index = 0) {
     z: LOBBY_AREA.minZ + margin + Math.floor(slot / columns) * spacing
   };
 }
+function resetPlayerHealState(player) {
+  if (!player) return;
+  player.lastDamagedAt = 0;
+  player.lastAttackedAt = 0;
+  player.isPropHealing = false;
+  player.isPassiveHealing = false;
+  player.healCooldownUntil = 0;
+  player.healStartedAt = 0;
+  player.healEndTime = 0;
+}
 function movePlayerToLobby(player, index) {
   const spawn = lobbySpawn(index); player.x = spawn.x; player.z = spawn.z; player.y = PLAYER_EYE_LEVEL;
   player.role = 'waiting'; player.alive = true; player.isProp = false; player.propId = null;
-  player.health = PROP_MAX_HEALTH; player.npcStrikes = 0; player.disguiseBrokenAt = 0;
+  player.health = PROP_MAX_HEALTH; player.hp = PROP_MAX_HEALTH; player.npcStrikes = 0; player.disguiseBrokenAt = 0;
+  resetPlayerHealState(player);
 }
 
 function shufflePlayers(roomPlayers) {
@@ -900,8 +911,10 @@ function startRoom(roomName) {
     player.isProp = false;
     player.propId = null;
     player.health = player.role === 'hunter' ? HUNTER_MAX_HEALTH : PROP_MAX_HEALTH;
+    player.hp = player.health;
     player.npcStrikes = 0;
     player.disguiseBrokenAt = 0;
+    resetPlayerHealState(player);
 
     const spawn = randomSpawnPoint(zone, occupiedSpawns);
     occupiedSpawns.push(spawn);
@@ -1089,6 +1102,20 @@ function publicPlayerPayload(player, id) {
   packet.equippedWeapon = (packet.loadout && (packet.loadout.primaryGun || packet.loadout.equippedWeapon)) || 'standardGun';
   packet.alive = player.alive !== false;
   packet.isMoving = !!player.isMoving;
+
+  const now = Date.now();
+  const currentHealth = typeof player.health === 'number' ? player.health : (player.role === 'hunter' ? HUNTER_MAX_HEALTH : PROP_MAX_HEALTH);
+  const roundedHealth = Math.round(currentHealth * 10) / 10;
+  packet.health = roundedHealth;
+  packet.hp = roundedHealth;
+  packet.maxHp = player.role === 'hunter' ? HUNTER_MAX_HEALTH : PROP_MAX_HEALTH;
+  packet.isHealing = player.role === 'prop' ? !!player.isPropHealing : !!player.isPassiveHealing;
+  packet.isPropHealing = !!player.isPropHealing;
+  packet.isPassiveHealing = !!player.isPassiveHealing;
+  packet.healCooldownRemaining = (player.healCooldownUntil && player.healCooldownUntil > now)
+    ? Math.max(0, Math.ceil((player.healCooldownUntil - now) / 1000))
+    : 0;
+
   return packet;
 }
 
@@ -1190,6 +1217,12 @@ const BULLET_DAMAGE = 35;
 const HUNTER_MAX_HEALTH = 100;
 const MELEE_RANGE = 50;
 const MELEE_DAMAGE = 50;
+
+const HUNTER_PASSIVE_HEAL_RATE = 6; // +6 HP/sec
+const HUNTER_PASSIVE_HEAL_DELAY_MS = 2000; // 2000ms delay after taking damage or attacking
+const PROP_ACTIVE_HEAL_RATE = 4; // +4 HP/sec
+const PROP_ACTIVE_HEAL_DURATION_MS = 6000; // up to 6 seconds
+const PROP_ACTIVE_HEAL_COOLDOWN_MS = 18000; // 18 seconds cooldown
 
 const WEAPON_PROFILES = {
   primary: { name: 'Primary', damage: 25, ammo: 5, fireRateMs: 800 },
@@ -2053,6 +2086,13 @@ io.on('connection', (socket) => {
       alive: true,
       score: 0,
       health: playerHealth,
+      hp: playerHealth,
+      lastDamagedAt: 0,
+      lastAttackedAt: 0,
+      isPropHealing: false,
+      isPassiveHealing: false,
+      healCooldownUntil: 0,
+      healEndTime: 0,
       npcStrikes: 0,
       disguiseBrokenAt: 0,
       isHost,
@@ -2233,6 +2273,8 @@ io.on('connection', (socket) => {
     if (!aim || typeof aim.dx !== 'number' || typeof aim.dy !== 'number') {
       return;
     }
+    player.lastAttackedAt = Date.now();
+    player.isPassiveHealing = false;
 
     // Phase 1 — Hitscan "Teleport" Shooting.
     // No bullet entity is ever created. The server instantly marches an
@@ -2328,6 +2370,11 @@ io.on('connection', (socket) => {
     if (!attacker || !roomState || roomState.state !== 'playing' || !attacker.alive) return;
     if (attacker.role !== 'prop' && attacker.role !== 'hunter') return;
 
+    if (attacker.role === 'hunter') {
+      attacker.lastAttackedAt = Date.now();
+      attacker.isPassiveHealing = false;
+    }
+
     // One swing, one pass: a hunter can only carve up props, a prop can only
     // carve up hunters (and, below, ghouls). The victim role is decided once
     // and the player table is walked once - no duplicated player loops.
@@ -2361,13 +2408,24 @@ io.on('connection', (socket) => {
 
       const wasDisguised = !!target.isProp;
       target.health -= MELEE_DAMAGE;
+      target.hp = target.health;
+      target.lastDamagedAt = Date.now();
+      if (target.role === 'hunter') {
+        target.isPassiveHealing = false;
+      } else if (target.role === 'prop' && target.isPropHealing) {
+        target.isPropHealing = false;
+        target.healCooldownUntil = Date.now() + PROP_ACTIVE_HEAL_COOLDOWN_MS;
+        io.to(id).emit('healInterrupted');
+      }
       hitAny = true;
 
       if (target.health <= 0) {
         target.health = 0;
+        target.hp = 0;
         target.alive = false;
         target.isProp = false;
         target.propId = null;
+        resetPlayerHealState(target);
         killedSomething = true;
 
         attacker.score = (attacker.score || 0) + HUNTER_KILL_SCORE;
@@ -2452,15 +2510,28 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('requestHeal', () => {
-    const player = players[socket.id];
+  function handlePropHealRequest(socketId) {
+    const player = players[socketId];
     const roomState = player ? getRoomState(player.roomName) : null;
     if (!player || !roomState || roomState.state !== 'playing' || !player.alive) return;
+    if (player.role !== 'prop') return;
+    if (player.health >= PROP_MAX_HEALTH) return;
+    if (player.isPropHealing) return;
+    const now = Date.now();
+    if (player.healCooldownUntil && now < player.healCooldownUntil) return;
 
-    player.health = HUNTER_MAX_HEALTH;
-    player.npcStrikes = 0;
+    player.isPropHealing = true;
+    player.healStartedAt = now;
+    player.healEndTime = now + PROP_ACTIVE_HEAL_DURATION_MS;
     io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
-    sendRadarAfterStateChange();
+  }
+
+  socket.on('requestHeal', () => {
+    handlePropHealRequest(socket.id);
+  });
+
+  socket.on('requestPropHeal', () => {
+    handlePropHealRequest(socket.id);
   });
 
   socket.on('respawn', () => {
@@ -2479,8 +2550,10 @@ io.on('connection', (socket) => {
     player.isProp = false;
     player.propId = null;
     player.health = PROP_MAX_HEALTH;
+    player.hp = PROP_MAX_HEALTH;
     player.npcStrikes = 0;
     player.disguiseBrokenAt = 0;
+    resetPlayerHealState(player);
 
     io.to(player.roomName).emit('stateUpdate', buildStateUpdatePayload(player.roomName));
     sendRadarAfterStateChange();
@@ -3272,15 +3345,30 @@ function applyHitscanHit(hit, ctx) {
     victim.health = victim.role === 'hunter' ? HUNTER_MAX_HEALTH : PROP_MAX_HEALTH;
   }
   victim.health -= ctx.damage;
+  victim.hp = victim.health;
+  victim.lastDamagedAt = Date.now();
+  if (victim.role === 'hunter') {
+    victim.isPassiveHealing = false;
+  } else if (victim.role === 'prop' && victim.isPropHealing) {
+    victim.isPropHealing = false;
+    victim.healCooldownUntil = Date.now() + PROP_ACTIVE_HEAL_COOLDOWN_MS;
+    if (hit.victimId && io && io.to) {
+      io.to(hit.victimId).emit('healInterrupted');
+    }
+  }
 
   if (ctx.isKnife) {
     io.to(hit.victimId).emit('hit', { health: Math.max(0, victim.health) });
 
     if (victim.health <= 0) {
       victim.health = 0;
+      victim.hp = 0;
       victim.alive = false;
       victim.isProp = false;
       victim.propId = null;
+      victim.isPropHealing = false;
+      victim.isPassiveHealing = false;
+      victim.healCooldownUntil = 0;
 
       if (killer) {
         killer.score = (killer.score || 0) + HUNTER_KILL_SCORE;
@@ -3317,6 +3405,10 @@ function applyHitscanHit(hit, ctx) {
     victim.isProp = false;
     victim.propId = null;
     victim.health = 0;
+    victim.hp = 0;
+    victim.isPropHealing = false;
+    victim.isPassiveHealing = false;
+    victim.healCooldownUntil = 0;
 
     if (killer) {
       killer.score = (killer.score || 0) + HUNTER_KILL_SCORE;
@@ -3486,6 +3578,15 @@ function tickNPCs() {
 
     target.npcStrikes += 1;
     target.health -= 17;
+    target.hp = target.health;
+    target.lastDamagedAt = Date.now();
+    if (target.role === 'hunter') {
+      target.isPassiveHealing = false;
+    } else if (target.role === 'prop' && target.isPropHealing) {
+      target.isPropHealing = false;
+      target.healCooldownUntil = Date.now() + PROP_ACTIVE_HEAL_COOLDOWN_MS;
+      io.to(npc.targetId).emit('healInterrupted');
+    }
     const lethal = target.npcStrikes >= 6 || target.health <= 0;
 
     npcDamageRooms.add(target.roomName);
@@ -3493,10 +3594,12 @@ function tickNPCs() {
 
     if (lethal) {
       target.health = 0;
+      target.hp = 0;
       target.alive = false;
       target.isProp = false;
       target.propId = null;
       target.npcStrikes = 0;
+      resetPlayerHealState(target);
 
       io.to(npc.targetId).emit('hit', { health: 0, wasMelee: true, fromNpc: true });
       io.to(npc.targetId).emit('died');
@@ -3566,7 +3669,61 @@ function tickLoot() {
   }
 }
 
+function tickHealing(dt, now) {
+  for (const player of Object.values(players)) {
+    if (!player || !player.alive) {
+      if (player) {
+        player.isPropHealing = false;
+        player.isPassiveHealing = false;
+      }
+      continue;
+    }
+    const rs = getRoomState(player.roomName);
+    if (!rs || rs.state !== 'playing') {
+      player.isPropHealing = false;
+      player.isPassiveHealing = false;
+      continue;
+    }
+
+    if (player.role === 'hunter') {
+      const maxHp = HUNTER_MAX_HEALTH;
+      const canPassiveHeal = player.health < maxHp &&
+        (now - (player.lastDamagedAt || 0) >= HUNTER_PASSIVE_HEAL_DELAY_MS) &&
+        (now - (player.lastAttackedAt || 0) >= HUNTER_PASSIVE_HEAL_DELAY_MS);
+
+      if (canPassiveHeal) {
+        player.isPassiveHealing = true;
+        player.health = Math.min(maxHp, player.health + HUNTER_PASSIVE_HEAL_RATE * dt);
+        player.hp = player.health;
+      } else {
+        player.isPassiveHealing = false;
+      }
+    } else if (player.role === 'prop') {
+      const maxHp = PROP_MAX_HEALTH;
+      if (player.isPropHealing) {
+        const timeRemaining = Math.max(0, (player.healEndTime || now) - (now - dt * 1000));
+        const effectiveDt = Math.min(dt, timeRemaining / 1000);
+        player.health = Math.min(maxHp, player.health + PROP_ACTIVE_HEAL_RATE * effectiveDt);
+        player.hp = player.health;
+
+        if (player.health >= maxHp || now >= (player.healEndTime || 0)) {
+          player.health = Math.min(maxHp, player.health);
+          player.hp = player.health;
+          player.isPropHealing = false;
+          player.healCooldownUntil = now + PROP_ACTIVE_HEAL_COOLDOWN_MS;
+        }
+      }
+    }
+  }
+}
+
+let lastHealingTick = Date.now();
 setInterval(() => {
+  const now = Date.now();
+  const dt = Math.min(0.1, (now - lastHealingTick) / 1000);
+  lastHealingTick = now;
+
+  tickHealing(dt, now);
   tickNPCs();
   tickLoot();
 
