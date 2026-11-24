@@ -746,6 +746,665 @@ let screechRestSound = null;
 let screechRestReady = false;
 let skeletonWasChasing = false; // Tracks state transitions
 
+// ============================================================================
+// BACKGROUND MUSIC CONTROLLER & AUDIO GENERATOR (Main Menu & Creepy Lobby)
+// ============================================================================
+
+function getAudioContext() {
+  if (window.__gameAudioListener && window.__gameAudioListener.context) {
+    return window.__gameAudioListener.context;
+  }
+  if (audioListener && audioListener.context) {
+    return audioListener.context;
+  }
+  if (!window.__lobbyAudioCtx || window.__lobbyAudioCtx.state === 'closed') {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      window.__lobbyAudioCtx = new AudioCtx();
+    }
+  }
+  return window.__lobbyAudioCtx;
+}
+
+// ----------------------------------------------------------------------------
+// 1. Main Menu Background Music (Plays existing Settings music track)
+// ----------------------------------------------------------------------------
+const MainMenuAudio = {
+  element: null,
+  targetVolume: 0.7,
+  fadeInterval: null,
+  isPlaying: false,
+  isFadingOut: false,
+
+  getElement() {
+    if (!this.element) {
+      this.element = document.getElementById('mainMenuMusicTrack');
+      if (!this.element) {
+        this.element = document.createElement('video');
+        this.element.id = 'mainMenuMusicTrack';
+        this.element.className = 'bg-music-track';
+        this.element.loop = true;
+        this.element.playsInline = true;
+        this.element.setAttribute('playsinline', '');
+        this.element.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;top:-100px;left:-100px;';
+        
+        const s1 = document.createElement('source');
+        s1.src = 'public/settings-bg.mp4';
+        s1.type = 'video/mp4';
+        const s2 = document.createElement('source');
+        s2.src = 'settings-bg.mp4';
+        s2.type = 'video/mp4';
+        this.element.appendChild(s1);
+        this.element.appendChild(s2);
+        document.body.appendChild(this.element);
+      }
+    }
+    return this.element;
+  },
+
+  play(targetVol, duration = 1.0) {
+    const el = this.getElement();
+    if (!el) return;
+    this.targetVolume = targetVol;
+    this.isFadingOut = false;
+    this.isPlaying = true;
+
+    if (this.fadeInterval) {
+      clearInterval(this.fadeInterval);
+      this.fadeInterval = null;
+    }
+
+    const settings = GameMusicController.getSettings();
+    el.muted = settings.isMuted;
+
+    if (el.paused) {
+      el.volume = 0;
+      const playPromise = el.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(err => {
+          if (err && err.name === 'NotAllowedError') {
+            GameMusicController.requestAutoplayUnlock();
+          }
+        });
+      }
+    }
+
+    const startTime = performance.now();
+    const startVol = el.volume;
+    const endVol = settings.isMuted ? 0 : targetVol;
+    const durMs = duration * 1000;
+
+    this.fadeInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durMs);
+      const v = startVol + (endVol - startVol) * progress;
+      el.volume = Math.max(0, Math.min(1, v));
+      if (progress >= 1) {
+        clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
+      }
+    }, 30);
+  },
+
+  stop(duration = 0.6, immediate = false) {
+    const el = this.getElement();
+    if (!el) return;
+    if (this.fadeInterval) {
+      clearInterval(this.fadeInterval);
+      this.fadeInterval = null;
+    }
+    this.isFadingOut = true;
+    this.isPlaying = false;
+
+    if (immediate || el.paused) {
+      el.pause();
+      el.volume = 0;
+      this.isFadingOut = false;
+      return;
+    }
+
+    const startTime = performance.now();
+    const startVol = el.volume;
+    const durMs = duration * 1000;
+
+    this.fadeInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durMs);
+      const v = startVol * (1 - progress);
+      el.volume = Math.max(0, Math.min(1, v));
+      if (progress >= 1) {
+        clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
+        el.pause();
+        this.isFadingOut = false;
+      }
+    }, 30);
+  },
+
+  setVolume(vol) {
+    const el = this.getElement();
+    if (!el) return;
+    const settings = GameMusicController.getSettings();
+    el.muted = settings.isMuted;
+    this.targetVolume = settings.isMuted ? 0 : vol;
+    if (!this.isFadingOut && this.isPlaying) {
+      if (this.fadeInterval) {
+        clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
+      }
+      el.volume = this.targetVolume;
+    }
+  }
+};
+
+// ----------------------------------------------------------------------------
+// 2. Creepy Ghost Town Lobby Background Music (Web Audio API procedural loop)
+// ----------------------------------------------------------------------------
+const CreepyLobbyAudio = {
+  ctx: null,
+  masterGain: null,
+  submixGain: null,
+  droneGain: null,
+  droneFilter: null,
+  droneOscs: [],
+  droneLfo: null,
+  droneLfoGain: null,
+  windSource: null,
+  windGain: null,
+  windFilter: null,
+  windLfo: null,
+  windLfoGain: null,
+  delayNode: null,
+  delayFeedback: null,
+  delayFilter: null,
+  chimeTimeouts: [],
+  isPlaying: false,
+  isFadingOut: false,
+  fadeTimer: null,
+  currentMotifIndex: 0,
+
+  start(targetVolume, duration = 1.2) {
+    if (this.isPlaying && !this.isFadingOut) {
+      this.setVolume(targetVolume);
+      return;
+    }
+
+    if (this.fadeTimer) {
+      clearTimeout(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    this.ctx = ctx;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    if (this.isPlaying && this.isFadingOut && this.masterGain) {
+      this.isFadingOut = false;
+      const now = ctx.currentTime;
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
+      this.masterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetVolume), now + duration);
+      this.scheduleChimes();
+      return;
+    }
+
+    this.cleanupNodes();
+
+    this.isPlaying = true;
+    this.isFadingOut = false;
+    const now = ctx.currentTime;
+
+    // Master Gain & Submix
+    this.masterGain = ctx.createGain();
+    this.masterGain.gain.setValueAtTime(0.0001, now);
+    this.masterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetVolume), now + duration);
+    this.masterGain.connect(ctx.destination);
+
+    this.submixGain = ctx.createGain();
+    this.submixGain.gain.setValueAtTime(1.0, now);
+    this.submixGain.connect(this.masterGain);
+
+    // 1. Drone Layer: Deep, eerie detuned minor-key drone with low-pass breathing
+    try {
+      this.droneFilter = ctx.createBiquadFilter();
+      this.droneFilter.type = 'lowpass';
+      this.droneFilter.frequency.setValueAtTime(180, now);
+      this.droneFilter.Q.setValueAtTime(2.8, now);
+
+      this.droneLfo = ctx.createOscillator();
+      this.droneLfo.type = 'sine';
+      this.droneLfo.frequency.setValueAtTime(0.065, now);
+      this.droneLfoGain = ctx.createGain();
+      this.droneLfoGain.gain.setValueAtTime(65, now);
+      this.droneLfo.connect(this.droneLfoGain);
+      this.droneLfoGain.connect(this.droneFilter.frequency);
+      this.droneLfo.start(now);
+
+      this.droneGain = ctx.createGain();
+      this.droneGain.gain.setValueAtTime(0.32, now);
+      this.droneFilter.connect(this.droneGain);
+      this.droneGain.connect(this.submixGain);
+
+      const droneSpecs = [
+        { freq: 73.42, type: 'sawtooth', detune: -7 },
+        { freq: 73.42, type: 'triangle', detune: +6 },
+        { freq: 55.00, type: 'sawtooth', detune: -4 },
+        { freq: 87.31, type: 'sine',     detune: +4 },
+        { freq: 110.0, type: 'sine',     detune: -5 }
+      ];
+      this.droneOscs = droneSpecs.map(spec => {
+        const osc = ctx.createOscillator();
+        osc.type = spec.type;
+        osc.frequency.setValueAtTime(spec.freq, now);
+        osc.detune.setValueAtTime(spec.detune, now);
+        osc.connect(this.droneFilter);
+        osc.start(now);
+        return osc;
+      });
+    } catch (e) {
+      console.warn('Lobby drone init error:', e);
+    }
+
+    // 2. Cold Wind / Ghostly Breath Texture Layer
+    try {
+      const sampleRate = ctx.sampleRate || 44100;
+      const noiseLen = sampleRate * 3;
+      const noiseBuffer = ctx.createBuffer(1, noiseLen, sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < noiseLen; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99765 * b0 + white * 0.0990460;
+        b1 = 0.96300 * b1 + white * 0.1442111;
+        b2 = 0.57000 * b2 + white * 0.3542289;
+        data[i] = (b0 + b1 + b2) * 0.22;
+      }
+
+      this.windSource = ctx.createBufferSource();
+      this.windSource.buffer = noiseBuffer;
+      this.windSource.loop = true;
+
+      this.windFilter = ctx.createBiquadFilter();
+      this.windFilter.type = 'bandpass';
+      this.windFilter.frequency.setValueAtTime(360, now);
+      this.windFilter.Q.setValueAtTime(1.8, now);
+
+      this.windLfo = ctx.createOscillator();
+      this.windLfo.type = 'sine';
+      this.windLfo.frequency.setValueAtTime(0.09, now);
+      this.windLfoGain = ctx.createGain();
+      this.windLfoGain.gain.setValueAtTime(160, now);
+      this.windLfo.connect(this.windLfoGain);
+      this.windLfoGain.connect(this.windFilter.frequency);
+      this.windLfo.start(now);
+
+      this.windGain = ctx.createGain();
+      this.windGain.gain.setValueAtTime(0.24, now);
+      this.windSource.connect(this.windFilter);
+      this.windFilter.connect(this.windGain);
+      this.windGain.connect(this.submixGain);
+      this.windSource.start(now);
+    } catch (e) {
+      console.warn('Lobby wind texture init error:', e);
+    }
+
+    // 3. Delay & Feedback Loop for Chimes
+    try {
+      this.delayNode = ctx.createDelay(1.0);
+      this.delayNode.delayTime.setValueAtTime(0.42, now);
+
+      this.delayFeedback = ctx.createGain();
+      this.delayFeedback.gain.setValueAtTime(0.40, now);
+
+      this.delayFilter = ctx.createBiquadFilter();
+      this.delayFilter.type = 'lowpass';
+      this.delayFilter.frequency.setValueAtTime(1200, now);
+
+      this.delayNode.connect(this.delayFilter);
+      this.delayFilter.connect(this.delayFeedback);
+      this.delayFeedback.connect(this.delayNode);
+      this.delayNode.connect(this.submixGain);
+    } catch (e) {
+      console.warn('Lobby delay init error:', e);
+    }
+
+    // 4. Start Sparse Haunting Music Box Chimes
+    this.scheduleChimes();
+  },
+
+  scheduleChimes() {
+    this.clearChimeTimers();
+    if (!this.isPlaying || this.isFadingOut) return;
+
+    const motifs = [
+      [ { note: 587.33, dur: 1.8 }, { note: 440.00, dur: 2.0 }, { note: 349.23, dur: 2.2 }, { note: 293.66, dur: 3.5 } ],
+      [ { note: 349.23, dur: 1.6 }, { note: 440.00, dur: 1.8 }, { note: 554.37, dur: 2.2 }, { note: 587.33, dur: 3.5 } ],
+      [ { note: 466.16, dur: 1.8 }, { note: 440.00, dur: 1.6 }, { note: 349.23, dur: 1.8 }, { note: 392.00, dur: 2.0 }, { note: 440.00, dur: 3.5 } ],
+      [ { note: 587.33, dur: 1.6 }, { note: 554.37, dur: 2.0 }, { note: 466.16, dur: 2.2 }, { note: 440.00, dur: 3.5 } ],
+      [ { note: 440.00, dur: 2.0 }, { note: 349.23, dur: 2.2 }, { note: 293.66, dur: 4.0 } ]
+    ];
+
+    const playNextMotif = () => {
+      if (!this.isPlaying || this.isFadingOut) return;
+      const motif = motifs[this.currentMotifIndex % motifs.length];
+      this.currentMotifIndex++;
+
+      let accumDelay = 0;
+      motif.forEach(step => {
+        const tId = setTimeout(() => {
+          if (!this.isPlaying || this.isFadingOut) return;
+          this.playChimeNote(step.note, 0.22);
+        }, accumDelay * 1000);
+        this.chimeTimeouts.push(tId);
+        accumDelay += step.dur;
+      });
+
+      const silencePause = 5.0 + Math.random() * 3.0;
+      const nextDelay = (accumDelay + silencePause) * 1000;
+      const loopId = setTimeout(playNextMotif, nextDelay);
+      this.chimeTimeouts.push(loopId);
+    };
+
+    const initTimer = setTimeout(playNextMotif, 2000);
+    this.chimeTimeouts.push(initTimer);
+  },
+
+  playChimeNote(freq, velocity = 0.22) {
+    if (!this.isPlaying || this.isFadingOut || !this.ctx || !this.submixGain) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    try {
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(freq, now);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(freq * 2.756, now);
+
+      const noteGain = ctx.createGain();
+      noteGain.gain.setValueAtTime(0.0001, now);
+      noteGain.gain.exponentialRampToValueAtTime(velocity, now + 0.008);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.3);
+
+      const overtoneGain = ctx.createGain();
+      overtoneGain.gain.setValueAtTime(velocity * 0.24, now);
+      overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+
+      osc1.connect(noteGain);
+      osc2.connect(overtoneGain);
+      overtoneGain.connect(noteGain);
+
+      noteGain.connect(this.submixGain);
+      if (this.delayNode) {
+        noteGain.connect(this.delayNode);
+      }
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 2.5);
+      osc2.stop(now + 2.5);
+    } catch (e) {
+      console.warn('Lobby chime play error:', e);
+    }
+  },
+
+  stop(duration = 0.8, immediate = false) {
+    this.clearChimeTimers();
+
+    if (!this.isPlaying && !this.masterGain) return;
+    this.isFadingOut = true;
+
+    if (immediate || !this.masterGain || !this.ctx) {
+      this.isPlaying = false;
+      this.isFadingOut = false;
+      this.cleanupNodes();
+      return;
+    }
+
+    if (this.fadeTimer) {
+      clearTimeout(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+
+    const now = this.ctx.currentTime;
+    try {
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
+      this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    } catch (e) {}
+
+    this.fadeTimer = setTimeout(() => {
+      if (this.isFadingOut) {
+        this.isPlaying = false;
+        this.isFadingOut = false;
+        this.cleanupNodes();
+      }
+    }, Math.round(duration * 1000) + 40);
+  },
+
+  setVolume(vol, rampTime = 0.05) {
+    if (this.masterGain && this.ctx && this.isPlaying && !this.isFadingOut) {
+      const now = this.ctx.currentTime;
+      try {
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setTargetAtTime(Math.max(0.0001, vol), now, rampTime);
+      } catch (e) {}
+    }
+  },
+
+  clearChimeTimers() {
+    this.chimeTimeouts.forEach(t => clearTimeout(t));
+    this.chimeTimeouts = [];
+  },
+
+  cleanupNodes() {
+    this.clearChimeTimers();
+    if (this.fadeTimer) {
+      clearTimeout(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+
+    this.droneOscs.forEach(osc => {
+      try { osc.stop(); osc.disconnect(); } catch (e) {}
+    });
+    this.droneOscs = [];
+
+    if (this.droneLfo) {
+      try { this.droneLfo.stop(); this.droneLfo.disconnect(); } catch (e) {}
+      this.droneLfo = null;
+    }
+    if (this.droneLfoGain) {
+      try { this.droneLfoGain.disconnect(); } catch (e) {}
+      this.droneLfoGain = null;
+    }
+    if (this.droneFilter) {
+      try { this.droneFilter.disconnect(); } catch (e) {}
+      this.droneFilter = null;
+    }
+    if (this.droneGain) {
+      try { this.droneGain.disconnect(); } catch (e) {}
+      this.droneGain = null;
+    }
+
+    if (this.windSource) {
+      try { this.windSource.stop(); this.windSource.disconnect(); } catch (e) {}
+      this.windSource = null;
+    }
+    if (this.windLfo) {
+      try { this.windLfo.stop(); this.windLfo.disconnect(); } catch (e) {}
+      this.windLfo = null;
+    }
+    if (this.windLfoGain) {
+      try { this.windLfoGain.disconnect(); } catch (e) {}
+      this.windLfoGain = null;
+    }
+    if (this.windFilter) {
+      try { this.windFilter.disconnect(); } catch (e) {}
+      this.windFilter = null;
+    }
+    if (this.windGain) {
+      try { this.windGain.disconnect(); } catch (e) {}
+      this.windGain = null;
+    }
+
+    if (this.delayNode) {
+      try { this.delayNode.disconnect(); } catch (e) {}
+      this.delayNode = null;
+    }
+    if (this.delayFeedback) {
+      try { this.delayFeedback.disconnect(); } catch (e) {}
+      this.delayFeedback = null;
+    }
+    if (this.delayFilter) {
+      try { this.delayFilter.disconnect(); } catch (e) {}
+      this.delayFilter = null;
+    }
+
+    if (this.submixGain) {
+      try { this.submixGain.disconnect(); } catch (e) {}
+      this.submixGain = null;
+    }
+    if (this.masterGain) {
+      try { this.masterGain.disconnect(); } catch (e) {}
+      this.masterGain = null;
+    }
+  }
+};
+
+// ----------------------------------------------------------------------------
+// 3. Central Game Audio / Music State Controller
+// ----------------------------------------------------------------------------
+const GameMusicController = {
+  currentTrack: 'NONE',
+  targetTrack: 'NONE',
+  isUnlocked: false,
+  hasBoundUnlock: false,
+  transitionToken: 0,
+  syncInterval: null,
+
+  init() {
+    this.setupAutoplayUnlock();
+    this.syncState();
+    if (!this.syncInterval) {
+      this.syncInterval = setInterval(() => {
+        this.syncState();
+      }, 500);
+    }
+  },
+
+  getSettings() {
+    let s = (typeof window !== 'undefined' && window.__gameSettings) ? window.__gameSettings : null;
+    if (!s) {
+      try {
+        s = JSON.parse(localStorage.getItem('ghosttown_settings'));
+      } catch (e) {}
+    }
+    const master = s && typeof s.masterVolume === 'number' ? s.masterVolume : 100;
+    const music = s && typeof s.musicVolume === 'number' ? s.musicVolume : (s && typeof s.ambienceVolume === 'number' ? s.ambienceVolume : 70);
+    const isMuted = Boolean(s && s.muteAll);
+    const volume = isMuted ? 0 : Math.max(0, Math.min(1, (master / 100) * (music / 100)));
+    return { master, music, isMuted, volume };
+  },
+
+  setupAutoplayUnlock() {
+    if (this.hasBoundUnlock) return;
+    this.hasBoundUnlock = true;
+
+    const unlockHandler = () => {
+      this.isUnlocked = true;
+      ['pointerdown', 'keydown', 'click', 'touchstart'].forEach(evt => {
+        window.removeEventListener(evt, unlockHandler, true);
+        document.removeEventListener(evt, unlockHandler, true);
+      });
+
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      const state = this.determineState();
+      if (state === 'MENU' || state === 'LOBBY') {
+        this.setTrack(state, true);
+      }
+    };
+
+    ['pointerdown', 'keydown', 'click', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, unlockHandler, true);
+      document.addEventListener(evt, unlockHandler, true);
+    });
+  },
+
+  requestAutoplayUnlock() {
+    this.setupAutoplayUnlock();
+  },
+
+  determineState() {
+    const splash = document.getElementById('intro-splash');
+    const splashVisible = splash && splash.style.display !== 'none' && !splash.classList.contains('splash-fade-out');
+    const menuEl = document.getElementById('main-menu');
+    const menuVisible = menuEl && !menuEl.classList.contains('hidden');
+
+    if (!hasJoined || menuVisible || splashVisible) {
+      return 'MENU';
+    }
+
+    const inLobbyZone = currentZone && (currentZone.id === LOBBY_AREA.id || currentZone.id === 'stagingLobby');
+    const isWaiting = matchState === 'waiting' || (players && myId && players[myId] && players[myId].role === 'waiting');
+    const lobbyPanelEl = document.getElementById('lobbyPanel');
+    const lobbyPanelVisible = lobbyPanelEl && !lobbyPanelEl.classList.contains('hidden');
+
+    if (inLobbyZone || isWaiting || lobbyPanelVisible) {
+      return 'LOBBY';
+    }
+
+    return 'NONE';
+  },
+
+  syncState() {
+    const target = this.determineState();
+    this.setTrack(target);
+  },
+
+  setTrack(target, force = false) {
+    if (this.targetTrack === target && !force) return;
+    this.targetTrack = target;
+    const token = ++this.transitionToken;
+
+    const settings = this.getSettings();
+    const vol = settings.volume;
+
+    if (target === 'MENU') {
+      CreepyLobbyAudio.stop(0.6);
+      MainMenuAudio.play(vol, 1.0);
+      this.currentTrack = 'MENU';
+    } else if (target === 'LOBBY') {
+      MainMenuAudio.stop(0.6);
+      CreepyLobbyAudio.start(vol, 1.2);
+      this.currentTrack = 'LOBBY';
+    } else {
+      MainMenuAudio.stop(0.6);
+      CreepyLobbyAudio.stop(0.6);
+      this.currentTrack = 'NONE';
+    }
+  },
+
+  updateVolumes() {
+    const settings = this.getSettings();
+    const vol = settings.volume;
+    MainMenuAudio.setVolume(vol);
+    CreepyLobbyAudio.setVolume(vol);
+  }
+};
+
+window.__gameMusicController = GameMusicController;
+GameMusicController.init();
+
 const FOUNTAIN_PARTICLE_COUNT = 500;  // particles per fountain
 const FOUNTAIN_SPAWN_OFFSET_Y = 60;   // particles emit this far above each fountain's origin
 const FOUNTAIN_BASIN_OFFSET_Y = -5;   // particles respawn once they fall this far below the origin
@@ -3120,10 +3779,12 @@ function showMainMenuRoot() {
   if (lobbyPanel) lobbyPanel.classList.add('hidden');
   if (lockHint) lockHint.classList.add('hidden');
   if (controls) controls.unlock();
+  if (window.__gameMusicController) window.__gameMusicController.syncState();
 }
 
 function hideMainMenu() {
   mainMenu.classList.add('hidden');
+  if (window.__gameMusicController) window.__gameMusicController.syncState();
 }
 
 function showDeathScreen() {
@@ -3214,6 +3875,7 @@ function updateLobbyUi() {
     roomCodeBar.classList.toggle('hidden', !showRoomCode);
   }
   if (copyRoomCodeBtn) copyRoomCodeBtn.classList.toggle('hidden', !(showRoomCode && myIsHost));
+  if (window.__gameMusicController) window.__gameMusicController.syncState();
 }
 
 function setRoomCodeHudText(code) {
@@ -3524,6 +4186,7 @@ function joinGame(options) {
   if (lockHint && !controls.isLocked) {
     lockHint.classList.remove('hidden');
   }
+  if (window.__gameMusicController) window.__gameMusicController.syncState();
 }
 
 function createRoom(options) {
@@ -5195,6 +5858,7 @@ function leaveMatchToMainMenu() {
   if (roomCodeDisplay) roomCodeDisplay.textContent = '—';
   socket.emit('requestWallet', persistentPlayerId);
   showMainMenuRoot();
+  if (window.__gameMusicController) window.__gameMusicController.syncState();
 }
 
 function attachSocketListeners() {
@@ -5665,17 +6329,20 @@ function attachSocketListeners() {
     cancelHeal(); isCrouching = false;
     const winner = data.winner || 'PROPS'; const lb = Array.isArray(data.leaderboard) ? data.leaderboard : [];
     showMatchOver(winner, lb, data.intermissionSeconds || 10);
+    if (window.__gameMusicController) window.__gameMusicController.syncState();
   });
 
   socket.on('matchEnd', (data) => {
     cancelHeal(); isCrouching = false;
     const winner = data.winner || 'PROPS'; const lb = Array.isArray(data.leaderboard) ? data.leaderboard : [];
     showMatchOver(winner, lb, 10);
+    if (window.__gameMusicController) window.__gameMusicController.syncState();
   });
 
   socket.on('matchStarted', (data) => {
     hideMatchOver(); hideDeathScreen(); stopIntermissionCountdown(); closeHostSettings();
     matchState = data.state || 'playing';
+    if (window.__gameMusicController) window.__gameMusicController.syncState();
     if (typeof data.timeLeft === 'number') timeLeft = data.timeLeft;
     if (typeof data.originalDuration === 'number') originalDuration = data.originalDuration;
     if (typeof data.timeLimit === 'number') selectedTimeLimit = data.timeLimit;

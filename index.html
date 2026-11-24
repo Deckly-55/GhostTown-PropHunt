@@ -3459,6 +3459,12 @@
     </div>
   </div>
 
+  <!-- Dedicated Main Menu Audio Track (Uses existing Settings music track) -->
+  <video id="mainMenuMusicTrack" class="bg-music-track" loop playsinline preload="auto" style="position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;top:-100px;left:-100px;">
+    <source src="public/settings-bg.mp4" type="video/mp4" />
+    <source src="settings-bg.mp4" type="video/mp4" />
+  </video>
+
   <!-- Tabbed Settings Modal -->
   <div id="settingsModalOverlay" class="hidden">
     <div class="settings-modal-panel">
@@ -3796,6 +3802,7 @@
         masterVolume: 100,
         sfxVolume: 80,
         ambienceVolume: 70,
+        musicVolume: 70,
         muteAll: false,
         graphicsQuality: 'high',
         fov: 75,
@@ -3841,6 +3848,11 @@
           saved = JSON.parse(localStorage.getItem('ghosttown_settings'));
         } catch (e) {}
         var s = Object.assign({}, DEFAULT_SETTINGS, saved || {});
+        if (s.musicVolume === undefined && s.ambienceVolume !== undefined) {
+          s.musicVolume = s.ambienceVolume;
+        } else if (s.ambienceVolume === undefined && s.musicVolume !== undefined) {
+          s.ambienceVolume = s.musicVolume;
+        }
         s.keybinds = Object.assign({}, DEFAULT_SETTINGS.keybinds, (saved && saved.keybinds) || {});
         return s;
       }
@@ -4049,9 +4061,11 @@
         var masterMult = mute ? 0 : ((typeof currentSettings.masterVolume === 'number' ? currentSettings.masterVolume : 100) / 100);
         var sfxFactor = (typeof currentSettings.sfxVolume === 'number' ? currentSettings.sfxVolume : 80) / 100;
         var ambFactor = (typeof currentSettings.ambienceVolume === 'number' ? currentSettings.ambienceVolume : 70) / 100;
+        var musicFactor = (typeof currentSettings.musicVolume === 'number' ? currentSettings.musicVolume : (typeof currentSettings.ambienceVolume === 'number' ? currentSettings.ambienceVolume : 70)) / 100;
 
         window.__sfxMultiplier = sfxFactor;
         window.__ambienceMultiplier = ambFactor;
+        window.__musicMultiplier = musicFactor;
 
         // Three.js AudioListener Master Gain
         if (window.__gameAudioListener) {
@@ -4110,11 +4124,25 @@
         }
         allHtmlAudios.forEach(function (el) {
           if (el) {
+            if (el.id === 'settingsBgVideo') {
+              el.muted = true;
+              return;
+            }
+            if (el.id === 'mainMenuMusicTrack' || (el.classList && el.classList.contains('bg-music-track'))) {
+              return;
+            }
             if (el._baseVolume === undefined) el._baseVolume = (typeof el.volume === 'number' ? el.volume : 1.0);
             el.muted = mute;
             el.volume = mute ? 0 : Math.max(0, Math.min(1, el._baseVolume * masterMult * sfxFactor));
           }
         });
+
+        // Notify music controller in real time
+        if (window.__gameMusicController && typeof window.__gameMusicController.updateVolumes === 'function') {
+          try {
+            window.__gameMusicController.updateVolumes();
+          } catch (e) {}
+        }
 
         // 7. FPS counter visibility
         if (fpsCounter) {
@@ -4249,6 +4277,7 @@
       if (inAmbienceVol) {
         inAmbienceVol.addEventListener('input', function () {
           currentSettings.ambienceVolume = parseInt(inAmbienceVol.value, 10);
+          currentSettings.musicVolume = currentSettings.ambienceVolume;
           if (valAmbienceVol) valAmbienceVol.textContent = currentSettings.ambienceVolume + '%';
           persistSettings(currentSettings);
           applySettings();
