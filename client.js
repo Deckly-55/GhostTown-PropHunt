@@ -47,8 +47,6 @@ const WEAPONS = {
   primary:   { name: 'Primary',   damage: 25, ammo: 5,  fireRateMs: 800, reloadMs: 2000 },
   secondary: { name: 'Secondary', damage: 12.5, ammo: 12, fireRateMs: 150, reloadMs: 2000 }
 };
-const KNIFE_THROW_COOLDOWN_MS = 1500;
-let lastKnifeThrowTime = 0;
 const RELOAD_DURATION_MS = 2000;
 
 const GRAVITY = 90;
@@ -6233,6 +6231,9 @@ function attachSocketListeners() {
 
   socket.on('playerDisguised', (data) => {
     if (!data || !data.id) return;
+    if (data.id === myId) {
+      isDisguised = !!data.isProp;
+    }
     if (players[data.id]) {
       players[data.id].isProp = !!data.isProp;
       players[data.id].propId = data.propType || data.propId;
@@ -6385,7 +6386,6 @@ window.addEventListener('keydown', (event) => {
   if (key === '1' && hasJoined && amAlive) { switchWeapon('primary'); }
   if (key === '2' && hasJoined && amAlive) { switchWeapon('secondary'); }
   if (key === 'r' && hasJoined && amAlive) { startReload(); }
-  if (key === 'g' && hasJoined && amAlive) { handleThrowKnife(); }
 });
 
 window.addEventListener('keyup', (event) => {
@@ -6428,7 +6428,12 @@ document.addEventListener('mousedown', (event) => {
       }
     }
   }
-  else if (myRole === 'prop') { event.preventDefault(); handleMeleeAttack(); }
+  else if (myRole === 'prop') {
+    if (!isDisguised) {
+      event.preventDefault();
+      handleMeleeAttack();
+    }
+  }
 });
 
 window.addEventListener('contextmenu', (event) => { event.preventDefault(); });
@@ -6448,18 +6453,10 @@ function handleShoot() {
 }
 
 function handleMeleeAttack() {
-  if (!socket || !hasJoined || matchState !== 'playing' || myRole !== 'prop' || !amAlive) return;
+  const me = players[myId];
+  const disguised = Boolean(isDisguised || (me && (me.isProp || me.propId || me.isDisguised || me.disguise)));
+  if (!socket || !hasJoined || matchState !== 'playing' || myRole !== 'prop' || !amAlive || disguised) return;
   socket.emit('meleeAttack'); triggerMeleeSwingFeedback();
-}
-
-function handleThrowKnife() {
-  if (!socket || !hasJoined || matchState !== 'playing' || myRole !== 'prop' || !amAlive) return;
-  const now = performance.now();
-  if (now - lastKnifeThrowTime < KNIFE_THROW_COOLDOWN_MS) return;
-  camera.getWorldDirection(tmpDir);
-  if (tmpDir.lengthSq() < 0.000001) return;
-  socket.emit('throwKnife', { dx: tmpDir.x, dy: tmpDir.y, dz: tmpDir.z });
-  lastKnifeThrowTime = now;
 }
 
 function startHeal() {
@@ -6510,7 +6507,7 @@ function updateWeaponHud() {
   weaponHud.classList.toggle('hidden', !visible);
   if (!visible) return;
 
-  if (weaponHudName) weaponHudName.textContent = isHunter ? equippedItemName(equippedWeapon === 'secondary' ? 'secondaryGun' : 'primaryGun') : equippedItemName('secondaryKnife');
+  if (weaponHudName) weaponHudName.textContent = isHunter ? equippedItemName(equippedWeapon === 'secondary' ? 'secondaryGun' : 'primaryGun') : equippedItemName('primaryKnife');
   if (weaponHudAmmo) {
     weaponHudAmmo.classList.toggle('hidden', !isHunter);
     if (isHunter) {
@@ -6520,13 +6517,13 @@ function updateWeaponHud() {
     }
   }
   if (weaponHudReload) weaponHudReload.classList.toggle('hidden', !(isHunter && isReloading));
-  if (weaponHudKnife) weaponHudKnife.textContent = isHunter ? `Melee: ${equippedItemName('primaryKnife')}` : `G throw · LMB melee`;
+  if (weaponHudKnife) weaponHudKnife.textContent = isHunter ? `Melee: ${equippedItemName('primaryKnife')}` : 'LMB melee (undisguised)';
 }
 
 function resetCombatState() {
   isCrouching = false; crouchAmount = 0; cancelHeal(); isReloading = false; reloadEndsAt = 0;
   equippedWeapon = 'primary'; ammo.primary = WEAPONS.primary.ammo; ammo.secondary = WEAPONS.secondary.ammo;
-  lastShotTimeByWeapon.primary = 0; lastShotTimeByWeapon.secondary = 0; lastKnifeThrowTime = 0;
+  lastShotTimeByWeapon.primary = 0; lastShotTimeByWeapon.secondary = 0;
   myIsHealing = false; myIsPropHealing = false; myIsPassiveHealing = false;
   myHealCooldownRemaining = 0; healInterruptedUntil = 0;
   if (hudHealthBar) hudHealthBar.classList.remove('healing-pulse');

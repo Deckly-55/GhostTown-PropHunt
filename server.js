@@ -2320,55 +2320,14 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('throwKnife', (aim) => {
-    const player = players[socket.id];
-    const roomState = player ? getRoomState(player.roomName) : null;
-    if (!player || !roomState || roomState.state !== 'playing' || !player.alive || player.role !== 'prop') return;
-    if (!aim || typeof aim.dx !== 'number' || typeof aim.dy !== 'number') return;
-
-    const now = Date.now();
-    if (player.lastKnifeThrowTime && now - player.lastKnifeThrowTime < 1500) return;
-    player.lastKnifeThrowTime = now;
-
-    // Phase 1 — the thrown knife rides the same instant hitscan ray as the
-    // guns: shorter range, heavier damage, and it only ever targets hunters.
-    const dir = normalizeAimVector(aim);
-    const eyeY = typeof player.y === 'number' ? player.y : PLAYER_EYE_LEVEL;
-    const origin = {
-      x: player.x + dir.x * MUZZLE_FORWARD_OFFSET,
-      y: eyeY + dir.y * MUZZLE_FORWARD_OFFSET,
-      z: player.z + dir.z * MUZZLE_FORWARD_OFFSET
-    };
-
-    const hit = castHitscanRay(socket.id, origin, dir, player.roomName, 'hunter', true);
-
-    // Phase 3: the prop's equipped secondary knife model rides the packet.
-    const equippedKnifeId = (player.loadout && player.loadout.secondaryKnife) || DEFAULT_LOADOUT.secondaryKnife;
-
-    io.to(player.roomName).emit('fireTracer', {
-      ownerId: socket.id,
-      kind: 'knife',
-      weaponType: null,
-      weaponId: equippedKnifeId,
-      hitType: hit.type,
-      targetId: hit.victimId || hit.npcId || null,
-      start: origin,
-      end: hit.point
-    });
-
-    applyHitscanHit(hit, {
-      ownerId: socket.id,
-      roomName: player.roomName,
-      damage: KNIFE_DAMAGE,
-      isKnife: true
-    });
-  });
-
   socket.on('meleeAttack', () => {
     const attacker = players[socket.id];
     const roomState = attacker ? getRoomState(attacker.roomName) : null;
     if (!attacker || !roomState || roomState.state !== 'playing' || !attacker.alive) return;
     if (attacker.role !== 'prop' && attacker.role !== 'hunter') return;
+    // Props can only swing close-range melee while undisguised (normal character form).
+    if (attacker.role === 'prop' && (attacker.isProp || attacker.propId || attacker.isDisguised || attacker.disguise)) return;
+    if (!Number.isFinite(attacker.x) || !Number.isFinite(attacker.z)) return;
 
     if (attacker.role === 'hunter') {
       attacker.lastAttackedAt = Date.now();
@@ -2391,6 +2350,7 @@ io.on('connection', (socket) => {
       if (!target || !target.alive) continue;
       if (target.roomName !== attacker.roomName) continue;
       if (target.role !== victimRole) continue;
+      if (!Number.isFinite(target.x) || !Number.isFinite(target.z)) continue;
 
       const targetY = typeof target.y === 'number' ? target.y : PLAYER_EYE_LEVEL;
       const dx = attacker.x - target.x;
