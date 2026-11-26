@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PropHunt.io — Ghost Town</title>
+<title>Mimic's Edge: Echoes of Ghost Town</title>
 
 <!-- ES Module Shims for importmap support (older browsers) -->
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
@@ -518,9 +518,11 @@
 
   .game-title {
     color: white;
-    font-size: 42px;
+    font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.1;
     margin: 0 0 10px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
   }
 
   .game-subtitle {
@@ -613,9 +615,9 @@
 
   .pause-menu-subtitle {
     color: #8fa1b1;
-    font-size: 13px;
+    font-size: 11.5px;
     margin: 0 0 24px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
@@ -1515,7 +1517,7 @@
   #copy-room-code.copied { background:#2ecc71; color:#fff; }
   #start-match-btn { padding:7px 10px; }
   #lobbyPanel { position:fixed; top:78px; left:50%; transform:translateX(-50%); z-index:11; min-width:280px; text-align:center; color:#fff; padding:11px 18px; border-radius:9px; background:rgba(8,22,35,.88); border:1px solid rgba(102,204,255,.65); box-shadow:0 3px 16px rgba(0,0,0,.45); }
-  #lobbyTitle { margin:0 0 3px; font-size:18px; color:#8ee8ff; letter-spacing:.08em; } #lobbyStatus { font-size:13px; color:#d7efff; } #start-match-btn { margin-top:9px; background:#2ecc71; color:#07170d; font-size:14px; }
+  #lobbyTitle { margin:0 0 2px; font-size:18px; color:#8ee8ff; letter-spacing:.08em; } #lobbySubtitle { margin:0 0 4px; font-size:11px; color:#b8dfff; letter-spacing:.06em; } #lobbyStatus { font-size:13px; color:#d7efff; } #start-match-btn { margin-top:9px; background:#2ecc71; color:#07170d; font-size:14px; }
 
   /* Match Timer - large and prominent inside topCenterHud */
   #matchTimer {
@@ -3348,7 +3350,7 @@
 <body>
   <!-- Intro Splash Screen -->
   <div id="intro-splash">
-    <img id="splash-logo" src="public/logo.png" alt="PropHunt Ghost Town Logo" />
+    <img id="splash-logo" src="public/logo.png" alt="Mimic's Edge: Echoes of Ghost Town Logo" />
   </div>
   <script>
     (function () {
@@ -3391,9 +3393,9 @@
     </button>
     <div class="menu-panel">
       <h1 class="game-title">
-        PropHunt<span class="title-io">.io</span>
+        MIMIC'S <span class="title-io">EDGE</span>
       </h1>
-      <p class="game-subtitle">Ghost Town Edition — 3D First Person</p>
+      <p class="game-subtitle">Echoes of Ghost Town</p>
 
       <div id="menu-buttons-root">
         <button class="menu-btn" id="btn-play-global">🌍 Play Global</button>
@@ -3449,7 +3451,7 @@
   <div id="pauseMenuOverlay" class="hidden">
     <div class="pause-menu-panel">
       <h1 class="pause-menu-title">PAUSED</h1>
-      <p class="pause-menu-subtitle">Ghost Town Edition</p>
+      <p class="pause-menu-subtitle">Mimic's Edge: Echoes of Ghost Town</p>
       <div class="pause-menu-buttons">
         <button id="btn-pause-resume" class="menu-btn pause-btn-resume" type="button">Resume</button>
         <button id="btn-pause-settings" class="menu-btn menu-btn-secondary" type="button">⚙ Settings</button>
@@ -3478,7 +3480,7 @@
       <div class="settings-header">
         <div class="settings-title-wrap">
           <h2>⚙ Settings</h2>
-          <p>Ghost Town Gameplay, Sound, Display &amp; Controls</p>
+          <p>Mimic's Edge: Echoes of Ghost Town — Gameplay, Sound, Display &amp; Controls</p>
         </div>
         <button id="btn-settings-x" class="settings-close-x" type="button" aria-label="Close">✕</button>
       </div>
@@ -4708,7 +4710,7 @@
       <button id="copy-room-code" type="button" class="hidden">Copy Code</button>
     </div>
   </div>
-  <div id="lobbyPanel" class="hidden"><h2 id="lobbyTitle">STAGING GROUND</h2><div id="lobbyStatus">Waiting for players…</div><button id="start-match-btn" class="hidden" type="button">Start Match</button></div>
+  <div id="lobbyPanel" class="hidden"><h2 id="lobbyTitle">MIMIC'S EDGE</h2><div id="lobbySubtitle">Echoes of Ghost Town</div><div id="lobbyStatus">Waiting for players…</div><button id="start-match-btn" class="hidden" type="button">Start Match</button></div>
 
   <div id="roleDisplay" class="hidden">Role: —</div>
 
@@ -4810,7 +4812,7 @@
     </div>
   </div>
 
-<div id="mapInfo">Ghost Town — 4000x4000</div>
+<div id="mapInfo">Mimic's Edge: Echoes of Ghost Town — 4000x4000</div>
 
   <!-- Group 5 — Authentication Overlay -->
   <div id="authOverlay" class="hidden menu-overlay">
@@ -4963,7 +4965,7 @@
       <span class="starter-kicker" id="starterKicker">Step 1</span>
       <h1 class="starter-title" id="starterTitle">Choose Your <span>Character</span></h1>
       <p class="starter-sub" id="starterSub">
-        Pick the starter you'll enter PropHunt.io as. This choice is permanent and cannot be changed later.
+        Pick the starter you'll enter Mimic's Edge: Echoes of Ghost Town as. This choice is permanent and cannot be changed later.
       </p>
 
       <div class="gender-cards" id="genderCardsContainer">
@@ -5644,7 +5646,7 @@
     } else {
       if (kickerEl) kickerEl.textContent = 'Step 1';
       if (titleEl) titleEl.innerHTML = 'Choose Your <span>Character</span>';
-      if (subEl) subEl.textContent = 'Pick the starter you\'ll enter PropHunt.io as. This choice is permanent and cannot be changed later.';
+      if (subEl) subEl.textContent = 'Pick the starter you\'ll enter Mimic\'s Edge: Echoes of Ghost Town as. This choice is permanent and cannot be changed later.';
       if (cardsContainer) cardsContainer.classList.remove('locked-single');
       if (maleCard) maleCard.classList.remove('hidden');
       if (femaleCard) femaleCard.classList.remove('hidden');

@@ -4059,7 +4059,7 @@ function updateMapInfo() {
     mapInfoEl.textContent = `Map: ${lobbyMapName}  ·  Time: ${Math.round(selectedTimeLimit / 60)} min`;
   } else {
     const zoneName = currentZone && currentZone.name ? currentZone.name : 'Unknown District';
-    mapInfoEl.textContent = `Ghost Town — ${worldWidth}x${worldHeight} — ${zoneName}`;
+    mapInfoEl.textContent = `Mimic's Edge: Echoes of Ghost Town — ${worldWidth}x${worldHeight} — ${zoneName}`;
   }
 }
 
@@ -5527,7 +5527,7 @@ function openStarterSelection() {
   } else {
     if (starterKicker) starterKicker.textContent = 'Step 1';
     if (starterTitle) starterTitle.innerHTML = 'Choose Your <span>Character</span>';
-    if (starterSub) starterSub.textContent = 'Pick the starter you\'ll enter PropHunt.io as. This choice is permanent and cannot be changed later.';
+    if (starterSub) starterSub.textContent = 'Pick the starter you\'ll enter Mimic\'s Edge: Echoes of Ghost Town as. This choice is permanent and cannot be changed later.';
     if (genderCardsContainer) genderCardsContainer.classList.remove('locked-single');
     if (genderCardMale) genderCardMale.classList.remove('hidden');
     if (genderCardFemale) genderCardFemale.classList.remove('hidden');
