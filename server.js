@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const express = require('express');
 const http = require('http');
@@ -6,7 +7,7 @@ const path = require('path');
 const { MongoClient } = require('mongodb');
 
 // Group 5 — Persistent Database Storage
-const MONGO_URI = "mongodb+srv://pasanbandara4_db_user:Pramuditha5002@cluster0.uifezcq.mongodb.net/?appName=Cluster0";
+const MONGO_URI = process.env.MONGODB_URI;
 let dbPlayers;
 
 const app = express();
