@@ -1,6 +1,6 @@
 {
   "name": "mimics-edge-ghost-town",
-  "productName": "Mimic's Edge: Echoes of Ghost Town",
+  "productName": "Mimic's Edge - Echoes of Ghost Town",
   "version": "1.0.0",
   "description": "Mimic's Edge: Echoes of Ghost Town",
   "author": "Pasan",
@@ -8,7 +8,7 @@
   "scripts": {
     "server": "node server.js",
     "start": "electron .",
-    "build": "electron-packager . MimicsEdge --platform=win32 --arch=x64 --out=E:\\MimicsEdgeBuild --overwrite --icon=icon.ico"
+    "build": "electron-packager . MimicsEdge --platform=win32 --arch=x64 --out=E:\\MimicsEdgeBuild --overwrite --icon=icon.ico --ignore=\"^/\\.env$\""
   },
   "dependencies": {
     "dotenv": "^18.0.10",

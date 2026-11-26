@@ -1,7 +1,7 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-app.setName("Mimic's Edge: Echoes of Ghost Town");
+app.setName("Mimic's Edge - Echoes of Ghost Town");
 
 function createWindow () {
   const win = new BrowserWindow({
