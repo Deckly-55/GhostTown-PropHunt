@@ -3708,28 +3708,6 @@
 
           <div class="settings-row">
             <div class="settings-row-info">
-              <div class="settings-row-label">Field of View (FOV)</div>
-              <div class="settings-row-desc">Horizontal camera viewing angle (60° to 110°)</div>
-            </div>
-            <div class="settings-row-control">
-              <input id="setting-fov" class="settings-range" type="range" min="60" max="110" step="1" value="75" />
-              <span id="val-fov" class="settings-badge">75°</span>
-            </div>
-          </div>
-
-          <div class="settings-row">
-            <div class="settings-row-info">
-              <div class="settings-row-label">View / Fog Distance</div>
-              <div class="settings-row-desc">Horror fog distance across the town (Wrap player vs. see far)</div>
-            </div>
-            <div class="settings-row-control">
-              <input id="setting-fog-dist" class="settings-range" type="range" min="400" max="3000" step="50" value="1800" />
-              <span id="val-fog-dist" class="settings-badge">1800m</span>
-            </div>
-          </div>
-
-          <div class="settings-row">
-            <div class="settings-row-info">
               <div class="settings-row-label">Dynamic Shadows</div>
               <div class="settings-row-desc">Render dynamic sunlight and entity cast shadows</div>
             </div>
@@ -3800,8 +3778,6 @@
         musicVolume: 70,
         muteAll: false,
         graphicsQuality: 'high',
-        fov: 75,
-        viewDistance: 1800,
         shadows: true,
         showFps: false,
         keybinds: {
@@ -3847,6 +3823,8 @@
           s.ambienceVolume = s.musicVolume;
         }
         s.keybinds = Object.assign({}, DEFAULT_SETTINGS.keybinds, (saved && saved.keybinds) || {});
+        delete s.fov;
+        delete s.viewDistance;
         return s;
       }
 
@@ -3945,10 +3923,6 @@
       var inMuteAll = document.getElementById('setting-mute-all');
 
       var inGraphics = document.getElementById('setting-graphics');
-      var inFov = document.getElementById('setting-fov');
-      var valFov = document.getElementById('val-fov');
-      var inFogDist = document.getElementById('setting-fog-dist');
-      var valFogDist = document.getElementById('val-fog-dist');
       var inShadows = document.getElementById('setting-shadows');
       var inFps = document.getElementById('setting-fps');
 
@@ -3969,14 +3943,7 @@
           hintEl.classList.toggle('user-hidden', !currentSettings.showHints);
         }
 
-        // 2. Camera Field of View (FOV)
-        var userFov = Number(currentSettings.fov || 75);
-        if (window.__gameCamera) {
-          window.__gameCamera.fov = userFov;
-          window.__gameCamera.updateProjectionMatrix();
-        }
-
-        // 3. Renderer: Resolution / Render Scale & Shadow Maps
+        // 2. Renderer: Resolution / Render Scale & Shadow Maps
         if (window.__gameRenderer) {
           var qual = currentSettings.graphicsQuality || 'high';
           var scale = 1.0;
@@ -4036,17 +4003,6 @@
               }
             }
           });
-
-          // 5. Scene: Fog Distance
-          var fogDist = Number(currentSettings.viewDistance || 1800);
-          if (!window.__gameScene.fog || !window.__gameScene.fog.isFog) {
-            if (window.__THREE) {
-              window.__gameScene.fog = new window.__THREE.Fog(0x10151f, Math.max(50, Math.round(fogDist * 0.25)), fogDist);
-            }
-          } else {
-            window.__gameScene.fog.far = fogDist;
-            window.__gameScene.fog.near = Math.max(50, Math.round(fogDist * 0.25));
-          }
         }
 
         // 6. Audio: Master Volume, SFX, Ambience & Mute
@@ -4162,10 +4118,6 @@
         if (inMuteAll) inMuteAll.checked = Boolean(currentSettings.muteAll);
 
         if (inGraphics) inGraphics.value = currentSettings.graphicsQuality || 'high';
-        if (inFov) inFov.value = currentSettings.fov || 75;
-        if (valFov) valFov.textContent = (currentSettings.fov || 75) + '°';
-        if (inFogDist) inFogDist.value = currentSettings.viewDistance || 1800;
-        if (valFogDist) valFogDist.textContent = (currentSettings.viewDistance || 1800) + 'm';
         if (inShadows) inShadows.checked = Boolean(currentSettings.shadows);
         if (inFps) inFps.checked = Boolean(currentSettings.showFps);
 
@@ -4286,22 +4238,6 @@
       if (inGraphics) {
         inGraphics.addEventListener('change', function () {
           currentSettings.graphicsQuality = inGraphics.value;
-          persistSettings(currentSettings);
-          applySettings();
-        });
-      }
-      if (inFov) {
-        inFov.addEventListener('input', function () {
-          currentSettings.fov = parseInt(inFov.value, 10);
-          if (valFov) valFov.textContent = currentSettings.fov + '°';
-          persistSettings(currentSettings);
-          applySettings();
-        });
-      }
-      if (inFogDist) {
-        inFogDist.addEventListener('input', function () {
-          currentSettings.viewDistance = parseInt(inFogDist.value, 10);
-          if (valFogDist) valFogDist.textContent = currentSettings.viewDistance + 'm';
           persistSettings(currentSettings);
           applySettings();
         });

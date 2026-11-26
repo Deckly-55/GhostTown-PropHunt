@@ -6682,7 +6682,7 @@ function getCurrentEyeHeight() { return PLAYER_EYE_HEIGHT - (PLAYER_EYE_HEIGHT -
 function updateAimDownSights(dt) {
   if (!camera) return;
   const canAds = myRole === 'hunter' && hasJoined && amAlive && controls && controls.isLocked;
-  const baseFov = Number(window.__gameSettings?.fov || DEFAULT_FOV || 75);
+  const baseFov = DEFAULT_FOV || 75;
   const targetFov = (isAiming && canAds) ? ADS_FOV : baseFov;
   if (Math.abs(camera.fov - targetFov) < 0.01) {
     if (camera.fov !== targetFov) { camera.fov = targetFov; camera.updateProjectionMatrix(); }
